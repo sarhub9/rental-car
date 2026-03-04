@@ -1,0 +1,84 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import path from 'path';
+import authRoutes from './routes/auth.routes.js';
+import agreementRoutes from './routes/agreement.routes.js';
+import customerRoutes from './routes/customer.routes.js';
+import vehicleRoutes from './routes/vehicle.routes.js';
+import invoiceRoutes from './routes/invoice.routes.js';
+import disputeRoutes from './routes/dispute.routes.js';
+import customerPortalRoutes from './routes/customer-portal.routes.js';
+import staffAuthRoutes from './routes/staff-auth.routes.js';
+import adminUserRoutes from './routes/admin-user.routes.js';
+import adminDashboardRoutes from './routes/admin-dashboard.routes.js';
+import adminSettingsRoutes from './routes/admin-settings.routes.js';
+import { driverRouter, taskManagementRouter } from './routes/driver-task.routes.js';
+import ratePlanRoutes from './routes/rate-plan.routes.js';
+import depositRoutes from './routes/deposit.routes.js';
+import tollFineRoutes from './routes/toll-fine.routes.js';
+import maintenanceRoutes from './routes/maintenance.routes.js';
+import systemAuditLogRoutes from './routes/system-audit-log.routes.js';
+import kpiRoutes from './routes/kpi.routes.js';
+import { requestLogger } from './middleware/logger.middleware.js';
+import { apiRateLimiter } from './middleware/rate-limit.middleware.js';
+import { errorHandler, notFoundHandler } from './middleware/error-handler.middleware.js';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger);
+app.use(apiRateLimiter);
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
+
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// API routes
+app.use('/v1/auth', authRoutes);
+app.use('/v1/customer', customerPortalRoutes);
+app.use('/v1/agreements', agreementRoutes);
+app.use('/v1/customers', customerRoutes);
+app.use('/v1/vehicles', vehicleRoutes);
+app.use('/v1/invoices', invoiceRoutes);
+app.use('/v1/disputes', disputeRoutes);
+app.use('/v1/auth/staff', staffAuthRoutes);
+app.use('/v1/admin/users', adminUserRoutes);
+app.use('/v1/admin', adminDashboardRoutes);
+app.use('/v1/admin', adminSettingsRoutes);
+app.use('/v1/driver', driverRouter);
+app.use('/v1/tasks', taskManagementRouter);
+app.use('/v1/rate-plans', ratePlanRoutes);
+app.use('/v1/deposits', depositRoutes);
+app.use('/v1/toll-fines', tollFineRoutes);
+app.use('/v1/maintenance', maintenanceRoutes);
+app.use('/v1/audit-log', systemAuditLogRoutes);
+app.use('/v1/kpis', kpiRoutes);
+
+// 404 handler
+app.use(notFoundHandler);
+
+// Centralized error handler
+app.use(errorHandler);
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 API server running on port ${PORT}`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+});
+
+export default app;
