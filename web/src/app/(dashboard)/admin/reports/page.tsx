@@ -41,8 +41,10 @@ const PIE_COLORS = [
   '#EC4899', '#06B6D4', '#84CC16',
 ];
 
-function formatAED(amount: number | string): string {
+function formatAED(amount: number | string | null | undefined): string {
+  if (amount == null || amount === '') return 'AED 0.00';
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(num)) return 'AED 0.00';
   return `AED ${num.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 

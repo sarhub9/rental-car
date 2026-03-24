@@ -132,6 +132,13 @@ class AgreementController {
       }
 
       const agreements = await AgreementService.list(req.tenantId, filters);
+      
+      // Get total count for pagination
+      const totalCount = await AgreementService.count(req.tenantId, {
+        status: filters.status,
+        customer_id: filters.customer_id,
+        vehicle_id: filters.vehicle_id,
+      });
 
       return res.status(200).json({
         success: true,
@@ -139,7 +146,7 @@ class AgreementController {
         pagination: {
           limit: filters.limit,
           offset: filters.offset,
-          total: agreements.length,
+          total: totalCount,
         },
       });
     } catch (error) {

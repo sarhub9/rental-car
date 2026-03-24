@@ -13,7 +13,7 @@ export interface Column<T = any> {
 
 interface DataTableProps<T = any> {
   columns: Column<T>[];
-  data: T[];
+  data?: T[];
   page?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
@@ -28,7 +28,7 @@ function getNestedValue(obj: any, path: string): any {
 
 export function DataTable<T extends Record<string, any>>({
   columns,
-  data,
+  data = [],
   page = 1,
   totalPages = 1,
   onPageChange,

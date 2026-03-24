@@ -40,22 +40,29 @@ export default function AgreementsPage() {
     try {
       setLoading(true);
       const params: Record<string, any> = {
-        page,
         limit,
+        offset: (page - 1) * limit,
       };
       if (search) params.search = search;
       if (statusFilter) params.status = statusFilter;
 
       const response = await agreementService.getAgreements(params);
-      setAgreements(response.data || []);
-      setTotalPages(response.totalPages || 1);
-      setTotalCount(response.total || 0);
+      
+      // API returns: { success: true, data: [...], pagination: {...} }
+      const agreementsData = response.data || [];
+      const pagination = response.pagination || { total: 0 };
+      
+      setAgreements(agreementsData);
+      const total = pagination.total || 0;
+      setTotalPages(Math.ceil(total / limit));
+      setTotalCount(total);
     } catch (error: any) {
+      console.error('Failed to load agreements:', error);
       toast.error(error?.message || 'Failed to load agreements');
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, limit]);
 
   useEffect(() => {
     fetchAgreements();
@@ -69,32 +76,24 @@ export default function AgreementsPage() {
     {
       key: 'agreement_number',
       label: 'Agreement #',
-      render: (row: Agreement) => (
+      render: (value: string, row: Agreement) => (
         <span className="font-semibold text-blue-600">
-          {row.agreement_number || `AGR-${String(row.id).padStart(5, '0')}`}
+          {row.agreement_number || `AGR-${String(row.id).slice(-5).toUpperCase()}`}
         </span>
       ),
     },
     {
-      key: 'customer',
+      key: 'customer_name',
       label: 'Customer',
-      render: (row: Agreement) =>
-        row.customer
-          ? `${row.customer.full_name_en} ${row.customer.full_name_ar}`
-          : '-',
     },
     {
-      key: 'vehicle',
+      key: 'vehicle_info',
       label: 'Vehicle',
-      render: (row: Agreement) =>
-        row.vehicle
-          ? `${row.vehicle.year} ${row.vehicle.make} ${row.vehicle.model}`
-          : '-',
     },
     {
       key: 'rental_start_datetime',
       label: 'Start Date',
-      render: (row: Agreement) =>
+      render: (value: string, row: Agreement) =>
         row.rental_start_datetime
           ? new Date(row.rental_start_datetime).toLocaleDateString()
           : '-',
@@ -102,7 +101,7 @@ export default function AgreementsPage() {
     {
       key: 'rental_end_datetime',
       label: 'End Date',
-      render: (row: Agreement) =>
+      render: (value: string, row: Agreement) =>
         row.rental_end_datetime
           ? new Date(row.rental_end_datetime).toLocaleDateString()
           : '-',
@@ -110,15 +109,15 @@ export default function AgreementsPage() {
     {
       key: 'estimated_amount',
       label: 'Amount',
-      render: (row: Agreement) =>
+      render: (value: number, row: Agreement) =>
         row.estimated_amount != null
-          ? `$${Number(row.estimated_amount).toFixed(2)}`
+          ? `AED ${Number(row.estimated_amount).toFixed(2)}`
           : '-',
     },
     {
       key: 'status',
       label: 'Status',
-      render: (row: Agreement) => <StatusBadge status={row.status} />,
+      render: (value: string, row: Agreement) => <StatusBadge status={row.status} />,
     },
   ];
 

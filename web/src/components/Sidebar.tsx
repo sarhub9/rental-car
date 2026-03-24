@@ -38,64 +38,64 @@ interface NavItem {
 const NAV_BY_ROLE: Record<string, NavItem[]> = {
   SUPER_ADMIN: [
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
-    { label: 'Agreements', href: '/dashboard/agreements', icon: <HiOutlineDocumentText size={20} /> },
-    { label: 'Customers', href: '/dashboard/customers', icon: <HiOutlineUsers size={20} /> },
-    { label: 'Vehicles', href: '/dashboard/vehicles', icon: <HiOutlineTruck size={20} /> },
-    { label: 'Invoices', href: '/dashboard/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
-    { label: 'Users', href: '/dashboard/users', icon: <HiOutlineUserGroup size={20} /> },
-    { label: 'Rate Plans', href: '/dashboard/rate-plans', icon: <HiOutlineTag size={20} /> },
-    { label: 'Maintenance', href: '/dashboard/maintenance', icon: <HiOutlineWrenchScrewdriver size={20} /> },
-    { label: 'Deposits', href: '/dashboard/deposits', icon: <HiOutlineBanknotes size={20} /> },
-    { label: 'Toll Fines', href: '/dashboard/toll-fines', icon: <HiOutlineExclamationTriangle size={20} /> },
-    { label: 'KPIs', href: '/dashboard/kpis', icon: <HiOutlineChartBar size={20} /> },
-    { label: 'Reports', href: '/dashboard/reports', icon: <HiOutlineDocumentChartBar size={20} /> },
-    { label: 'Audit Log', href: '/dashboard/audit-log', icon: <HiOutlineShieldCheck size={20} /> },
+    { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={20} /> },
+    { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={20} /> },
+    { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={20} /> },
+    { label: 'Invoices', href: '/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
+    { label: 'Users', href: '/admin/users', icon: <HiOutlineUserGroup size={20} /> },
+    { label: 'Rate Plans', href: '/rate-plans', icon: <HiOutlineTag size={20} /> },
+    { label: 'Maintenance', href: '/maintenance', icon: <HiOutlineWrenchScrewdriver size={20} /> },
+    { label: 'Deposits', href: '/accounts/deposits', icon: <HiOutlineBanknotes size={20} /> },
+    { label: 'Toll Fines', href: '/accounts/toll-fines', icon: <HiOutlineExclamationTriangle size={20} /> },
+    { label: 'KPIs', href: '/admin/kpis', icon: <HiOutlineChartBar size={20} /> },
+    { label: 'Reports', href: '/admin/reports', icon: <HiOutlineDocumentChartBar size={20} /> },
+    // { label: 'Audit Log', href: '/admin/audit-log', icon: <HiOutlineShieldCheck size={20} /> }, // TODO: Create page
   ],
   OWNER_ADMIN: [
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
-    { label: 'Agreements', href: '/dashboard/agreements', icon: <HiOutlineDocumentText size={20} /> },
-    { label: 'Customers', href: '/dashboard/customers', icon: <HiOutlineUsers size={20} /> },
-    { label: 'Vehicles', href: '/dashboard/vehicles', icon: <HiOutlineTruck size={20} /> },
-    { label: 'Invoices', href: '/dashboard/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
-    { label: 'Users', href: '/dashboard/users', icon: <HiOutlineUserGroup size={20} /> },
-    { label: 'Rate Plans', href: '/dashboard/rate-plans', icon: <HiOutlineTag size={20} /> },
-    { label: 'Maintenance', href: '/dashboard/maintenance', icon: <HiOutlineWrenchScrewdriver size={20} /> },
-    { label: 'Deposits', href: '/dashboard/deposits', icon: <HiOutlineBanknotes size={20} /> },
-    { label: 'Toll Fines', href: '/dashboard/toll-fines', icon: <HiOutlineExclamationTriangle size={20} /> },
-    { label: 'KPIs', href: '/dashboard/kpis', icon: <HiOutlineChartBar size={20} /> },
-    { label: 'Reports', href: '/dashboard/reports', icon: <HiOutlineDocumentChartBar size={20} /> },
-    { label: 'Audit Log', href: '/dashboard/audit-log', icon: <HiOutlineShieldCheck size={20} /> },
+    { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={20} /> },
+    { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={20} /> },
+    { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={20} /> },
+    { label: 'Invoices', href: '/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
+    { label: 'Users', href: '/admin/users', icon: <HiOutlineUserGroup size={20} /> },
+    { label: 'Rate Plans', href: '/rate-plans', icon: <HiOutlineTag size={20} /> },
+    { label: 'Maintenance', href: '/maintenance', icon: <HiOutlineWrenchScrewdriver size={20} /> },
+    { label: 'Deposits', href: '/accounts/deposits', icon: <HiOutlineBanknotes size={20} /> },
+    { label: 'Toll Fines', href: '/accounts/toll-fines', icon: <HiOutlineExclamationTriangle size={20} /> },
+    { label: 'KPIs', href: '/admin/kpis', icon: <HiOutlineChartBar size={20} /> },
+    { label: 'Reports', href: '/admin/reports', icon: <HiOutlineDocumentChartBar size={20} /> },
+    // { label: 'Audit Log', href: '/admin/audit-log', icon: <HiOutlineShieldCheck size={20} /> }, // TODO: Create page
   ],
   FRONT_DESK: [
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
-    { label: 'Agreements', href: '/dashboard/agreements', icon: <HiOutlineDocumentText size={20} /> },
-    { label: 'Customers', href: '/dashboard/customers', icon: <HiOutlineUsers size={20} /> },
-    { label: 'Vehicles', href: '/dashboard/vehicles', icon: <HiOutlineTruck size={20} /> },
+    { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={20} /> },
+    { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={20} /> },
+    { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={20} /> },
   ],
   FLEET_MANAGER: [
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
-    { label: 'Vehicles', href: '/dashboard/vehicles', icon: <HiOutlineTruck size={20} /> },
-    { label: 'Maintenance', href: '/dashboard/maintenance', icon: <HiOutlineWrenchScrewdriver size={20} /> },
+    { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={20} /> },
+    { label: 'Maintenance', href: '/maintenance', icon: <HiOutlineWrenchScrewdriver size={20} /> },
   ],
   ACCOUNTS: [
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
-    { label: 'Invoices', href: '/dashboard/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
-    { label: 'Payments', href: '/dashboard/payments', icon: <HiOutlineBanknotes size={20} /> },
-    { label: 'Deposits', href: '/dashboard/deposits', icon: <HiOutlineBanknotes size={20} /> },
-    { label: 'Toll Fines', href: '/dashboard/toll-fines', icon: <HiOutlineExclamationTriangle size={20} /> },
+    { label: 'Invoices', href: '/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
+    { label: 'Payments', href: '/accounts/payments', icon: <HiOutlineBanknotes size={20} /> },
+    { label: 'Deposits', href: '/accounts/deposits', icon: <HiOutlineBanknotes size={20} /> },
+    { label: 'Toll Fines', href: '/accounts/toll-fines', icon: <HiOutlineExclamationTriangle size={20} /> },
   ],
   DRIVER_RECOVERY: [
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
-    { label: 'My Tasks', href: '/dashboard/tasks', icon: <HiOutlineClipboardDocumentCheck size={20} /> },
+    { label: 'My Tasks', href: '/driver', icon: <HiOutlineClipboardDocumentCheck size={20} /> },
   ],
   RENTAL_CUSTOMER: [
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
-    { label: 'My Rentals', href: '/dashboard/my-rentals', icon: <HiOutlineClipboardDocumentList size={20} /> },
-    { label: 'Invoices', href: '/dashboard/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
-    { label: 'Disputes', href: '/dashboard/disputes', icon: <HiOutlineExclamationTriangle size={20} /> },
-    { label: 'Messages', href: '/dashboard/messages', icon: <HiOutlineChatBubbleLeftRight size={20} /> },
-    { label: 'Notifications', href: '/dashboard/notifications', icon: <HiOutlineBellAlert size={20} /> },
-    { label: 'Profile', href: '/dashboard/profile', icon: <HiOutlineUserCircle size={20} /> },
+    { label: 'My Rentals', href: '/portal/rentals', icon: <HiOutlineClipboardDocumentList size={20} /> },
+    { label: 'Invoices', href: '/portal/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
+    { label: 'Disputes', href: '/portal/disputes', icon: <HiOutlineExclamationTriangle size={20} /> },
+    { label: 'Messages', href: '/portal/messages', icon: <HiOutlineChatBubbleLeftRight size={20} /> },
+    { label: 'Notifications', href: '/portal/notifications', icon: <HiOutlineBellAlert size={20} /> },
+    { label: 'Profile', href: '/portal/profile', icon: <HiOutlineUserCircle size={20} /> },
   ],
 };
 
@@ -109,7 +109,7 @@ export function Sidebar() {
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
-    return pathname.startsWith(href);
+    return pathname === href || pathname.startsWith(href + '/');
   };
 
   const sidebarContent = (

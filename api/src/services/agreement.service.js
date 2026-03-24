@@ -270,6 +270,13 @@ class AgreementService {
     return await RentalAgreementModel.list(tenantId, filters);
   }
 
+  /**
+   * Count agreements
+   */
+  async count(tenantId, filters = {}) {
+    return await RentalAgreementModel.count(tenantId, filters);
+  }
+
   async activateAgreement(agreementId, tenantId, userId, ipAddress, userAgent) {
     const agreement = await RentalAgreementModel.findById(agreementId, tenantId);
 

@@ -113,31 +113,37 @@ class RentalAgreementModel {
    */
   async list(tenantId, filters = {}) {
     let query = `
-      SELECT * FROM rental_agreements
-      WHERE tenant_id = $1
+      SELECT
+        ra.*,
+        COALESCE(c.full_name_en, 'Unknown Customer') as customer_name,
+        COALESCE(v.year::text || ' ' || v.make || ' ' || v.model, 'Unknown Vehicle') as vehicle_info
+      FROM rental_agreements ra
+      LEFT JOIN customers c ON ra.customer_id = c.id AND c.tenant_id = ra.tenant_id
+      LEFT JOIN vehicles v ON ra.vehicle_id = v.id AND v.tenant_id = ra.tenant_id
+      WHERE ra.tenant_id = $1
     `;
     const values = [tenantId];
     let paramCount = 2;
 
     if (filters.status) {
-      query += ` AND status = $${paramCount}`;
+      query += ` AND ra.status = $${paramCount}`;
       values.push(filters.status);
       paramCount++;
     }
 
     if (filters.customer_id) {
-      query += ` AND customer_id = $${paramCount}`;
+      query += ` AND ra.customer_id = $${paramCount}`;
       values.push(filters.customer_id);
       paramCount++;
     }
 
     if (filters.vehicle_id) {
-      query += ` AND vehicle_id = $${paramCount}`;
+      query += ` AND ra.vehicle_id = $${paramCount}`;
       values.push(filters.vehicle_id);
       paramCount++;
     }
 
-    query += ` ORDER BY created_at DESC`;
+    query += ` ORDER BY ra.created_at DESC`;
 
     if (filters.limit) {
       query += ` LIMIT $${paramCount}`;
@@ -145,9 +151,10 @@ class RentalAgreementModel {
       paramCount++;
     }
 
-    if (filters.offset) {
+    if (filters.offset !== undefined && filters.offset !== null) {
       query += ` OFFSET $${paramCount}`;
       values.push(filters.offset);
+      paramCount++;
     }
 
     const result = await pool.query(query, values);
