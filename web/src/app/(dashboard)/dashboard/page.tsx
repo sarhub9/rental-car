@@ -57,7 +57,8 @@ function AdminDashboard() {
     (async () => {
       try {
         const res = await getAdminDashboard();
-        setData(res.data);
+        // Handle response - API returns data directly after our service fix
+        setData(res.data || res);
       } catch {
         toast.error('Failed to load dashboard data');
       } finally {

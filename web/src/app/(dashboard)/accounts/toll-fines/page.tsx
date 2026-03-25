@@ -38,7 +38,15 @@ export default function TollFinesPage() {
       if (attributionFilter !== 'ALL') params.attribution_status = attributionFilter;
 
       const res = await accountsService.getTollFines(params);
-      setFines(res.data ?? res);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(res)) {
+        setFines(res);
+      } else if (res.data) {
+        setFines(res.data);
+      } else {
+        setFines(res);
+      }
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to load toll fines');
     } finally {

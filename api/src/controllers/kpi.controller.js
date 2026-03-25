@@ -3,8 +3,10 @@ import KpiService from '../services/kpi.service.js';
 class KpiController {
   getFilters(query) {
     return {
-      date_from: query.date_from, date_to: query.date_to,
-      branch_id: query.branch_id, vehicle_category_id: query.category_id,
+      date_from: query.date_from || query.from,
+      date_to: query.date_to || query.to,
+      branch_id: query.branch_id,
+      vehicle_category_id: query.category_id,
     };
   }
 

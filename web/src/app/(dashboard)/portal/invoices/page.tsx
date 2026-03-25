@@ -26,8 +26,18 @@ export default function MyInvoicesPage() {
     try {
       setLoading(true);
       const res = await customerPortalService.getCustomerInvoices({ page, limit: 10 });
-      setInvoices(res.data?.data || res.data || []);
-      setTotalPages(res.data?.totalPages || 1);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(res)) {
+        setInvoices(res);
+        setTotalPages(1);
+      } else if (res.data) {
+        setInvoices(Array.isArray(res.data) ? res.data : res.data.data || []);
+        setTotalPages(res.data.totalPages || res.totalPages || 1);
+      } else {
+        setInvoices([]);
+        setTotalPages(1);
+      }
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to load invoices');
     } finally {

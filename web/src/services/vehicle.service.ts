@@ -40,12 +40,12 @@ export async function createVehicle(payload: CreateVehiclePayload) {
 
 export async function getVehicles(params?: VehicleListParams) {
   const response = await apiClient.get('/vehicles', { params });
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function getVehicleById(id: string) {
   const response = await apiClient.get(`/vehicles/${id}`);
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function updateVehicle(id: string, payload: Partial<CreateVehiclePayload>) {
@@ -55,7 +55,7 @@ export async function updateVehicle(id: string, payload: Partial<CreateVehiclePa
 
 export async function getAvailableVehicles(params: AvailableVehiclesParams) {
   const response = await apiClient.get('/vehicles/available', { params });
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export const vehicleService = {

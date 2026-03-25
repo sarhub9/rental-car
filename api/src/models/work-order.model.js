@@ -29,9 +29,12 @@ class WorkOrderModel {
 
   async findById(id, tenantId) {
     const query = `
-      SELECT wo.*, v.plate_number, v.make, v.model as vehicle_model, v.vehicle_number
+      SELECT wo.*,
+             row_to_json(v.*) as vehicle,
+             (SELECT COUNT(*) FROM work_orders WHERE vehicle_id = wo.vehicle_id AND tenant_id = wo.tenant_id) as vehicle_maintenance_count,
+             (SELECT MAX(completed_at) FROM work_orders WHERE vehicle_id = wo.vehicle_id AND tenant_id = wo.tenant_id AND status = 'completed') as vehicle_last_service
       FROM work_orders wo
-      JOIN vehicles v ON v.id = wo.vehicle_id
+      LEFT JOIN vehicles v ON v.id = wo.vehicle_id AND v.tenant_id = wo.tenant_id
       WHERE wo.id = $1 AND wo.tenant_id = $2
     `;
     const result = await pool.query(query, [id, tenantId]);

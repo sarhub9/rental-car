@@ -26,27 +26,27 @@ export interface CustomerListParams {
 
 export async function createCustomer(payload: CreateCustomerPayload) {
   const response = await apiClient.post('/customers', payload);
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function getCustomers(params?: CustomerListParams) {
   const response = await apiClient.get('/customers', { params });
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function searchCustomers(query: string) {
   const response = await apiClient.get('/customers/search', { params: { q: query } });
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function getCustomerById(id: string) {
   const response = await apiClient.get(`/customers/${id}`);
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function updateCustomer(id: string, payload: Partial<CreateCustomerPayload>) {
   const response = await apiClient.patch(`/customers/${id}`, payload);
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export const customerService = {

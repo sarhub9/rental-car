@@ -43,12 +43,15 @@ export default function DriverDashboardPage() {
         driverTaskService.getDriverTasks(),
       ]);
 
-      setTasks(tasksRes.data ?? tasksRes);
-      const s = statsRes.data ?? statsRes;
+      // Handle response - API returns array directly after our service fix
+      const tasksData = Array.isArray(tasksRes) ? tasksRes : (tasksRes.data || tasksRes);
+      const statsData = Array.isArray(statsRes) ? statsRes : (statsRes.data || statsRes);
+
+      setTasks(tasksData);
       setStats({
-        completedToday: s.completed_today ?? 0,
-        pending: s.pending ?? 0,
-        inProgress: s.in_progress ?? 0,
+        completedToday: statsData.completed_today ?? 0,
+        pending: statsData.pending ?? 0,
+        inProgress: statsData.in_progress ?? 0,
       });
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to load driver tasks');

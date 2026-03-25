@@ -43,10 +43,24 @@ export default function InvoicesPage() {
       if (statusFilter) params.status = statusFilter;
       if (searchQuery) params.search = searchQuery;
 
-      const response: PaginatedResponse<Invoice> = await invoiceService.getInvoices(params);
-      setInvoices(response.results);
-      setTotalPages(Math.ceil(response.count / 20));
-      setTotalCount(response.count);
+      const response = await invoiceService.getInvoices(params);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(response)) {
+        setInvoices(response);
+        setTotalCount(response.length);
+        setTotalPages(1);
+      } else if (response.results) {
+        // Fallback for paginated response
+        setInvoices(response.results);
+        setTotalPages(Math.ceil(response.count / 20));
+        setTotalCount(response.count);
+      } else {
+        // Direct data
+        setInvoices(response);
+        setTotalCount(response.length || 0);
+        setTotalPages(1);
+      }
     } catch (error) {
       toast.error('Failed to load invoices');
     } finally {

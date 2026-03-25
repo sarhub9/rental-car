@@ -44,7 +44,15 @@ export default function DepositsPage() {
       if (activeTab === 'eligible') params.eligible_for_release = 'true';
 
       const res = await accountsService.getDeposits(params);
-      setDeposits(res.data ?? res);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(res)) {
+        setDeposits(res);
+      } else if (res.data) {
+        setDeposits(res.data);
+      } else {
+        setDeposits(res);
+      }
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to load deposits');
     } finally {
@@ -141,53 +149,66 @@ export default function DepositsPage() {
       key: 'actions',
       label: 'Actions',
       render: (_: any, row: any) => {
-        if (row.status !== 'HELD') return null;
-        return (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedDeposit(row);
-                setShowUseModal(true);
-              }}
-              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
-              title="Use"
-            >
-              <HiOutlineBanknotes className="h-4 w-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRelease(row);
-              }}
-              className="p-1.5 text-green-600 hover:bg-green-50 rounded"
-              title="Release"
-            >
-              <HiOutlineShieldCheck className="h-4 w-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedDeposit(row);
-                setShowForfeitModal(true);
-              }}
-              className="p-1.5 text-red-600 hover:bg-red-50 rounded"
-              title="Forfeit"
-            >
-              <HiOutlineNoSymbol className="h-4 w-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRefund(row);
-              }}
-              className="p-1.5 text-purple-600 hover:bg-purple-50 rounded"
-              title="Refund"
-            >
-              <HiOutlineArrowUturnLeft className="h-4 w-4" />
-            </button>
-          </div>
-        );
+        // HELD deposits: can Use, Release, or Forfeit
+        if (row.status === 'HELD') {
+          return (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedDeposit(row);
+                  setShowUseModal(true);
+                }}
+                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                title="Use"
+              >
+                <HiOutlineBanknotes className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRelease(row);
+                }}
+                className="p-1.5 text-green-600 hover:bg-green-50 rounded"
+                title="Release"
+              >
+                <HiOutlineShieldCheck className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedDeposit(row);
+                  setShowForfeitModal(true);
+                }}
+                className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                title="Forfeit"
+              >
+                <HiOutlineNoSymbol className="h-4 w-4" />
+              </button>
+            </div>
+          );
+        }
+
+        // RELEASED deposits: can Refund
+        if (row.status === 'RELEASED') {
+          return (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRefund(row);
+                }}
+                className="p-1.5 text-purple-600 hover:bg-purple-50 rounded"
+                title="Refund"
+              >
+                <HiOutlineArrowUturnLeft className="h-4 w-4" />
+              </button>
+            </div>
+          );
+        }
+
+        // USED, FORFEITED, REFUNDED: no actions available
+        return null;
       },
     },
   ];

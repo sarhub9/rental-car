@@ -26,8 +26,18 @@ export default function DisputesPage() {
     try {
       setLoading(true);
       const res = await customerPortalService.getCustomerDisputes();
-      setDisputes(res.data?.data || res.data || []);
-      setTotalPages(res.data?.totalPages || 1);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(res)) {
+        setDisputes(res);
+        setTotalPages(1);
+      } else if (res.data) {
+        setDisputes(Array.isArray(res.data) ? res.data : res.data.data || []);
+        setTotalPages(res.data.totalPages || res.totalPages || 1);
+      } else {
+        setDisputes([]);
+        setTotalPages(1);
+      }
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to load disputes');
     } finally {

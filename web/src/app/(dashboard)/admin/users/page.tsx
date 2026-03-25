@@ -67,10 +67,24 @@ export default function UsersPage() {
       const params: Record<string, any> = { page, page_size: 20 };
       if (searchQuery) params.search = searchQuery;
 
-      const response: PaginatedResponse<StaffUser> = await adminService.getUsers(params);
-      setUsers(response.results);
-      setTotalPages(Math.ceil(response.count / 20));
-      setTotalCount(response.count);
+      const response = await adminService.getUsers(params);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(response)) {
+        setUsers(response);
+        setTotalCount(response.length);
+        setTotalPages(1);
+      } else if (response.results) {
+        // Fallback for paginated response
+        setUsers(response.results);
+        setTotalPages(Math.ceil(response.count / 20));
+        setTotalCount(response.count);
+      } else {
+        // Direct data array
+        setUsers(response);
+        setTotalCount(response.length);
+        setTotalPages(1);
+      }
     } catch (error) {
       toast.error('Failed to load users');
     } finally {

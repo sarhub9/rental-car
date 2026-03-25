@@ -67,9 +67,23 @@ export default function CustomersPage() {
       } else {
         res = await customerService.getCustomers({ page, limit: 10 });
       }
-      setCustomers(res.data);
-      setTotalPages(res.totalPages);
-      setTotalCount(res.total);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(res)) {
+        setCustomers(res);
+        setTotalCount(res.length);
+        setTotalPages(1);
+      } else if (res.data) {
+        // Fallback for paginated response
+        setCustomers(res.data);
+        setTotalPages(res.totalPages || 1);
+        setTotalCount(res.total || res.data.length);
+      } else {
+        // Direct data
+        setCustomers(res);
+        setTotalCount(res.length || 0);
+        setTotalPages(1);
+      }
     } catch {
       toast.error('Failed to load customers');
     } finally {

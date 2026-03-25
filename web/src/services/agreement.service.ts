@@ -37,22 +37,23 @@ export interface ReturnPayload {
 
 export async function createAgreement(payload: CreateAgreementPayload) {
   const response = await apiClient.post('/agreements', payload);
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function getAgreements(params?: AgreementListParams) {
   const response = await apiClient.get('/agreements', { params });
+  // Return full response with pagination
   return response.data;
 }
 
 export async function getAgreementById(id: string) {
   const response = await apiClient.get(`/agreements/${id}`);
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function updateAgreement(id: string, payload: Partial<CreateAgreementPayload>) {
   const response = await apiClient.patch(`/agreements/${id}`, payload);
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function checkoutAgreement(agreementId: string, payload: CheckoutPayload | FormData) {
@@ -73,7 +74,7 @@ export async function checkoutAgreement(agreementId: string, payload: CheckoutPa
   const response = await apiClient.post(`/agreements/${agreementId}/checkout`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function returnAgreement(agreementId: string, payload: ReturnPayload | FormData) {
@@ -97,17 +98,17 @@ export async function returnAgreement(agreementId: string, payload: ReturnPayloa
   const response = await apiClient.post(`/agreements/${agreementId}/return`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function getAgreementEvidence(agreementId: string) {
   const response = await apiClient.get(`/agreements/${agreementId}/evidence`);
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export async function getAgreementCharges(agreementId: string) {
   const response = await apiClient.get(`/agreements/${agreementId}/charges`);
-  return response.data;
+  return response.data.data || response.data;
 }
 
 export const agreementService = {

@@ -100,8 +100,14 @@ class RentalAgreementModel {
    */
   async findById(id, tenantId) {
     const query = `
-      SELECT * FROM rental_agreements
-      WHERE id = $1 AND tenant_id = $2
+      SELECT
+        ra.*,
+        row_to_json(c.*) as customer,
+        row_to_json(v.*) as vehicle
+      FROM rental_agreements ra
+      LEFT JOIN customers c ON ra.customer_id = c.id AND c.tenant_id = ra.tenant_id
+      LEFT JOIN vehicles v ON ra.vehicle_id = v.id AND v.tenant_id = ra.tenant_id
+      WHERE ra.id = $1 AND ra.tenant_id = $2
     `;
 
     const result = await pool.query(query, [id, tenantId]);
@@ -159,6 +165,40 @@ class RentalAgreementModel {
 
     const result = await pool.query(query, values);
     return result.rows;
+  }
+
+  /**
+   * Count agreements with filters
+   */
+  async count(tenantId, filters = {}) {
+    let query = `
+      SELECT COUNT(*) as count
+      FROM rental_agreements
+      WHERE tenant_id = $1
+    `;
+    const values = [tenantId];
+    let paramCount = 2;
+
+    if (filters.status) {
+      query += ` AND status = $${paramCount}`;
+      values.push(filters.status);
+      paramCount++;
+    }
+
+    if (filters.customer_id) {
+      query += ` AND customer_id = $${paramCount}`;
+      values.push(filters.customer_id);
+      paramCount++;
+    }
+
+    if (filters.vehicle_id) {
+      query += ` AND vehicle_id = $${paramCount}`;
+      values.push(filters.vehicle_id);
+      paramCount++;
+    }
+
+    const result = await pool.query(query, values);
+    return parseInt(result.rows[0].count);
   }
 
   /**

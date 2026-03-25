@@ -22,7 +22,15 @@ export default function RatePlansPage() {
     try {
       setLoading(true);
       const res = await ratePlanService.getRatePlans();
-      setRatePlans(res.data ?? res);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(res)) {
+        setRatePlans(res);
+      } else if (res.data) {
+        setRatePlans(res.data);
+      } else {
+        setRatePlans(res);
+      }
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to load rate plans');
     } finally {

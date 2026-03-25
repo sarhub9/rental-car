@@ -40,8 +40,18 @@ export default function MyRentalsPage() {
         page,
         limit: 10,
       });
-      setAgreements(res.data?.data || res.data || []);
-      setTotalPages(res.data?.totalPages || 1);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(res)) {
+        setAgreements(res);
+        setTotalPages(1);
+      } else if (res.data) {
+        setAgreements(Array.isArray(res.data) ? res.data : res.data.data || []);
+        setTotalPages(res.data.totalPages || res.totalPages || 1);
+      } else {
+        setAgreements([]);
+        setTotalPages(1);
+      }
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to load rentals');
     } finally {

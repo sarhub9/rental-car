@@ -43,7 +43,15 @@ export default function MaintenancePage() {
       if (vehicleFilter) params.vehicle_id = vehicleFilter;
 
       const res = await accountsService.getMaintenanceRecords(params);
-      setWorkOrders(res.data ?? res);
+
+      // Handle response - API returns array directly after our service fix
+      if (Array.isArray(res)) {
+        setWorkOrders(res);
+      } else if (res.data) {
+        setWorkOrders(res.data);
+      } else {
+        setWorkOrders(res);
+      }
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to load work orders');
     } finally {

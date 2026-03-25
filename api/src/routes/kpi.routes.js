@@ -6,6 +6,7 @@ const router = express.Router();
 router.use(authenticate);
 router.use(requireRole('OWNER_ADMIN', 'SUPER_ADMIN'));
 
+router.get('/', (req, res, next) => KpiController.getDashboardSummary(req, res, next));
 router.get('/fleet', (req, res, next) => KpiController.getFleetKpis(req, res, next));
 router.get('/revenue', (req, res, next) => KpiController.getRevenueKpis(req, res, next));
 router.get('/risk', (req, res, next) => KpiController.getRiskKpis(req, res, next));
