@@ -21,6 +21,7 @@ import { vehicleService } from '@/services/vehicle.service';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Modal } from '@/components/Modal';
 import { SearchInput } from '@/components/SearchInput';
+import { cleanPayload, sanitizeUuidFields, UUID_REGEX } from '@/lib/clean-payload';
 import type { Customer, Vehicle } from '@/types';
 
 const STEPS = [
@@ -157,20 +158,24 @@ export default function CreateAgreementPage() {
     if (!selectedCustomer || !selectedVehicle) return;
     try {
       setSubmitting(true);
-      const payload = {
-        customer_id: selectedCustomer.id,
-        vehicle_id: selectedVehicle.id,
+      const rawPayload = {
+        customer_id: selectedCustomer!.id,
+        vehicle_id: selectedVehicle!.id,
         rental_start_datetime: rentalStartDatetime,
         rental_end_datetime: rentalEndDatetime,
         daily_rate: dailyRate,
         weekly_rate: weeklyRate,
         estimated_amount: pricing.amount,
       };
+      const payload = cleanPayload(rawPayload) as Record<string, unknown>;
+      sanitizeUuidFields(payload, ['customer_id', 'vehicle_id']);
       const result = await agreementService.createAgreement(payload);
       toast.success('Agreement created successfully');
       router.push(`/agreements/${result.id || result.data?.id}`);
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to create agreement');
+      const details = error?.response?.data?.details;
+      const msg = details?.map((d: any) => d.message).join(', ') || error?.response?.data?.message || error?.message || 'Failed to create agreement';
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { vehicleService } from '@/services/vehicle.service';
 import toast from 'react-hot-toast';
 import { HiArrowLeft } from 'react-icons/hi2';
+import { cleanPayload, sanitizeUuidFields } from '@/lib/clean-payload';
 
 const TRANSMISSION_TYPES = ['AUTOMATIC', 'MANUAL'];
 const FUEL_TYPES = ['PETROL', 'DIESEL', 'HYBRID', 'ELECTRIC'];
@@ -22,7 +23,6 @@ export default function CreateVehiclePage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    vehicle_number: '',
     make: '',
     model: '',
     year: new Date().getFullYear(),
@@ -50,17 +50,24 @@ export default function CreateVehiclePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.vehicle_number || !formData.make || !formData.model || !formData.year || !formData.plate_number || !formData.plate_emirate) {
+    if (!formData.make || !formData.model || !formData.year || !formData.plate_number || !formData.plate_emirate) {
       toast.error('Please fill in all required fields');
       return;
     }
+
+    // Clean payload - remove empty strings, format dates as ISO strings
+    const payload = cleanPayload(formData) as Record<string, unknown>;
+    sanitizeUuidFields(payload, ['category_id']);
+
     setSubmitting(true);
     try {
-      await vehicleService.createVehicle(formData);
+      await vehicleService.createVehicle(payload);
       toast.success('Vehicle created successfully');
       router.push('/vehicles');
-    } catch {
-      toast.error('Failed to create vehicle');
+    } catch (err: any) {
+      const details = err?.response?.data?.details;
+      const msg = details?.map((d: any) => d.message).join(', ') || err?.response?.data?.message || 'Failed to create vehicle';
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -81,18 +88,6 @@ export default function CreateVehiclePage() {
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Vehicle Number */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Number *</label>
-            <input
-              type="text"
-              name="vehicle_number"
-              value={formData.vehicle_number}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
 
           {/* Make */}
           <div>

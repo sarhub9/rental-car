@@ -16,6 +16,7 @@ import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { Spinner } from '@/components/Spinner';
+import { cleanPayload } from '@/lib/clean-payload';
 
 type DepositStatus = 'ALL' | 'HELD' | 'USED' | 'RELEASED' | 'FORFEITED' | 'REFUNDED';
 
@@ -68,7 +69,8 @@ export default function DepositsPage() {
     if (!selectedDeposit || !useAmount) return;
     try {
       setSubmitting(true);
-      await accountsService.useDeposit(selectedDeposit.id, Number(useAmount));
+      const payload = cleanPayload({ amount: Number(useAmount) });
+      await accountsService.useDeposit(selectedDeposit.id, payload.amount as number);
       toast.success('Deposit used successfully');
       setShowUseModal(false);
       setUseAmount('');
@@ -95,7 +97,8 @@ export default function DepositsPage() {
     if (!selectedDeposit) return;
     try {
       setSubmitting(true);
-      await accountsService.forfeitDeposit(selectedDeposit.id, forfeitJustification);
+      const payload = cleanPayload({ justification: forfeitJustification });
+      await accountsService.forfeitDeposit(selectedDeposit.id, payload.justification as string);
       toast.success('Deposit forfeited');
       setShowForfeitModal(false);
       setForfeitJustification('');

@@ -14,6 +14,7 @@ import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { Spinner } from '@/components/Spinner';
+import { cleanPayload, sanitizeUuidFields } from '@/lib/clean-payload';
 
 export default function MaintenancePage() {
   const router = useRouter();
@@ -66,13 +67,16 @@ export default function MaintenancePage() {
   const handleCreate = async () => {
     try {
       setSubmitting(true);
-      await accountsService.createMaintenance({
+      let payload: Record<string, unknown> = {
         vehicle_id: createForm.vehicle_id,
         type: createForm.type,
         description: createForm.description,
         estimated_cost: createForm.estimated_cost ? Number(createForm.estimated_cost) : undefined,
         scheduled_date: createForm.scheduled_date || undefined,
-      });
+      };
+      const cleaned = cleanPayload(payload) as Record<string, unknown>;
+      sanitizeUuidFields(cleaned, ['vehicle_id']);
+      await accountsService.createMaintenance(cleaned as any);
       toast.success('Work order created');
       setShowCreateModal(false);
       setCreateForm({

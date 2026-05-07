@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { HiOutlineArrowLeft } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { cleanPayload, sanitizeUuidFields } from '@/lib/clean-payload';
 
 export default function CreateDisputePage() {
   const router = useRouter();
@@ -57,11 +58,14 @@ export default function CreateDisputePage() {
 
     try {
       setSubmitting(true);
-      await customerPortalService.createDispute({
+      const rawPayload = {
         agreement_id: form.agreement_id,
         subject: form.subject.trim(),
         description: form.description.trim(),
-      });
+      };
+      const payload = cleanPayload(rawPayload) as Record<string, unknown>;
+      sanitizeUuidFields(payload, ['agreement_id']);
+      await customerPortalService.createDispute(payload as any);
       toast.success('Dispute raised successfully');
       router.push('/portal/disputes');
     } catch (err: any) {

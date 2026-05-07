@@ -10,6 +10,7 @@ import {
 } from 'react-icons/hi2';
 import { ratePlanService } from '@/services/rate-plan.service';
 import { PageHeader } from '@/components/PageHeader';
+import { cleanPayload } from '@/lib/clean-payload';
 
 export default function CreateRatePlanPage() {
   const router = useRouter();
@@ -78,7 +79,7 @@ export default function CreateRatePlanPage() {
         }
       }
 
-      const payload: any = {
+      const rawPayload: Record<string, unknown> = {
         name: form.name,
         daily_rate: form.daily_rate ? Number(form.daily_rate) : undefined,
         weekly_rate: form.weekly_rate ? Number(form.weekly_rate) : undefined,
@@ -93,6 +94,7 @@ export default function CreateRatePlanPage() {
           .filter((a) => a.name.trim())
           .map((a) => ({ name: a.name, price: a.price ? Number(a.price) : 0 })),
       };
+      const payload = cleanPayload(rawPayload) as Record<string, unknown>;
 
       await ratePlanService.createRatePlan(payload);
       toast.success('Rate plan created');

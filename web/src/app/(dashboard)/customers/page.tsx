@@ -8,6 +8,7 @@ import { Modal } from '@/components/Modal';
 import { Customer } from '@/types';
 import toast from 'react-hot-toast';
 import { HiPlus, HiMagnifyingGlass, HiPencilSquare, HiXMark } from 'react-icons/hi2';
+import { cleanPayload, sanitizeUuidFields } from '@/lib/clean-payload';
 
 const EMIRATES = [
   'Abu Dhabi',
@@ -108,7 +109,8 @@ export default function CustomersPage() {
     }
     setSubmitting(true);
     try {
-      await customerService.createCustomer(formData);
+      const payload = cleanPayload(formData) as Record<string, unknown>;
+      await customerService.createCustomer(payload as any);
       toast.success('Customer created successfully');
       setShowAddModal(false);
       setFormData(initialFormState);
@@ -125,7 +127,8 @@ export default function CustomersPage() {
     if (!selectedCustomer) return;
     setSubmitting(true);
     try {
-      await customerService.updateCustomer(selectedCustomer.id, formData);
+      const payload = cleanPayload(formData) as Record<string, unknown>;
+      await customerService.updateCustomer(selectedCustomer.id, payload as any);
       toast.success('Customer updated successfully');
       setIsEditing(false);
       setShowDetailModal(false);
