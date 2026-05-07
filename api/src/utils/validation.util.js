@@ -143,7 +143,6 @@ export const photoMetadataSchema = Joi.object({
 export const staffLoginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(8).required(),
-  tenant_id: Joi.string().uuid().required(),
 });
 
 export const forgotPasswordSchema = Joi.object({
@@ -177,6 +176,16 @@ export const updateStaffUserSchema = Joi.object({
     'OWNER_ADMIN', 'FRONT_DESK', 'FLEET_MANAGER', 'ACCOUNTS', 'DRIVER_RECOVERY'
   ),
 }).min(1);
+
+// ============================================================================
+// Feature Request Schemas
+// ============================================================================
+export const featureRequestSchema = Joi.object({
+  feature_title: Joi.string().max(200).required(),
+  message: Joi.string().max(2000).required(),
+  company_name: Joi.string().max(200),
+  contact_email: Joi.string().email().max(200),
+});
 
 // ============================================================================
 // Admin Settings Schema
@@ -274,3 +283,26 @@ export const validate = (schema) => {
     next();
   };
 };
+
+// ===========================================================================
+// Company Registration & Management Schemas
+// ===========================================================================
+export const companyRegisterSchema = Joi.object({
+  name: Joi.string().max(200).required(),
+  contact_email: Joi.string().email().max(200).required(),
+  phone_number: Joi.string().max(20).required(),
+  password: Joi.string().min(8).max(128).required(),
+});
+
+export const updateCompanySchema = Joi.object({
+  name: Joi.string().max(200),
+  contact_email: Joi.string().email().max(200),
+  phone_number: Joi.string().max(20),
+  address: Joi.string().max(500).allow(null, ''),
+  logo_url: Joi.string().uri().allow(null, ''),
+  trade_license_number: Joi.string().max(100).allow(null, ''),
+}).min(1);
+
+export const subscribeSchema = Joi.object({
+  plan_id: Joi.string().uuid().required(),
+});

@@ -24,7 +24,6 @@ export default function LoginPage() {
 
   // Customer login state
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [customerTenantId, setCustomerTenantId] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpTimer, setOtpTimer] = useState(0);
@@ -35,7 +34,6 @@ export default function LoginPage() {
   // Staff login state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [staffTenantId, setStaffTenantId] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
 
   // Redirect if already authenticated
@@ -71,15 +69,11 @@ export default function LoginPage() {
       toast.error('Please enter your phone number');
       return;
     }
-    if (!customerTenantId.trim()) {
-      toast.error('Please enter the Tenant ID');
-      return;
-    }
 
     setRequestingOtp(true);
     try {
       const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `+971${phoneNumber}`;
-      await requestOtp(fullPhone, customerTenantId.trim());
+      await requestOtp(fullPhone, '');
       setOtpSent(true);
       setOtpTimer(120); // 2-minute countdown
       toast.success('OTP sent to your phone number');
@@ -97,7 +91,7 @@ export default function LoginPage() {
     } finally {
       setRequestingOtp(false);
     }
-  }, [phoneNumber, customerTenantId, requestOtp]);
+  }, [phoneNumber, requestOtp]);
 
   const handleVerifyOtp = useCallback(async () => {
     if (!otpCode.trim() || otpCode.length !== 6) {
@@ -108,7 +102,7 @@ export default function LoginPage() {
     setVerifyingOtp(true);
     try {
       const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `+971${phoneNumber}`;
-      await verifyOtp(fullPhone, customerTenantId.trim(), otpCode.trim());
+      await verifyOtp(fullPhone, '', otpCode.trim());
       toast.success('Login successful!');
       router.replace('/dashboard');
     } catch (err: any) {
@@ -120,19 +114,19 @@ export default function LoginPage() {
     } finally {
       setVerifyingOtp(false);
     }
-  }, [otpCode, phoneNumber, customerTenantId, verifyOtp, router]);
+  }, [otpCode, phoneNumber, verifyOtp, router]);
 
   const handleStaffLogin = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!email.trim() || !password.trim() || !staffTenantId.trim()) {
+      if (!email.trim() || !password.trim()) {
         toast.error('Please fill in all fields');
         return;
       }
 
       setLoggingIn(true);
       try {
-        await staffLogin(email.trim(), password, staffTenantId.trim());
+        await staffLogin(email.trim(), password, '');
         toast.success('Login successful!');
         router.replace('/dashboard');
       } catch (err: any) {
@@ -145,7 +139,7 @@ export default function LoginPage() {
         setLoggingIn(false);
       }
     },
-    [email, password, staffTenantId, staffLogin, router]
+    [email, password, staffLogin, router]
   );
 
   if (isLoading) {
@@ -231,25 +225,6 @@ export default function LoginPage() {
                           }
                           placeholder="5XXXXXXXX"
                           className="w-full pl-[5.5rem] pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#0E7490]/20 focus:border-[#0E7490] outline-none transition-all"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Tenant ID */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Tenant ID
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <HiOutlineBuildingOffice2 className="w-5 h-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          value={customerTenantId}
-                          onChange={(e) => setCustomerTenantId(e.target.value)}
-                          placeholder="Enter tenant ID"
-                          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#0E7490]/20 focus:border-[#0E7490] outline-none transition-all"
                         />
                       </div>
                     </div>
@@ -412,25 +387,6 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Tenant ID */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Tenant ID
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <HiOutlineBuildingOffice2 className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      value={staffTenantId}
-                      onChange={(e) => setStaffTenantId(e.target.value)}
-                      placeholder="Enter tenant ID"
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#0E7490]/20 focus:border-[#0E7490] outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
                 {/* Login Button */}
                 <button
                   type="submit"
@@ -454,6 +410,12 @@ export default function LoginPage() {
         {/* Footer */}
         <p className="text-center text-white/40 text-xs mt-6">
           CarRental ERP &mdash; Car Rental Management Platform
+        </p>
+        <p className="text-center text-white/60 text-sm mt-2">
+          Want to start your own rental business?{' '}
+          <a href="/register" className="text-white font-semibold hover:underline">
+            Register your company
+          </a>
         </p>
       </div>
     </div>

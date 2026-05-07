@@ -11,12 +11,12 @@ const router = express.Router();
 const requestOtpSchema = Joi.object({
   phone_number: Joi.string().pattern(/^\+?[0-9]{7,15}$/).required()
     .messages({ 'string.pattern.base': 'Phone number must be 7-15 digits, optionally starting with +' }),
-  tenant_id: Joi.string().uuid().required(),
+  tenant_id: Joi.string().uuid().optional(),
 });
 
 const verifyOtpSchema = Joi.object({
   phone_number: Joi.string().pattern(/^\+?[0-9]{7,15}$/).required(),
-  tenant_id: Joi.string().uuid().required(),
+  tenant_id: Joi.string().uuid().optional(),
   otp_code: Joi.string().length(6).pattern(/^[0-9]+$/).required()
     .messages({ 'string.pattern.base': 'OTP must be exactly 6 digits' }),
   device_info: Joi.object().optional(),

@@ -21,13 +21,11 @@ import { Button } from '@/components/Button';
 import type { StaffUser, PaginatedResponse } from '@/types';
 
 const ROLES = [
-  { value: 'ADMIN', label: 'Admin', color: 'bg-red-100 text-red-800' },
-  { value: 'MANAGER', label: 'Manager', color: 'bg-purple-100 text-purple-800' },
-  { value: 'SUPERVISOR', label: 'Supervisor', color: 'bg-blue-100 text-blue-800' },
-  { value: 'ACCOUNTANT', label: 'Accountant', color: 'bg-green-100 text-green-800' },
-  { value: 'SALES_AGENT', label: 'Sales Agent', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'FLEET_COORDINATOR', label: 'Fleet Coordinator', color: 'bg-indigo-100 text-indigo-800' },
-  { value: 'VIEWER', label: 'Viewer', color: 'bg-gray-100 text-gray-800' },
+  { value: 'OWNER_ADMIN', label: 'Owner Admin', color: 'bg-red-100 text-red-800' },
+  { value: 'FRONT_DESK', label: 'Front Desk', color: 'bg-blue-100 text-blue-800' },
+  { value: 'FLEET_MANAGER', label: 'Fleet Manager', color: 'bg-indigo-100 text-indigo-800' },
+  { value: 'ACCOUNTS', label: 'Accounts', color: 'bg-green-100 text-green-800' },
+  { value: 'DRIVER_RECOVERY', label: 'Driver / Recovery', color: 'bg-yellow-100 text-yellow-800' },
 ];
 
 function getRoleBadge(role: string) {
@@ -45,7 +43,7 @@ const INITIAL_FORM = {
   full_name: '',
   email: '',
   phone_number: '',
-  role: 'VIEWER',
+  role: 'FRONT_DESK',
   password: '',
 };
 
@@ -117,7 +115,9 @@ export default function UsersPage() {
       setForm(INITIAL_FORM);
       fetchUsers();
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to create user');
+      toast.error(
+        error?.response?.data?.message || error?.response?.data?.error || 'Failed to create user'
+      );
     } finally {
       setSubmitting(false);
     }

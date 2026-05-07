@@ -6,7 +6,7 @@ const router = express.Router();
 
 /**
  * @route   POST /v1/auth/staff/login
- * @desc    Staff email/password login
+ * @desc    Staff email/password login (tenant_id optional)
  * @access  Public
  */
 router.post('/login', validate(staffLoginSchema), StaffAuthController.login);

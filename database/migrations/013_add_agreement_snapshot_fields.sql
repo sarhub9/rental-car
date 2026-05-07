@@ -45,7 +45,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER prevent_agreement_snapshot_updates
-  BEFORE UPDATE ON rental_agreements
-  FOR EACH ROW
-  EXECUTE FUNCTION prevent_snapshot_updates();
+DO $$ BEGIN
+  CREATE TRIGGER prevent_agreement_snapshot_updates
+    BEFORE UPDATE ON rental_agreements
+    FOR EACH ROW
+    EXECUTE FUNCTION prevent_snapshot_updates();
+EXCEPTION WHEN duplicate_object THEN null; END $$;

@@ -16,11 +16,18 @@ class AuthController {
     try {
       const { phone_number, tenant_id } = req.validatedBody;
 
+      // If tenant_id not provided, try to find it from existing user/customer
+      let resolvedTenantId = tenant_id;
+      if (!resolvedTenantId) {
+        const user = await UserModel.findByPhoneGlobal(phone_number);
+        if (user) resolvedTenantId = user.tenant_id;
+      }
+
       // Verify customer exists and create user if needed
-      await UserService.findOrCreateCustomerUser(phone_number, tenant_id);
+      await UserService.findOrCreateCustomerUser(phone_number, resolvedTenantId || null);
 
       // Generate and send OTP
-      const { expiresAt } = await OtpService.generateOtp(phone_number, tenant_id, 'LOGIN');
+      const { expiresAt } = await OtpService.generateOtp(phone_number, resolvedTenantId || null, 'LOGIN');
 
       const response = {
         success: true,
@@ -63,8 +70,15 @@ class AuthController {
     try {
       const { phone_number, tenant_id, otp_code } = req.validatedBody;
 
+      // If tenant_id not provided, try to find it from existing user
+      let resolvedTenantId = tenant_id;
+      if (!resolvedTenantId) {
+        const user = await UserModel.findByPhoneGlobal(phone_number);
+        if (user) resolvedTenantId = user.tenant_id;
+      }
+
       // Verify the OTP
-      const verification = await OtpService.verifyOtp(phone_number, tenant_id, otp_code, 'LOGIN');
+      const verification = await OtpService.verifyOtp(phone_number, resolvedTenantId || null, otp_code, 'LOGIN');
 
       if (!verification.valid) {
         return res.status(401).json({

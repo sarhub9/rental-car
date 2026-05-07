@@ -2,8 +2,13 @@
 -- Feature: 006-erp-core-upgrade (US6: Maintenance Module)
 -- Constitution: XI. Availability & Booking Integrity — vehicles blocked when maintenance overdue
 
-CREATE TYPE work_order_type AS ENUM ('scheduled', 'unscheduled', 'recall', 'inspection');
-CREATE TYPE work_order_status AS ENUM ('open', 'in_progress', 'completed', 'cancelled');
+DO $$ BEGIN
+  CREATE TYPE work_order_type AS ENUM ('scheduled', 'unscheduled', 'recall', 'inspection');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE work_order_status AS ENUM ('open', 'in_progress', 'completed', 'cancelled');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE IF NOT EXISTS work_orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -37,8 +42,10 @@ CREATE INDEX IF NOT EXISTS idx_wo_vehicle ON work_orders(vehicle_id);
 CREATE INDEX IF NOT EXISTS idx_wo_status ON work_orders(tenant_id, status);
 CREATE INDEX IF NOT EXISTS idx_wo_scheduled ON work_orders(tenant_id, scheduled_date);
 
-CREATE TRIGGER trg_wo_updated_at
-  BEFORE UPDATE ON work_orders
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER trg_wo_updated_at
+    BEFORE UPDATE ON work_orders
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 COMMENT ON TABLE work_orders IS 'Vehicle maintenance work orders with cost/downtime tracking and vehicle blocking';

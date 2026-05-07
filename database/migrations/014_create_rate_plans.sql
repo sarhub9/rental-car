@@ -33,8 +33,10 @@ CREATE INDEX IF NOT EXISTS idx_rate_plans_tenant ON rate_plans(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_rate_plans_active ON rate_plans(tenant_id, is_active);
 CREATE INDEX IF NOT EXISTS idx_rate_plans_name ON rate_plans(tenant_id, name);
 
-CREATE TRIGGER trg_rate_plans_updated_at
-  BEFORE UPDATE ON rate_plans
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER trg_rate_plans_updated_at
+    BEFORE UPDATE ON rate_plans
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 COMMENT ON TABLE rate_plans IS 'Versioned rate plan templates. Changes create new versions; existing agreements use snapshot values.';

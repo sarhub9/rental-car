@@ -14,7 +14,8 @@ class StaffAuthService {
    * Staff login with email and password
    */
   async login(email, password, tenantId) {
-    const user = await UserModel.findByEmail(email, tenantId);
+    // If tenantId provided, use it; otherwise lookup by email only
+    const user = await UserModel.findByEmail(email, tenantId || null);
 
     if (!user) {
       const error = new Error('Invalid email or password');
@@ -110,7 +111,7 @@ class StaffAuthService {
    * Generate a password reset token
    */
   async generateResetToken(email, tenantId) {
-    const user = await UserModel.findByEmail(email, tenantId);
+    const user = await UserModel.findByEmail(email, tenantId || null);
 
     if (!user || user.role === 'RENTAL_CUSTOMER') {
       // Don't reveal whether user exists

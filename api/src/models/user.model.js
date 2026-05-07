@@ -100,8 +100,21 @@ class UserModel {
   }
 
   async findByEmail(email, tenantId) {
-    const query = 'SELECT * FROM users WHERE email = $1 AND tenant_id = $2';
-    const result = await pool.query(query, [email, tenantId]);
+    let query, values;
+    if (tenantId) {
+      query = 'SELECT * FROM users WHERE email = $1 AND tenant_id = $2';
+      values = [email, tenantId];
+    } else {
+      query = 'SELECT * FROM users WHERE email = $1';
+      values = [email];
+    }
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  }
+
+  async findByPhoneGlobal(phoneNumber) {
+    const query = 'SELECT * FROM users WHERE phone_number = $1 LIMIT 1';
+    const result = await pool.query(query, [phoneNumber]);
     return result.rows[0];
   }
 

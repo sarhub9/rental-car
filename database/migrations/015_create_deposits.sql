@@ -2,7 +2,9 @@
 -- Feature: 006-erp-core-upgrade (US4: Deposit Lifecycle)
 -- Constitution: V. Financial Control — deposits are liabilities until settled
 
-CREATE TYPE deposit_status AS ENUM ('HELD', 'USED', 'RELEASED', 'FORFEITED', 'REFUNDED');
+DO $$ BEGIN
+  CREATE TYPE deposit_status AS ENUM ('HELD', 'USED', 'RELEASED', 'FORFEITED', 'REFUNDED');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE IF NOT EXISTS deposits (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -36,8 +38,10 @@ CREATE INDEX IF NOT EXISTS idx_deposits_customer ON deposits(customer_id);
 CREATE INDEX IF NOT EXISTS idx_deposits_status ON deposits(tenant_id, status);
 CREATE INDEX IF NOT EXISTS idx_deposits_release_eligible ON deposits(tenant_id, status, release_eligible_at);
 
-CREATE TRIGGER trg_deposits_updated_at
-  BEFORE UPDATE ON deposits
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER trg_deposits_updated_at
+    BEFORE UPDATE ON deposits
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 COMMENT ON TABLE deposits IS 'Deposit lifecycle: HELD → USED | RELEASED | FORFEITED → REFUNDED. Liabilities until settled.';

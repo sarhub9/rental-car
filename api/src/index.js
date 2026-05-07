@@ -21,6 +21,8 @@ import tollFineRoutes from './routes/toll-fine.routes.js';
 import maintenanceRoutes from './routes/maintenance.routes.js';
 import systemAuditLogRoutes from './routes/system-audit-log.routes.js';
 import kpiRoutes from './routes/kpi.routes.js';
+import companyRoutes from './routes/company.routes.js';
+import featureRequestRoutes from './routes/feature-request.routes.js';
 import { requestLogger } from './middleware/logger.middleware.js';
 import { apiRateLimiter } from './middleware/rate-limit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.middleware.js';
@@ -67,6 +69,8 @@ app.use('/v1/toll-fines', tollFineRoutes);
 app.use('/v1/maintenance', maintenanceRoutes);
 app.use('/v1/audit-log', systemAuditLogRoutes);
 app.use('/v1/kpis', kpiRoutes);
+app.use('/v1/companies', companyRoutes);
+app.use('/v1/feature-requests', featureRequestRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

@@ -8,6 +8,7 @@ import { DataTable, Column } from '@/components/DataTable';
 import { getAdminDashboard, getVehicleStats } from '@/services/admin.service';
 import { getInvoices } from '@/services/invoice.service';
 import { getDriverTasks } from '@/services/driver-task.service';
+import { getMyCompany, CompanyProfile } from '@/services/company.service';
 import toast from 'react-hot-toast';
 import {
   HiOutlineDocumentText,
@@ -27,6 +28,8 @@ import {
   HiOutlineArrowTrendingUp,
   HiOutlineShieldExclamation,
   HiOutlineCalendarDays,
+  HiOutlineBuildingOffice2,
+  HiOutlineMegaphone,
 } from 'react-icons/hi2';
 import {
   BarChart,
@@ -51,14 +54,18 @@ import type {
 
 function AdminDashboard() {
   const [data, setData] = useState<AdminDashboardData | null>(null);
+  const [company, setCompany] = useState<CompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await getAdminDashboard();
-        // Handle response - API returns data directly after our service fix
-        setData(res.data || res);
+        const [dashRes, companyRes] = await Promise.all([
+          getAdminDashboard(),
+          getMyCompany().catch(() => null),
+        ]);
+        setData(dashRes.data || dashRes);
+        if (companyRes) setCompany(companyRes);
       } catch {
         toast.error('Failed to load dashboard data');
       } finally {
@@ -66,6 +73,17 @@ function AdminDashboard() {
       }
     })();
   }, []);
+
+  // Trial warning
+  const trialWarning =
+    company?.status === 'TRIAL' && company.trial_ends_at
+      ? (() => {
+          const daysLeft = Math.ceil(
+            (new Date(company.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+          );
+          return daysLeft > 0 ? daysLeft : 0;
+        })()
+      : null;
 
   const activityColumns: Column[] = useMemo(
     () => [
@@ -85,6 +103,74 @@ function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Trial Warning Banner */}
+      {trialWarning !== null && trialWarning > 0 && (
+        <div className={`rounded-xl p-4 flex items-center gap-3 ${trialWarning <= 3 ? 'bg-red-50 border border-red-200' : trialWarning <= 7 ? 'bg-orange-50 border border-orange-200' : 'bg-blue-50 border border-blue-200'}`}>
+          <HiOutlineMegaphone className={`w-6 h-6 shrink-0 ${trialWarning <= 3 ? 'text-red-600' : trialWarning <= 7 ? 'text-orange-600' : 'text-blue-600'}`} />
+          <div className="flex-1">
+            <p className={`text-sm font-semibold ${trialWarning <= 3 ? 'text-red-800' : trialWarning <= 7 ? 'text-orange-800' : 'text-blue-800'}`}>
+              {trialWarning <= 3
+                ? `Trial expires in ${trialWarning} day${trialWarning === 1 ? '' : 's'}!`
+                : `Trial expires in ${trialWarning} days`}
+            </p>
+            <p className={`text-xs mt-0.5 ${trialWarning <= 3 ? 'text-red-600' : trialWarning <= 7 ? 'text-orange-600' : 'text-blue-600'}`}>
+              Subscribe to a plan to continue using all features after your trial ends.
+            </p>
+          </div>
+          <a
+            href="/subscribe"
+            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${trialWarning <= 3 ? 'bg-red-600 text-white hover:bg-red-700' : trialWarning <= 7 ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+          >
+            View Plans
+          </a>
+        </div>
+      )}
+      {trialWarning === 0 && (
+        <div className="rounded-xl p-4 flex items-center gap-3 bg-red-50 border border-red-200">
+          <HiOutlineExclamationTriangle className="w-6 h-6 shrink-0 text-red-600" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-red-800">Trial period has ended</p>
+            <p className="text-xs text-red-600 mt-0.5">Subscribe to a plan to regain access to all features.</p>
+          </div>
+          <a href="/subscribe" className="px-4 py-2 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors">
+            Subscribe Now
+          </a>
+        </div>
+      )}
+
+      {/* Company Info Bar */}
+      {company && (
+        <div className="flex items-center justify-between bg-white rounded-xl border border-[#CBD5E1] shadow-sm p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 bg-[#0E7490]/10 text-[#0E7490] rounded-xl">
+              <HiOutlineBuildingOffice2 size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#0F172A]">{company.name}</p>
+              <p className="text-xs text-[#64748B]">
+                {company.plan_name || 'No Plan'} &middot; {company.subscription_status || company.status}
+              </p>
+            </div>
+          </div>
+          {company.usage && (
+            <div className="hidden sm:flex items-center gap-6">
+              <div className="text-center">
+                <p className="text-lg font-bold text-[#0F172A]">{company.usage.vehicles_count}</p>
+                <p className="text-xs text-[#64748B]">Vehicles</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-[#0F172A]">{company.usage.users_count}</p>
+                <p className="text-xs text-[#64748B]">Users</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-[#0F172A]">{company.usage.agreements_active}</p>
+                <p className="text-xs text-[#64748B]">Active</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div>
         <h1 className="text-2xl font-bold text-[#0F172A]">Admin Dashboard</h1>
         <p className="text-sm text-[#64748B] mt-1">Overview of your rental operations</p>

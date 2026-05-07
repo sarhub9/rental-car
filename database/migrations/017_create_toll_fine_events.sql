@@ -2,8 +2,13 @@
 -- Feature: 006-erp-core-upgrade (US5: Toll/Fine Attribution)
 -- Constitution: XII. Automation Engine — auto-attribute tolls/fines to agreements
 
-CREATE TYPE toll_fine_type AS ENUM ('salik', 'traffic_fine', 'parking_fine');
-CREATE TYPE toll_attribution_status AS ENUM ('pending', 'matched', 'unmatched', 'manual');
+DO $$ BEGIN
+  CREATE TYPE toll_fine_type AS ENUM ('salik', 'traffic_fine', 'parking_fine');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE toll_attribution_status AS ENUM ('pending', 'matched', 'unmatched', 'manual');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE IF NOT EXISTS toll_fine_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -33,8 +38,10 @@ CREATE INDEX IF NOT EXISTS idx_tfe_status ON toll_fine_events(tenant_id, attribu
 CREATE INDEX IF NOT EXISTS idx_tfe_agreement ON toll_fine_events(agreement_id);
 CREATE INDEX IF NOT EXISTS idx_tfe_batch ON toll_fine_events(import_batch_id);
 
-CREATE TRIGGER trg_tfe_updated_at
-  BEFORE UPDATE ON toll_fine_events
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER trg_tfe_updated_at
+    BEFORE UPDATE ON toll_fine_events
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 COMMENT ON TABLE toll_fine_events IS 'Salik tolls and traffic fines, auto-attributed to rental agreements by plate + date matching';

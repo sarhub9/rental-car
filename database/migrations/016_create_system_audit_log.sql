@@ -31,9 +31,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_prevent_audit_delete
-  BEFORE DELETE ON system_audit_log
-  FOR EACH ROW EXECUTE FUNCTION prevent_audit_log_delete();
+DO $$ BEGIN
+  CREATE TRIGGER trg_prevent_audit_delete
+    BEFORE DELETE ON system_audit_log
+    FOR EACH ROW EXECUTE FUNCTION prevent_audit_log_delete();
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- Prevent UPDATE on system_audit_log
 CREATE OR REPLACE FUNCTION prevent_audit_log_update()
@@ -43,8 +45,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_prevent_audit_update
-  BEFORE UPDATE ON system_audit_log
-  FOR EACH ROW EXECUTE FUNCTION prevent_audit_log_update();
+DO $$ BEGIN
+  CREATE TRIGGER trg_prevent_audit_update
+    BEFORE UPDATE ON system_audit_log
+    FOR EACH ROW EXECUTE FUNCTION prevent_audit_log_update();
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 COMMENT ON TABLE system_audit_log IS 'Immutable, append-only audit log for all critical system operations';

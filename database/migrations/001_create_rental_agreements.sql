@@ -70,11 +70,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for updated_at
-CREATE TRIGGER update_rental_agreements_updated_at
-    BEFORE UPDATE ON rental_agreements
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- Create trigger for updated_at (idempotent)
+DO $$ BEGIN
+  CREATE TRIGGER update_rental_agreements_updated_at
+      BEFORE UPDATE ON rental_agreements
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- Comments
 COMMENT ON TABLE rental_agreements IS 'Rental agreement lifecycle management (Draft → Active → Closed)';

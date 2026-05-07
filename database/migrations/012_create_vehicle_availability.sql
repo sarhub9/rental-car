@@ -4,7 +4,9 @@
 
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
-CREATE TYPE availability_lock_type AS ENUM ('reservation', 'rental', 'maintenance');
+DO $$ BEGIN
+  CREATE TYPE availability_lock_type AS ENUM ('reservation', 'rental', 'maintenance');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE IF NOT EXISTS vehicle_availability (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
