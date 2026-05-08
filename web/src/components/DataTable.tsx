@@ -28,7 +28,7 @@ function getNestedValue(obj: any, path: string): any {
 
 export function DataTable<T extends Record<string, any>>({
   columns,
-  data = [],
+  data: rawData = [],
   page = 1,
   totalPages = 1,
   onPageChange,
@@ -36,6 +36,7 @@ export function DataTable<T extends Record<string, any>>({
   emptyMessage = 'No data found.',
   onRowClick,
 }: DataTableProps<T>) {
+  const data = Array.isArray(rawData) ? rawData : [];
   const skeletonRows = 5;
 
   return (
@@ -88,7 +89,7 @@ export function DataTable<T extends Record<string, any>>({
                     const renderFn = col.render || col.accessor;
                     return (
                       <td key={col.key || idx} className="px-4 py-3 text-[#0F172A] whitespace-nowrap">
-                        {renderFn ? (renderFn as any)(value ?? row, row) : (value ?? '—')}
+                        {renderFn ? (renderFn as any)(value ?? row, row, rowIdx) : (value ?? '—')}
                       </td>
                     );
                   })}

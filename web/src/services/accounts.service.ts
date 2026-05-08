@@ -42,122 +42,122 @@ export interface CreateMaintenancePayload {
 // ===== Deposits =====
 
 export async function getDeposits(params?: DepositListParams) {
-  const response = await apiClient.get('/deposits', { params });
+  const response = await apiClient.get('/v1/deposits', { params });
   return response.data.data || response.data;
 }
 
 export async function createDeposit(payload: CreateDepositPayload) {
-  const response = await apiClient.post('/deposits', payload);
+  const response = await apiClient.post('/v1/deposits', payload);
   return response.data.data || response.data;
 }
 
 export async function getEligibleDeposits() {
-  const response = await apiClient.get('/deposits/eligible');
+  const response = await apiClient.get('/v1/deposits/eligible');
   return response.data.data || response.data;
 }
 
 export async function useDeposit(id: string, amount: number) {
-  const response = await apiClient.put(`/deposits/${id}/use`, { amount });
+  const response = await apiClient.put(`/v1/deposits/${id}/use`, { amount });
   return response.data.data || response.data;
 }
 
 export async function releaseDeposit(id: string) {
-  const response = await apiClient.put(`/deposits/${id}/release`);
+  const response = await apiClient.put(`/v1/deposits/${id}/release`);
   return response.data.data || response.data;
 }
 
 export async function forfeitDeposit(id: string, justification: string) {
-  const response = await apiClient.put(`/deposits/${id}/forfeit`, { justification });
+  const response = await apiClient.put(`/v1/deposits/${id}/forfeit`, { justification });
   return response.data.data || response.data;
 }
 
 export async function refundDeposit(id: string) {
-  const response = await apiClient.put(`/deposits/${id}/refund`);
+  const response = await apiClient.put(`/v1/deposits/${id}/refund`);
   return response.data.data || response.data;
 }
 
 // ===== Toll & Fines =====
 
 export async function importTollFines(formData: FormData) {
-  const response = await apiClient.post('/toll-fines/import', formData, {
+  const response = await apiClient.post('/v1/toll-fines/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data.data || response.data;
 }
 
 export async function getTollFines(params?: TollFineListParams) {
-  const response = await apiClient.get('/toll-fines', { params });
+  const response = await apiClient.get('/v1/toll-fines', { params });
   return response.data.data || response.data;
 }
 
 export async function getUnmatchedTollFines() {
-  const response = await apiClient.get('/toll-fines/unmatched');
+  const response = await apiClient.get('/v1/toll-fines/unmatched');
   return response.data.data || response.data;
 }
 
 export async function assignTollFine(id: string, agreementId: string) {
-  const response = await apiClient.put(`/toll-fines/${id}/assign`, {
+  const response = await apiClient.put(`/v1/toll-fines/${id}/assign`, {
     agreement_id: agreementId,
   });
   return response.data.data || response.data;
 }
 
 export async function getTollFinesByAgreement(agreementId: string) {
-  const response = await apiClient.get(`/toll-fines/agreement/${agreementId}`);
+  const response = await apiClient.get(`/v1/toll-fines/agreement/${agreementId}`);
   return response.data.data || response.data;
 }
 
 export async function reprocessTollFines() {
-  const response = await apiClient.post('/toll-fines/reprocess');
+  const response = await apiClient.post('/v1/toll-fines/reprocess');
   return response.data.data || response.data;
 }
 
 // ===== Maintenance =====
 
 export async function getMaintenanceRecords(params?: MaintenanceListParams) {
-  const response = await apiClient.get('/maintenance', { params });
+  const response = await apiClient.get('/v1/maintenance', { params });
   return response.data.data || response.data;
 }
 
 export async function createMaintenance(payload: CreateMaintenancePayload) {
-  const response = await apiClient.post('/maintenance', payload);
+  const response = await apiClient.post('/v1/maintenance', payload);
   return response.data.data || response.data;
 }
 
 export async function getMaintenanceById(id: string) {
-  const response = await apiClient.get(`/maintenance/${id}`);
+  const response = await apiClient.get(`/v1/maintenance/${id}`);
   return response.data.data || response.data;
 }
 
 export async function getOverdueMaintenance() {
-  const response = await apiClient.get('/maintenance/overdue');
+  const response = await apiClient.get('/v1/maintenance/overdue');
   return response.data.data || response.data;
 }
 
 export async function getUpcomingMaintenance() {
-  const response = await apiClient.get('/maintenance/upcoming');
+  const response = await apiClient.get('/v1/maintenance/upcoming');
   return response.data.data || response.data;
 }
 
 export async function startMaintenance(id: string) {
-  const response = await apiClient.put(`/maintenance/${id}/start`);
+  const response = await apiClient.put(`/v1/maintenance/${id}/start`);
   return response.data.data || response.data;
 }
 
 export async function completeMaintenance(id: string, actualCost: number) {
-  const response = await apiClient.put(`/maintenance/${id}/complete`, {
+  const response = await apiClient.put(`/v1/maintenance/${id}/complete`, {
     actual_cost: actualCost,
   });
   return response.data.data || response.data;
 }
 
 export async function cancelMaintenance(id: string) {
-  const response = await apiClient.put(`/maintenance/${id}/cancel`);
+  const response = await apiClient.put(`/v1/maintenance/${id}/cancel`);
   return response.data.data || response.data;
 }
 
 export async function getVehicleMaintenanceSummary(vehicleId: string) {
-  const response = await apiClient.get(`/maintenance/vehicle/${vehicleId}/summary`);
+  const response = await apiClient.get(`/v1/maintenance/vehicle/${vehicleId}/summary`);
   return response.data.data || response.data;
 }
 

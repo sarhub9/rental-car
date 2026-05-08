@@ -36,23 +36,23 @@ export interface ReturnPayload {
 }
 
 export async function createAgreement(payload: CreateAgreementPayload) {
-  const response = await apiClient.post('/agreements', payload);
+  const response = await apiClient.post('/v1/agreements', payload);
   return response.data.data || response.data;
 }
 
 export async function getAgreements(params?: AgreementListParams) {
-  const response = await apiClient.get('/agreements', { params });
+  const response = await apiClient.get('/v1/agreements', { params });
   // Return full response with pagination
   return response.data;
 }
 
 export async function getAgreementById(id: string) {
-  const response = await apiClient.get(`/agreements/${id}`);
+  const response = await apiClient.get(`/v1/agreements/${id}`);
   return response.data.data || response.data;
 }
 
 export async function updateAgreement(id: string, payload: Partial<CreateAgreementPayload>) {
-  const response = await apiClient.patch(`/agreements/${id}`, payload);
+  const response = await apiClient.patch(`/v1/agreements/${id}`, payload);
   return response.data.data || response.data;
 }
 
@@ -71,7 +71,7 @@ export async function checkoutAgreement(agreementId: string, payload: CheckoutPa
     formData.append('customer_signature', payload.customer_signature);
   }
 
-  const response = await apiClient.post(`/agreements/${agreementId}/checkout`, formData, {
+  const response = await apiClient.post(`/v1/agreements/${agreementId}/checkout`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data.data || response.data;
@@ -95,19 +95,19 @@ export async function returnAgreement(agreementId: string, payload: ReturnPayloa
     formData.append('customer_acknowledgment', String(payload.customer_acknowledgment));
   }
 
-  const response = await apiClient.post(`/agreements/${agreementId}/return`, formData, {
+  const response = await apiClient.post(`/v1/agreements/${agreementId}/return`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data.data || response.data;
 }
 
 export async function getAgreementEvidence(agreementId: string) {
-  const response = await apiClient.get(`/agreements/${agreementId}/evidence`);
+  const response = await apiClient.get(`/v1/agreements/${agreementId}/evidence`);
   return response.data.data || response.data;
 }
 
 export async function getAgreementCharges(agreementId: string) {
-  const response = await apiClient.get(`/agreements/${agreementId}/charges`);
+  const response = await apiClient.get(`/v1/agreements/${agreementId}/charges`);
   return response.data.data || response.data;
 }
 

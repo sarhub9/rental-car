@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { vehicleService } from '@/services/vehicle.service';
+import type { CreateVehiclePayload } from '@/services/vehicle.service';
 import toast from 'react-hot-toast';
 import { HiArrowLeft } from 'react-icons/hi2';
 import { cleanPayload, sanitizeUuidFields } from '@/lib/clean-payload';
@@ -56,8 +57,9 @@ export default function CreateVehiclePage() {
     }
 
     // Clean payload - remove empty strings, format dates as ISO strings
-    const payload = cleanPayload(formData) as Record<string, unknown>;
-    sanitizeUuidFields(payload, ['category_id']);
+    const cleaned = cleanPayload(formData) as Record<string, unknown>;
+    sanitizeUuidFields(cleaned, ['category_id']);
+    const payload = cleaned as unknown as CreateVehiclePayload;
 
     setSubmitting(true);
     try {

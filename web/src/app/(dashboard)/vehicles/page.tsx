@@ -29,17 +29,18 @@ export default function VehiclesPage() {
       }
       const res = await vehicleService.getVehicles(params);
 
-      // Handle response - res is now the vehicles array directly
+      // Handle response - normalize to array
+      let items: Vehicle[] = [];
       if (Array.isArray(res)) {
-        setVehicles(res);
-        setTotalCount(res.length);
-        setTotalPages(1);
-      } else {
-        // Fallback if response has pagination structure
-        setVehicles(res.data || res);
-        setTotalPages(res.totalPages || 1);
-        setTotalCount(res.total || (res.data || res).length);
+        items = res;
+      } else if (res && Array.isArray(res.data)) {
+        items = res.data;
+      } else if (res && Array.isArray(res.results)) {
+        items = res.results;
       }
+      setVehicles(items);
+      setTotalCount(items.length);
+      setTotalPages(1);
     } catch {
       toast.error('Failed to load vehicles');
     } finally {

@@ -23,6 +23,7 @@ import { Modal } from '@/components/Modal';
 import { SearchInput } from '@/components/SearchInput';
 import { cleanPayload, sanitizeUuidFields, UUID_REGEX } from '@/lib/clean-payload';
 import type { Customer, Vehicle } from '@/types';
+import type { CreateAgreementPayload } from '@/services/agreement.service';
 
 const STEPS = [
   { label: 'Customer', icon: HiUser },
@@ -41,11 +42,22 @@ function calculateAmount(
   if (!startDate || !endDate || dailyRate <= 0) {
     return { days: 0, weeks: 0, remainder: 0, amount: 0 };
   }
-  const start = new Date(startDate).getTime();
-  const end = new Date(endDate).getTime();
-  if (end <= start) return { days: 0, weeks: 0, remainder: 0, amount: 0 };
+  // datetime-local produces YYYY-MM-DDTHH:mm — ensure full ISO by appending :00
+  const ensureSeconds = (s: string) => {
+    if (!s) return '';
+    const parts = s.split(':');
+    if (parts.length >= 3) return s; // already has seconds
+    return s + ':00';
+  };
+  const start = new Date(ensureSeconds(startDate)).getTime();
+  const end = new Date(ensureSeconds(endDate)).getTime();
+  if (isNaN(start) || isNaN(end) || end <= start) {
+    return { days: 0, weeks: 0, remainder: 0, amount: 0 };
+  }
 
-  const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const rawDays = (end - start) / msPerDay;
+  const days = Math.max(1, Math.ceil(rawDays));
   let weeks = 0;
   let remainder = days;
   let amount = 0;
@@ -100,8 +112,9 @@ export default function CreateAgreementPage() {
     const timeout = setTimeout(async () => {
       try {
         setLoadingCustomers(true);
-        const res = await customerService.getCustomers({ search: customerSearch, limit: 10 });
-        setCustomers(res.data || []);
+        const res = await customerService.searchCustomers(customerSearch);
+        const items = Array.isArray(res) ? res : (res?.data || []);
+        setCustomers(items);
       } catch {
         toast.error('Failed to search customers');
       } finally {
@@ -119,7 +132,8 @@ export default function CreateAgreementPage() {
         const params: Record<string, any> = { limit: 20, status: 'AVAILABLE' };
         if (vehicleSearch.trim()) params.search = vehicleSearch;
         const res = await vehicleService.getVehicles(params);
-        setVehicles(res.data || []);
+        const items = Array.isArray(res) ? res : (res?.data || []);
+        setVehicles(items);
       } catch {
         toast.error('Failed to search vehicles');
       } finally {
@@ -167,8 +181,9 @@ export default function CreateAgreementPage() {
         weekly_rate: weeklyRate,
         estimated_amount: pricing.amount,
       };
-      const payload = cleanPayload(rawPayload) as Record<string, unknown>;
-      sanitizeUuidFields(payload, ['customer_id', 'vehicle_id']);
+      const cleaned = cleanPayload(rawPayload) as Record<string, unknown>;
+      sanitizeUuidFields(cleaned, ['customer_id', 'vehicle_id']);
+      const payload = cleaned as unknown as CreateAgreementPayload;
       const result = await agreementService.createAgreement(payload);
       toast.success('Agreement created successfully');
       router.push(`/agreements/${result.id || result.data?.id}`);

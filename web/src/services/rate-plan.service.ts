@@ -15,27 +15,27 @@ export interface CreateRatePlanPayload {
 }
 
 export async function createRatePlan(payload: CreateRatePlanPayload) {
-  const response = await apiClient.post('/rate-plans', payload);
+  const response = await apiClient.post('/v1/rate-plans', payload);
   return response.data.data || response.data;
 }
 
 export async function getRatePlans() {
-  const response = await apiClient.get('/rate-plans');
+  const response = await apiClient.get('/v1/rate-plans');
   return response.data.data || response.data;
 }
 
 export async function getRatePlanById(id: string) {
-  const response = await apiClient.get(`/rate-plans/${id}`);
+  const response = await apiClient.get(`/v1/rate-plans/${id}`);
   return response.data.data || response.data;
 }
 
 export async function updateRatePlan(id: string, payload: Partial<CreateRatePlanPayload>) {
-  const response = await apiClient.put(`/rate-plans/${id}`, payload);
+  const response = await apiClient.put(`/v1/rate-plans/${id}`, payload);
   return response.data.data || response.data;
 }
 
 export async function deactivateRatePlan(id: string) {
-  const response = await apiClient.delete(`/rate-plans/${id}`);
+  const response = await apiClient.delete(`/v1/rate-plans/${id}`);
   return response.data.data || response.data;
 }
 

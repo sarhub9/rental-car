@@ -69,22 +69,18 @@ export default function CustomersPage() {
         res = await customerService.getCustomers({ page, limit: 10 });
       }
 
-      // Handle response - API returns array directly after our service fix
+      // Handle response - normalize to array
+      let items: Customer[] = [];
       if (Array.isArray(res)) {
-        setCustomers(res);
-        setTotalCount(res.length);
-        setTotalPages(1);
-      } else if (res.data) {
-        // Fallback for paginated response
-        setCustomers(res.data);
-        setTotalPages(res.totalPages || 1);
-        setTotalCount(res.total || res.data.length);
-      } else {
-        // Direct data
-        setCustomers(res);
-        setTotalCount(res.length || 0);
-        setTotalPages(1);
+        items = res;
+      } else if (res && Array.isArray(res.data)) {
+        items = res.data;
+      } else if (res && Array.isArray(res.results)) {
+        items = res.results;
       }
+      setCustomers(items);
+      setTotalCount(items.length);
+      setTotalPages(1);
     } catch {
       toast.error('Failed to load customers');
     } finally {
@@ -115,8 +111,9 @@ export default function CustomersPage() {
       setShowAddModal(false);
       setFormData(initialFormState);
       fetchCustomers();
-    } catch {
-      toast.error('Failed to create customer');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || 'Failed to create customer';
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -133,8 +130,9 @@ export default function CustomersPage() {
       setIsEditing(false);
       setShowDetailModal(false);
       fetchCustomers();
-    } catch {
-      toast.error('Failed to update customer');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || 'Failed to update customer';
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -161,13 +159,13 @@ export default function CustomersPage() {
   };
 
   const columns = [
-    { label: 'Customer #', render: (_: Customer, i: number) => (page - 1) * 10 + i + 1 },
-    { label: 'Name (EN)', render: (c: Customer) => c.full_name_en },
-    { label: 'Phone', render: (c: Customer) => c.phone_number },
-    { label: 'License', render: (c: Customer) => c.driving_license_number },
+    { label: 'Customer #', render: (_: any, _row: Customer, i: number) => (page - 1) * 10 + i + 1 },
+    { label: 'Name (EN)', key: 'full_name_en' },
+    { label: 'Phone', key: 'phone_number' },
+    { label: 'License', key: 'driving_license_number' },
     {
       label: 'Type',
-      render: (c: Customer) => (
+      render: (_: any, c: Customer) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${c.customer_type === 'CORPORATE' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
           {c.customer_type}
         </span>
@@ -175,11 +173,11 @@ export default function CustomersPage() {
     },
     {
       label: 'Status',
-      render: (c: Customer) => <StatusBadge status={c.is_active ? 'ACTIVE' : 'INACTIVE'} />,
+      render: (_: any, c: Customer) => <StatusBadge status={c.is_active ? 'ACTIVE' : 'INACTIVE'} />,
     },
     {
       label: 'Actions',
-      render: (c: Customer) => (
+      render: (_: any, c: Customer) => (
         <button
           onClick={(e) => {
             e.stopPropagation();

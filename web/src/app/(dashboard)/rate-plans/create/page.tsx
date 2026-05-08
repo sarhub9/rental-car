@@ -9,6 +9,7 @@ import {
   HiOutlineTrash,
 } from 'react-icons/hi2';
 import { ratePlanService } from '@/services/rate-plan.service';
+import type { CreateRatePlanPayload } from '@/services/rate-plan.service';
 import { PageHeader } from '@/components/PageHeader';
 import { cleanPayload } from '@/lib/clean-payload';
 
@@ -24,10 +25,17 @@ export default function CreateRatePlanPage() {
     included_km_per_day: '',
     extra_km_rate: '',
     deposit_amount: '',
-    fuel_policy: '',
-    late_return_rules: '',
     terms_text: '',
   });
+
+  // Fuel policy friendly fields
+  const [fuelType, setFuelType] = useState('full_to_full');
+  const [fuelChargePerUnit, setFuelChargePerUnit] = useState('100');
+
+  // Late return rules friendly fields
+  const [gracePeriodHours, setGracePeriodHours] = useState('2');
+  const [hourlyCharge, setHourlyCharge] = useState('50');
+  const [dailyCap, setDailyCap] = useState('150');
 
   const [addOns, setAddOns] = useState<{ name: string; price: string }[]>([]);
 
@@ -59,25 +67,16 @@ export default function CreateRatePlanPage() {
     try {
       setSubmitting(true);
 
-      let fuelPolicy: any = undefined;
-      if (form.fuel_policy.trim()) {
-        try {
-          fuelPolicy = JSON.parse(form.fuel_policy);
-        } catch {
-          toast.error('Invalid JSON for fuel policy');
-          return;
-        }
-      }
+      const fuelPolicy = {
+        type: fuelType,
+        charge_per_unit: Number(fuelChargePerUnit) || 0,
+      };
 
-      let lateReturnRules: any = undefined;
-      if (form.late_return_rules.trim()) {
-        try {
-          lateReturnRules = JSON.parse(form.late_return_rules);
-        } catch {
-          toast.error('Invalid JSON for late return rules');
-          return;
-        }
-      }
+      const lateReturnRules = {
+        grace_period_hours: Number(gracePeriodHours) || 0,
+        hourly_charge: Number(hourlyCharge) || 0,
+        daily_cap: Number(dailyCap) || 0,
+      };
 
       const rawPayload: Record<string, unknown> = {
         name: form.name,
@@ -94,13 +93,15 @@ export default function CreateRatePlanPage() {
           .filter((a) => a.name.trim())
           .map((a) => ({ name: a.name, price: a.price ? Number(a.price) : 0 })),
       };
-      const payload = cleanPayload(rawPayload) as Record<string, unknown>;
+      const cleaned = cleanPayload(rawPayload) as Record<string, unknown>;
+      const payload = cleaned as unknown as CreateRatePlanPayload;
 
       await ratePlanService.createRatePlan(payload);
       toast.success('Rate plan created');
       router.push('/rate-plans');
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to create rate plan');
+      const message = err?.response?.data?.message || err?.message || 'Failed to create rate plan';
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -205,31 +206,72 @@ export default function CreateRatePlanPage() {
         </div>
 
         {/* Fuel Policy */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Fuel Policy (JSON)
-          </label>
-          <textarea
-            value={form.fuel_policy}
-            onChange={(e) => handleChange('fuel_policy', e.target.value)}
-            rows={3}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder='{"type": "full_to_full", "charge_per_unit": 10}'
-          />
+        <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+          <h3 className="text-sm font-medium text-gray-700">Fuel Policy</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Policy Type</label>
+              <select
+                value={fuelType}
+                onChange={(e) => setFuelType(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="full_to_full">Full to Full</option>
+                <option value="half_to_full">Half to Full</option>
+                <option value="unlimited">Unlimited</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Charge per Unit (AED)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={fuelChargePerUnit}
+                onChange={(e) => setFuelChargePerUnit(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="100"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Late Return Rules */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Late Return Rules (JSON)
-          </label>
-          <textarea
-            value={form.late_return_rules}
-            onChange={(e) => handleChange('late_return_rules', e.target.value)}
-            rows={3}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder='{"grace_period_hours": 2, "hourly_charge": 50}'
-          />
+        <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+          <h3 className="text-sm font-medium text-gray-700">Late Return Rules</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Grace Period (Hours)</label>
+              <input
+                type="number"
+                value={gracePeriodHours}
+                onChange={(e) => setGracePeriodHours(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="2"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Hourly Charge (AED)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={hourlyCharge}
+                onChange={(e) => setHourlyCharge(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Daily Cap (AED)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={dailyCap}
+                onChange={(e) => setDailyCap(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="150"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Terms Text */}

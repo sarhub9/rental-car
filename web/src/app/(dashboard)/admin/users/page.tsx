@@ -62,29 +62,25 @@ export default function UsersPage() {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const params: Record<string, any> = { page, page_size: 20 };
+      const params: Record<string, any> = { limit: 20, offset: (page - 1) * 20 };
       if (searchQuery) params.search = searchQuery;
 
-      const response = await adminService.getUsers(params);
+      const res = await adminService.getUsers(params);
 
-      // Handle response - API returns array directly after our service fix
-      if (Array.isArray(response)) {
-        setUsers(response);
-        setTotalCount(response.length);
-        setTotalPages(1);
-      } else if (response.results) {
-        // Fallback for paginated response
-        setUsers(response.results);
-        setTotalPages(Math.ceil(response.count / 20));
-        setTotalCount(response.count);
-      } else {
-        // Direct data array
-        setUsers(response);
-        setTotalCount(response.length);
-        setTotalPages(1);
+      // Normalize response to array
+      let items: StaffUser[] = [];
+      if (Array.isArray(res)) {
+        items = res;
+      } else if (res && Array.isArray(res.data)) {
+        items = res.data;
+      } else if (res && Array.isArray(res.results)) {
+        items = res.results;
       }
-    } catch (error) {
-      toast.error('Failed to load users');
+      setUsers(items);
+      setTotalCount(items.length);
+      setTotalPages(1);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -153,7 +149,6 @@ export default function UsersPage() {
     {
       key: 'full_name',
       label: 'Name',
-      render: (_: any, row: StaffUser) => row.full_name || '—',
     },
     {
       key: 'email',
@@ -162,7 +157,6 @@ export default function UsersPage() {
     {
       key: 'phone_number',
       label: 'Phone',
-      render: (_: any, row: StaffUser) => row.phone_number || '—',
     },
     {
       key: 'role',

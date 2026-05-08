@@ -22,17 +22,10 @@ export default function RatePlansPage() {
     try {
       setLoading(true);
       const res = await ratePlanService.getRatePlans();
-
-      // Handle response - API returns array directly after our service fix
-      if (Array.isArray(res)) {
-        setRatePlans(res);
-      } else if (res.data) {
-        setRatePlans(res.data);
-      } else {
-        setRatePlans(res);
-      }
+      const items = Array.isArray(res) ? res : (res?.data || []);
+      setRatePlans(items);
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load rate plans');
+      toast.error((err?.response?.data?.message || err?.message) ?? 'Failed to load rate plans');
     } finally {
       setLoading(false);
     }
@@ -54,7 +47,7 @@ export default function RatePlansPage() {
       }
       fetchRatePlans();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to update rate plan');
+      toast.error((err?.response?.data?.message || err?.message) ?? 'Failed to update rate plan');
     }
   };
 

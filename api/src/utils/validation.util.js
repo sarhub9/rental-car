@@ -60,7 +60,10 @@ export const createCustomerSchema = Joi.object({
   email: Joi.string().email().max(200).allow(null, ''),
   emirates_id: Joi.string().max(20).allow(null, ''),
   driving_license_number: Joi.string().max(50).required(),
-  license_expiry_date: Joi.date().iso().required(),
+  license_expiry_date: Joi.date().iso().required().messages({
+    'date.iso': 'License expiry date must be a valid ISO date (e.g. YYYY-MM-DD)',
+    'any.required': 'License expiry date is required',
+  }),
   customer_type: Joi.string().valid('INDIVIDUAL', 'CORPORATE').default('INDIVIDUAL'),
   address_line_1: Joi.string().max(300).allow(null, ''),
   address_line_2: Joi.string().max(300).allow(null, ''),

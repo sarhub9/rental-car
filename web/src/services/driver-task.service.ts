@@ -50,45 +50,45 @@ export interface CreateTaskPayload {
 
 // Driver Tasks
 export async function getDriverTasks(params?: DriverTaskListParams) {
-  const response = await apiClient.get('/driver/tasks', { params });
+  const response = await apiClient.get('/v1/driver/tasks', { params });
   return response.data.data || response.data;
 }
 
 export async function getDriverTaskById(taskId: string) {
-  const response = await apiClient.get(`/driver/tasks/${taskId}`);
+  const response = await apiClient.get(`/v1/driver/tasks/${taskId}`);
   return response.data.data || response.data;
 }
 
 export async function startTask(taskId: string) {
-  const response = await apiClient.post(`/driver/tasks/${taskId}/start`);
+  const response = await apiClient.post(`/v1/driver/tasks/${taskId}/start`);
   return response.data.data || response.data;
 }
 
 export async function completeTask(taskId: string, payload: CompleteTaskPayload) {
-  const response = await apiClient.post(`/driver/tasks/${taskId}/complete`, payload);
+  const response = await apiClient.post(`/v1/driver/tasks/${taskId}/complete`, payload);
   return response.data.data || response.data;
 }
 
 export async function cancelTask(taskId: string, reason: string) {
-  const response = await apiClient.post(`/driver/tasks/${taskId}/cancel`, { reason });
+  const response = await apiClient.post(`/v1/driver/tasks/${taskId}/cancel`, { reason });
   return response.data.data || response.data;
 }
 
 // Evidence
 export async function uploadTaskEvidence(taskId: string, formData: FormData) {
-  const response = await apiClient.post(`/driver/tasks/${taskId}/evidence`, formData, {
+  const response = await apiClient.post(`/v1/driver/tasks/${taskId}/evidence`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data.data || response.data;
 }
 
 export async function getTaskEvidence(taskId: string) {
-  const response = await apiClient.get(`/driver/tasks/${taskId}/evidence`);
+  const response = await apiClient.get(`/v1/driver/tasks/${taskId}/evidence`);
   return response.data.data || response.data;
 }
 
 export async function uploadTaskSignature(taskId: string, formData: FormData) {
-  const response = await apiClient.post(`/driver/tasks/${taskId}/evidence/signature`, formData, {
+  const response = await apiClient.post(`/v1/driver/tasks/${taskId}/evidence/signature`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data.data || response.data;
@@ -96,40 +96,40 @@ export async function uploadTaskSignature(taskId: string, formData: FormData) {
 
 // Damages
 export async function reportDamage(taskId: string, payload: ReportDamagePayload) {
-  const response = await apiClient.post(`/driver/tasks/${taskId}/damages`, payload);
+  const response = await apiClient.post(`/v1/driver/tasks/${taskId}/damages`, payload);
   return response.data.data || response.data;
 }
 
 export async function getTaskDamages(taskId: string) {
-  const response = await apiClient.get(`/driver/tasks/${taskId}/damages`);
+  const response = await apiClient.get(`/v1/driver/tasks/${taskId}/damages`);
   return response.data.data || response.data;
 }
 
 // Location
 export async function updateTaskLocation(taskId: string, payload: LocationPayload) {
-  const response = await apiClient.post(`/driver/tasks/${taskId}/location`, payload);
+  const response = await apiClient.post(`/v1/driver/tasks/${taskId}/location`, payload);
   return response.data.data || response.data;
 }
 
 export async function getTaskLocation(taskId: string) {
-  const response = await apiClient.get(`/driver/tasks/${taskId}/location`);
+  const response = await apiClient.get(`/v1/driver/tasks/${taskId}/location`);
   return response.data.data || response.data;
 }
 
 // Recovery Attempts
 export async function addRecoveryAttempt(taskId: string, payload: RecoveryAttemptPayload) {
-  const response = await apiClient.post(`/driver/tasks/${taskId}/recovery-attempts`, payload);
+  const response = await apiClient.post(`/v1/driver/tasks/${taskId}/recovery-attempts`, payload);
   return response.data.data || response.data;
 }
 
 export async function getRecoveryAttempts(taskId: string) {
-  const response = await apiClient.get(`/driver/tasks/${taskId}/recovery-attempts`);
+  const response = await apiClient.get(`/v1/driver/tasks/${taskId}/recovery-attempts`);
   return response.data.data || response.data;
 }
 
 // Admin Task Creation
 export async function createTask(payload: CreateTaskPayload) {
-  const response = await apiClient.post('/tasks', payload);
+  const response = await apiClient.post('/v1/tasks', payload);
   return response.data.data || response.data;
 }
 

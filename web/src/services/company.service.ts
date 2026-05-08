@@ -95,12 +95,12 @@ export interface SuperAdminCompany {
 // ============================================================================
 
 export async function register(payload: RegisterPayload): Promise<RegisterResponse> {
-  const response = await apiClient.post('/companies', payload);
+  const response = await apiClient.post('/v1/companies', payload);
   return response.data.data;
 }
 
 export async function getPlans(): Promise<SubscriptionPlan[]> {
-  const response = await apiClient.get('/companies/plans');
+  const response = await apiClient.get('/v1/companies/plans');
   return response.data.data;
 }
 
@@ -109,7 +109,7 @@ export async function getPlans(): Promise<SubscriptionPlan[]> {
 // ============================================================================
 
 export async function getMyCompany(): Promise<CompanyProfile> {
-  const response = await apiClient.get('/companies/me');
+  const response = await apiClient.get('/v1/companies/me');
   return response.data.data;
 }
 
@@ -121,7 +121,7 @@ export async function updateMyCompany(data: Partial<{
   logo_url: string;
   trade_license_number: string;
 }>): Promise<CompanyProfile> {
-  const response = await apiClient.patch('/companies/me', data);
+  const response = await apiClient.patch('/v1/companies/me', data);
   return response.data.data;
 }
 
@@ -129,7 +129,7 @@ export async function subscribe(payload: SubscribePayload): Promise<{
   subscription: Record<string, unknown>;
   plan: SubscriptionPlan;
 }> {
-  const response = await apiClient.post('/companies/subscribe', payload);
+  const response = await apiClient.post('/v1/companies/subscribe', payload);
   return response.data.data;
 }
 
@@ -142,17 +142,17 @@ export async function listCompanies(params?: {
   limit?: number;
   offset?: number;
 }): Promise<{ items: SuperAdminCompany[]; count: number }> {
-  const response = await apiClient.get('/companies/super-admin/companies', { params });
+  const response = await apiClient.get('/v1/companies/super-admin/companies', { params });
   return { items: response.data.data, count: response.data.count };
 }
 
 export async function getCompanyById(id: string): Promise<SuperAdminCompany> {
-  const response = await apiClient.get(`/companies/super-admin/companies/${id}`);
+  const response = await apiClient.get(`/v1/companies/super-admin/companies/${id}`);
   return response.data.data;
 }
 
 export async function updateCompanyStatus(id: string, status: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED'): Promise<SuperAdminCompany> {
-  const response = await apiClient.patch(`/companies/super-admin/companies/${id}/status`, { status });
+  const response = await apiClient.patch(`/v1/companies/super-admin/companies/${id}/status`, { status });
   return response.data.data;
 }
 
@@ -168,6 +168,6 @@ export interface FeatureRequestPayload {
 }
 
 export async function submitFeatureRequest(payload: FeatureRequestPayload) {
-  const response = await apiClient.post('/feature-requests', payload);
+  const response = await apiClient.post('/v1/feature-requests', payload);
   return response.data.data;
 }

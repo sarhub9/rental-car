@@ -14,32 +14,32 @@ export interface InvoiceListParams {
 }
 
 export async function generateInvoice(agreementId: string) {
-  const response = await apiClient.post(`/invoices/generate/${agreementId}`);
+  const response = await apiClient.post(`/v1/invoices/generate/${agreementId}`);
   return response.data.data || response.data;
 }
 
 export async function getInvoices(params?: InvoiceListParams) {
-  const response = await apiClient.get('/invoices', { params });
+  const response = await apiClient.get('/v1/invoices', { params });
   return response.data.data || response.data;
 }
 
 export async function getInvoiceById(id: string) {
-  const response = await apiClient.get(`/invoices/${id}`);
+  const response = await apiClient.get(`/v1/invoices/${id}`);
   return response.data.data || response.data;
 }
 
 export async function issueInvoice(id: string) {
-  const response = await apiClient.patch(`/invoices/${id}/issue`);
+  const response = await apiClient.patch(`/v1/invoices/${id}/issue`);
   return response.data.data || response.data;
 }
 
 export async function voidInvoice(id: string, reason: string) {
-  const response = await apiClient.patch(`/invoices/${id}/void`, { reason });
+  const response = await apiClient.patch(`/v1/invoices/${id}/void`, { reason });
   return response.data.data || response.data;
 }
 
 export async function recordPayment(id: string, payload: RecordPaymentPayload) {
-  const response = await apiClient.post(`/invoices/${id}/payments`, payload);
+  const response = await apiClient.post(`/v1/invoices/${id}/payments`, payload);
   return response.data.data || response.data;
 }
 

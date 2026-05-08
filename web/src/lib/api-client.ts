@@ -1,6 +1,12 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/v1';
+const getApiBase = () => {
+  if (typeof window !== 'undefined') {
+    // Use the Next.js origin - rewrites will proxy /v1/* to API
+    return window.location.origin;
+  }
+  return 'http://localhost:3000';
+};
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -21,7 +27,6 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 const createApiClient = (): AxiosInstance => {
   const client = axios.create({
-    baseURL: API_BASE_URL,
     timeout: 15000,
     headers: { 'Content-Type': 'application/json' },
   });
@@ -68,7 +73,8 @@ const createApiClient = (): AxiosInstance => {
           throw new Error('No refresh token');
         }
 
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+        const base = getApiBase();
+        const response = await axios.post(`${base}/v1/auth/refresh`, {
           refresh_token: refreshToken,
         });
 

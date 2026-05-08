@@ -8,7 +8,6 @@ export interface CreateVehiclePayload {
   plate_number: string;
   plate_emirate?: string;
   chassis_number?: string;
-  vehicle_number?: string;
   transmission_type?: string;
   fuel_type?: string;
   current_odometer?: number;
@@ -34,27 +33,27 @@ export interface AvailableVehiclesParams {
 }
 
 export async function createVehicle(payload: CreateVehiclePayload) {
-  const response = await apiClient.post('/vehicles', payload);
-  return response.data;
+  const response = await apiClient.post('/v1/vehicles', payload);
+  return response.data.data || response.data;
 }
 
 export async function getVehicles(params?: VehicleListParams) {
-  const response = await apiClient.get('/vehicles', { params });
+  const response = await apiClient.get('/v1/vehicles', { params });
   return response.data.data || response.data;
 }
 
 export async function getVehicleById(id: string) {
-  const response = await apiClient.get(`/vehicles/${id}`);
+  const response = await apiClient.get(`/v1/vehicles/${id}`);
   return response.data.data || response.data;
 }
 
 export async function updateVehicle(id: string, payload: Partial<CreateVehiclePayload>) {
-  const response = await apiClient.patch(`/vehicles/${id}`, payload);
-  return response.data;
+  const response = await apiClient.patch(`/v1/vehicles/${id}`, payload);
+  return response.data.data || response.data;
 }
 
 export async function getAvailableVehicles(params: AvailableVehiclesParams) {
-  const response = await apiClient.get('/vehicles/available', { params });
+  const response = await apiClient.get('/v1/vehicles/available', { params });
   return response.data.data || response.data;
 }
 

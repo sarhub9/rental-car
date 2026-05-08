@@ -9,12 +9,20 @@ import {
   HiOutlineFunnel,
 } from 'react-icons/hi2';
 import { accountsService } from '@/services/accounts.service';
+import { vehicleService } from '@/services/vehicle.service';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { Spinner } from '@/components/Spinner';
 import { cleanPayload, sanitizeUuidFields } from '@/lib/clean-payload';
+
+interface VehicleOption {
+  id: string;
+  plate_number: string;
+  make: string;
+  model: string;
+}
 
 export default function MaintenancePage() {
   const router = useRouter();
@@ -26,6 +34,7 @@ export default function MaintenancePage() {
 
   // Create modal
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [vehicles, setVehicles] = useState<VehicleOption[]>([]);
   const [createForm, setCreateForm] = useState({
     vehicle_id: '',
     type: 'scheduled',
@@ -35,26 +44,40 @@ export default function MaintenancePage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Fetch vehicles for dropdown
+  useEffect(() => {
+    if (showCreateModal) {
+      vehicleService.getVehicles({ limit: 100 }).then((res) => {
+        const items = Array.isArray(res) ? res : (res?.data || []);
+        setVehicles(items);
+      }).catch(() => setVehicles([]));
+    }
+  }, [showCreateModal]);
+
   const fetchWorkOrders = useCallback(async () => {
     try {
       setLoading(true);
       const params: Record<string, string> = {};
-      if (activeTab !== 'all') params.filter = activeTab;
+      if (activeTab === 'overdue') {
+        const res = await accountsService.getOverdueMaintenance();
+        const items = Array.isArray(res) ? res : (res?.data || []);
+        setWorkOrders(items);
+        return;
+      }
+      if (activeTab === 'upcoming') {
+        const res = await accountsService.getUpcomingMaintenance();
+        const items = Array.isArray(res) ? res : (res?.data || []);
+        setWorkOrders(items);
+        return;
+      }
       if (statusFilter !== 'ALL') params.status = statusFilter;
       if (vehicleFilter) params.vehicle_id = vehicleFilter;
 
       const res = await accountsService.getMaintenanceRecords(params);
-
-      // Handle response - API returns array directly after our service fix
-      if (Array.isArray(res)) {
-        setWorkOrders(res);
-      } else if (res.data) {
-        setWorkOrders(res.data);
-      } else {
-        setWorkOrders(res);
-      }
+      const items = Array.isArray(res) ? res : (res?.data || []);
+      setWorkOrders(items);
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load work orders');
+      toast.error((err?.response?.data?.message || err?.message) ?? 'Failed to load work orders');
     } finally {
       setLoading(false);
     }
@@ -71,11 +94,15 @@ export default function MaintenancePage() {
         vehicle_id: createForm.vehicle_id,
         type: createForm.type,
         description: createForm.description,
-        estimated_cost: createForm.estimated_cost ? Number(createForm.estimated_cost) : undefined,
-        scheduled_date: createForm.scheduled_date || undefined,
+        estimated_cost: createForm.estimated_cost ? Number(createForm.estimated_cost) : null,
+        scheduled_date: createForm.scheduled_date || null,
       };
       const cleaned = cleanPayload(payload) as Record<string, unknown>;
       sanitizeUuidFields(cleaned, ['vehicle_id']);
+      if (!cleaned.vehicle_id || !cleaned.description) {
+        toast.error('Vehicle and description are required');
+        return;
+      }
       await accountsService.createMaintenance(cleaned as any);
       toast.success('Work order created');
       setShowCreateModal(false);
@@ -88,7 +115,8 @@ export default function MaintenancePage() {
       });
       fetchWorkOrders();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to create work order');
+      const message = err?.response?.data?.message || err?.message || 'Failed to create work order';
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -221,14 +249,19 @@ export default function MaintenancePage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle ID</label>
-            <input
-              type="text"
+            <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle *</label>
+            <select
               value={createForm.vehicle_id}
               onChange={(e) => setCreateForm({ ...createForm, vehicle_id: e.target.value })}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter vehicle ID"
-            />
+            >
+              <option value="">Select a vehicle</option>
+              {vehicles.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.plate_number} - {v.make} {v.model}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>

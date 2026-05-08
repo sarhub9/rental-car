@@ -49,9 +49,11 @@ export const authenticate = (req, res, next) => {
       });
     }
 
+    console.error('Auth middleware error:', error);
     return res.status(500).json({
       error: 'Internal Server Error',
       message: 'Authentication failed',
+      details: error.message,
     });
   }
 };
