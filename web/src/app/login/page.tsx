@@ -127,8 +127,13 @@ export default function LoginPage() {
       setLoggingIn(true);
       try {
         await staffLogin(email.trim(), password, '');
+        const loggedUser = JSON.parse(localStorage.getItem('auth_user') || '{}');
         toast.success('Login successful!');
-        router.replace('/dashboard');
+        if (loggedUser?.role === 'SUPER_ADMIN') {
+          router.replace('/superadmin');
+        } else {
+          router.replace('/dashboard');
+        }
       } catch (err: any) {
         const message =
           err?.response?.data?.error?.message ||

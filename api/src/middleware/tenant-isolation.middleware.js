@@ -3,6 +3,11 @@
  * Ensures all database queries are scoped to the authenticated user's tenant
  */
 export const enforceTenantIsolation = (req, res, next) => {
+  // SUPER_ADMIN is not scoped to any tenant
+  if (req.user?.role === 'SUPER_ADMIN') {
+    return next();
+  }
+
   if (!req.user || !req.user.tenantId) {
     return res.status(401).json({
       error: 'Unauthorized',
@@ -10,9 +15,7 @@ export const enforceTenantIsolation = (req, res, next) => {
     });
   }
 
-  // Attach tenant ID to request for easy access in controllers/services
   req.tenantId = req.user.tenantId;
-
   next();
 };
 

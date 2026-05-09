@@ -168,7 +168,7 @@ export default function SuperAdminCompaniesPage() {
         return (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => router.push(`/super-admin/companies/${company.id}`)}
+              onClick={() => router.push(`/superadmin/companies/${company.id}`)}
               className="p-1.5 text-[#0E7490] hover:bg-[#0E7490]/10 rounded-lg transition-colors"
               title="View Details"
             >

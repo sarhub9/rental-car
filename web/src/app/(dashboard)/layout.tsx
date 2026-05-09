@@ -16,6 +16,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [loading, user, router]);
 
+  // Apply superadmin theme settings
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('superadmin_settings_local') || '{}');
+      if (saved?.theme?.primary_color) document.documentElement.style.setProperty('--sa-primary', saved.theme.primary_color);
+      if (saved?.theme?.sidebar_color) document.documentElement.style.setProperty('--sa-sidebar', saved.theme.sidebar_color);
+    } catch {}
+  }, []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#F1F5F9]">

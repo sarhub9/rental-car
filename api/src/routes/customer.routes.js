@@ -24,7 +24,7 @@ router.get('/:id', requireRole('FRONT_DESK', 'OWNER_ADMIN'), CustomerController.
 
 router.patch(
   '/:id',
-  requireRole('OWNER_ADMIN'),
+  requireRole('FRONT_DESK', 'OWNER_ADMIN', 'SUPER_ADMIN'),
   validate(updateCustomerSchema),
   CustomerController.update
 );

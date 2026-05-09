@@ -41,15 +41,26 @@ class CustomerController {
 
   async list(req, res) {
     try {
+      const limit = parseInt(req.query.limit) || 15;
+      const page = parseInt(req.query.page) || 1;
+      const offset = req.query.offset ? parseInt(req.query.offset) : (page - 1) * limit;
+
       const filters = {
         is_active: req.query.is_active !== undefined ? req.query.is_active === 'true' : undefined,
-        customer_type: req.query.customer_type,
-        limit: req.query.limit ? parseInt(req.query.limit) : 50,
-        offset: req.query.offset ? parseInt(req.query.offset) : 0,
+        customer_type: req.query.customer_type || undefined,
+        limit,
+        offset,
       };
 
       const customers = await CustomerService.list(req.tenantId, filters);
-      return res.status(200).json({ success: true, data: customers });
+      return res.status(200).json({
+        success: true,
+        data: customers,
+        total: customers.length,
+        page,
+        limit,
+        pages: 1,
+      });
     } catch (error) {
       return res.status(500).json({
         error: 'Internal Server Error',

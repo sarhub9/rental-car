@@ -1,20 +1,21 @@
 import type { NextConfig } from "next";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://rental-car-upg8.onrender.com";
+
 const nextConfig: NextConfig = {
-  /* config options here */
   async rewrites() {
     return [
       {
         source: "/api/:path*",
-        destination: "https://rental-car-upg8.onrender.com/api/:path*",
+        destination: `${API_BASE}/api/:path*`,
       },
       {
         source: "/v1/:path*",
-        destination: "https://rental-car-upg8.onrender.com/v1/:path*",
+        destination: `${API_BASE}/v1/:path*`,
       },
       {
         source: "/auth/:path*",
-        destination: "https://rental-car-upg8.onrender.com/v1/auth/:path*",
+        destination: `${API_BASE}/v1/auth/:path*`,
       },
     ];
   },

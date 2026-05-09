@@ -2,10 +2,11 @@ import CustomerModel from '../models/customer.model.js';
 
 class CustomerService {
   async create(data) {
-    // Validate license not expired
-    this.validateLicenseExpiry(data.license_expiry_date);
+    // Only validate license expiry if provided
+    if (data.license_expiry_date) {
+      this.validateLicenseExpiry(data.license_expiry_date);
+    }
 
-    // Generate customer number
     const customerNumber = await CustomerModel.generateCustomerNumber(data.tenant_id);
     data.customer_number = customerNumber;
 

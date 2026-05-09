@@ -33,4 +33,11 @@ router.get('/settings', AdminSettingsController.getSettings);
  */
 router.patch('/settings', validate(updateSettingsSchema), AdminSettingsController.updateSettings);
 
+// Superadmin-only: feature flags + theme
+router.get('/superadmin-settings', requireRole('SUPER_ADMIN'), AdminSettingsController.getSuperadminSettings);
+router.put('/superadmin-settings', requireRole('SUPER_ADMIN'), AdminSettingsController.saveSuperadminSettings);
+
+// Superadmin-only: company activity feed
+router.get('/company-activity', requireRole('SUPER_ADMIN'), AdminSettingsController.getCompanyActivity);
+
 export default router;

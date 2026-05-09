@@ -27,6 +27,10 @@ import {
   HiOutlineXMark,
   HiOutlineShieldCheck,
   HiOutlineLightBulb,
+  HiOutlineIdentification,
+  HiOutlineCog6Tooth,
+  HiOutlineClipboardDocumentCheck as HiOutlineActivity,
+  HiOutlineBuildingOffice2,
 } from 'react-icons/hi2';
 import type { ReactNode } from 'react';
 
@@ -41,6 +45,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
     { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={20} /> },
     { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={20} /> },
+    { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={20} /> },
     { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={20} /> },
     { label: 'Invoices', href: '/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
     { label: 'Users', href: '/admin/users', icon: <HiOutlineUserGroup size={20} /> },
@@ -50,12 +55,13 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { label: 'Toll Fines', href: '/accounts/toll-fines', icon: <HiOutlineExclamationTriangle size={20} /> },
     { label: 'KPIs', href: '/admin/kpis', icon: <HiOutlineChartBar size={20} /> },
     { label: 'Reports', href: '/admin/reports', icon: <HiOutlineDocumentChartBar size={20} /> },
-    // { label: 'Audit Log', href: '/admin/audit-log', icon: <HiOutlineShieldCheck size={20} /> }, // TODO: Create page
+    { label: 'Super Admin', href: '/superadmin', icon: <HiOutlineBuildingOffice2 size={20} /> },
   ],
   OWNER_ADMIN: [
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
     { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={20} /> },
     { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={20} /> },
+    { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={20} /> },
     { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={20} /> },
     { label: 'Invoices', href: '/invoices', icon: <HiOutlineCurrencyDollar size={20} /> },
     { label: 'Users', href: '/admin/users', icon: <HiOutlineUserGroup size={20} /> },
@@ -65,12 +71,12 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { label: 'Toll Fines', href: '/accounts/toll-fines', icon: <HiOutlineExclamationTriangle size={20} /> },
     { label: 'KPIs', href: '/admin/kpis', icon: <HiOutlineChartBar size={20} /> },
     { label: 'Reports', href: '/admin/reports', icon: <HiOutlineDocumentChartBar size={20} /> },
-    // { label: 'Audit Log', href: '/admin/audit-log', icon: <HiOutlineShieldCheck size={20} /> }, // TODO: Create page
   ],
   FRONT_DESK: [
     { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={20} /> },
     { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={20} /> },
     { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={20} /> },
+    { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={20} /> },
     { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={20} /> },
   ],
   FLEET_MANAGER: [
@@ -115,10 +121,10 @@ export function Sidebar() {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--sa-sidebar, #0F172A)' }}>
       {/* Branding */}
       <div className="flex items-center gap-3 px-5 py-6 border-b border-white/10">
-        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0E7490]">
+        <div className="flex items-center justify-center w-9 h-9 rounded-lg" style={{ backgroundColor: 'var(--sa-primary, #0E7490)' }}>
           <HiOutlineTruck size={22} className="text-white" />
         </div>
         <span className="text-lg font-bold text-white tracking-tight">CarRental ERP</span>
@@ -134,10 +140,9 @@ export function Sidebar() {
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                active
-                  ? 'bg-[#0E7490] text-white'
-                  : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                active ? 'text-white' : 'text-slate-300 hover:bg-white/5 hover:text-white'
               }`}
+              style={active ? { backgroundColor: 'var(--sa-primary, #0E7490)' } : {}}
             >
               <span className={active ? 'text-white' : 'text-slate-400'}>{item.icon}</span>
               {item.label}
@@ -149,7 +154,7 @@ export function Sidebar() {
       {/* User info & logout */}
       <div className="border-t border-white/10 px-4 py-4 space-y-2">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-full bg-[#0E7490] flex items-center justify-center text-white text-sm font-bold">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: 'var(--sa-primary, #0E7490)' }}>
             {user?.full_name?.charAt(0)?.toUpperCase() ?? 'U'}
           </div>
           <div className="flex-1 min-w-0">
@@ -198,9 +203,8 @@ export function Sidebar() {
 
       {/* Mobile sidebar */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-[#0F172A] transform transition-transform duration-300 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ backgroundColor: 'var(--sa-sidebar, #0F172A)' }}
       >
         <button
           onClick={() => setMobileOpen(false)}
@@ -213,7 +217,7 @@ export function Sidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-[#0F172A]">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0" style={{ backgroundColor: 'var(--sa-sidebar, #0F172A)' }}>
         {sidebarContent}
       </aside>
 

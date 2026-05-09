@@ -267,6 +267,61 @@ async function updateCompanyStatus(req, res) {
   }
 }
 
+// ── Plan Management (SUPER_ADMIN) ─────────────────────────────────────────
+
+async function createPlan(req, res) {
+  try {
+    const { name, description, price_monthly, price_annual, max_vehicles, max_users, max_agreements_per_month, features, sort_order } = req.body;
+    if (!name || price_monthly === undefined) {
+      return res.status(400).json({ error: 'name and price_monthly are required' });
+    }
+    const plan = await SubscriptionPlanModel.create({
+      name, description, price_monthly, price_annual,
+      max_vehicles: max_vehicles || null,
+      max_users: max_users || null,
+      max_agreements_per_month: max_agreements_per_month || null,
+      features: features || {},
+      is_active: true,
+      sort_order: sort_order || 0,
+    });
+    return res.status(201).json({ success: true, data: plan });
+  } catch (err) {
+    console.error('Create plan error:', err);
+    return res.status(500).json({ error: 'Failed to create plan' });
+  }
+}
+
+async function updatePlan(req, res) {
+  try {
+    const plan = await SubscriptionPlanModel.update(req.params.id, req.body);
+    if (!plan) return res.status(404).json({ error: 'Plan not found' });
+    return res.json({ success: true, data: plan });
+  } catch (err) {
+    console.error('Update plan error:', err);
+    return res.status(500).json({ error: 'Failed to update plan' });
+  }
+}
+
+async function togglePlanStatus(req, res) {
+  try {
+    const plan = await SubscriptionPlanModel.findById(req.params.id);
+    if (!plan) return res.status(404).json({ error: 'Plan not found' });
+    const updated = await SubscriptionPlanModel.update(req.params.id, { is_active: !plan.is_active });
+    return res.json({ success: true, data: updated });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to toggle plan status' });
+  }
+}
+
+async function getAllPlans(req, res) {
+  try {
+    const plans = await SubscriptionPlanModel.list(false); // include inactive
+    return res.json({ success: true, data: plans });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch plans' });
+  }
+}
+
 export {
   register,
   getPlans,
@@ -276,4 +331,8 @@ export {
   listCompanies,
   getCompanyById,
   updateCompanyStatus,
+  createPlan,
+  updatePlan,
+  togglePlanStatus,
+  getAllPlans,
 };

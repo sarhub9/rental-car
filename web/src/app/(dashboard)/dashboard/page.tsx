@@ -8,7 +8,7 @@ import { DataTable, Column } from '@/components/DataTable';
 import { getAdminDashboard, getVehicleStats } from '@/services/admin.service';
 import { getInvoices } from '@/services/invoice.service';
 import { getDriverTasks } from '@/services/driver-task.service';
-import { getMyCompany, CompanyProfile } from '@/services/company.service';
+import { getMyCompany, CompanyProfile, getPlans, subscribe, SubscriptionPlan } from '@/services/company.service';
 import toast from 'react-hot-toast';
 import {
   HiOutlineDocumentText,
@@ -30,6 +30,9 @@ import {
   HiOutlineCalendarDays,
   HiOutlineBuildingOffice2,
   HiOutlineMegaphone,
+  HiOutlineTag,
+  HiOutlineXMark,
+  HiOutlineSparkles,
 } from 'react-icons/hi2';
 import {
   BarChart,
@@ -49,6 +52,195 @@ import type {
 } from '@/types';
 
 // ============================================================================
+// Subscribe Modal
+// ============================================================================
+
+function SubscribeModal({ onClose, onSubscribed }: { onClose: () => void; onSubscribed: () => void }) {
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+  const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
+
+  useEffect(() => {
+    getPlans()
+      .then((data) => setPlans(data.filter((p) => p.is_active)))
+      .catch(() => toast.error('Failed to load plans'))
+      .finally(() => setLoadingPlans(false));
+  }, []);
+
+  const handleSubscribe = async (planId: string) => {
+    setSubscribing(planId);
+    try {
+      await subscribe({ plan_id: planId });
+      toast.success('Successfully subscribed!');
+      onSubscribed();
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Subscription failed');
+    } finally {
+      setSubscribing(null);
+    }
+  };
+
+  const FEATURE_LABELS: Record<string, string> = {
+    agreements: 'Agreements',
+    invoicing: 'Invoicing',
+    disputes: 'Disputes',
+    kpi_dashboard: 'KPI Dashboard',
+    audit_logs: 'Audit Logs',
+    api_access: 'API Access',
+    multi_branch: 'Multi-Branch',
+    customer_portal: 'Customer Portal',
+    online_booking: 'Online Booking',
+    mobile_app: 'Mobile App',
+    gps_tracking: 'GPS Tracking',
+    custom_reports: 'Custom Reports',
+    priority_support: 'Priority Support',
+    white_label: 'White Label',
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-[#E2E8F0]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-[#0E7490]/10 text-[#0E7490] rounded-xl">
+                <HiOutlineSparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-[#0F172A] text-lg">Choose a Plan</h2>
+                <p className="text-xs text-[#64748B]">Subscribe to unlock all features</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Billing toggle */}
+              <div className="flex items-center bg-[#F1F5F9] rounded-xl p-1 gap-1">
+                <button
+                  onClick={() => setBilling('monthly')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${billing === 'monthly' ? 'bg-white text-[#0E7490] shadow-sm' : 'text-[#64748B]'}`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBilling('annual')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${billing === 'annual' ? 'bg-white text-[#0E7490] shadow-sm' : 'text-[#64748B]'}`}
+                >
+                  Annual
+                  <span className="ml-1 text-[10px] text-green-600 font-bold">Save</span>
+                </button>
+              </div>
+              <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+                <HiOutlineXMark className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Plans */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {loadingPlans ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-64 bg-gray-100 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="text-center py-12 text-[#64748B]">
+              <HiOutlineTag className="w-10 h-10 mx-auto mb-3 text-[#CBD5E1]" />
+              <p className="text-sm font-medium">No plans available</p>
+              <p className="text-xs mt-1">Contact support to get started</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {plans.map((plan) => {
+                const price = billing === 'annual' && plan.price_annual > 0 ? plan.price_annual : plan.price_monthly;
+                const period = billing === 'annual' ? '/year' : '/month';
+                const activeFeatures = Object.entries(plan.features || {})
+                  .filter(([, v]) => v)
+                  .map(([k]) => FEATURE_LABELS[k] ?? k);
+                const isSubscribing = subscribing === plan.id;
+
+                return (
+                  <div
+                    key={plan.id}
+                    className="border border-[#E2E8F0] rounded-2xl p-5 flex flex-col hover:border-[#0E7490] hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-[#0E7490]/10 text-[#0E7490] rounded-xl flex items-center justify-center">
+                        <HiOutlineTag className="w-4 h-4" />
+                      </div>
+                      <h3 className="font-semibold text-[#0F172A] text-sm">{plan.name}</h3>
+                    </div>
+                    {plan.description && (
+                      <p className="text-xs text-[#64748B] mb-3 line-clamp-2">{plan.description}</p>
+                    )}
+                    <div className="mb-4">
+                      <span className="text-2xl font-bold text-[#0F172A]">
+                        AED {price.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-[#94A3B8]">{period}</span>
+                    </div>
+
+                    {/* Limits */}
+                    <div className="space-y-1.5 mb-4 text-xs text-[#64748B]">
+                      <div className="flex justify-between">
+                        <span>Vehicles</span>
+                        <span className="font-medium text-[#0F172A]">{plan.max_vehicles ?? '∞'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Users</span>
+                        <span className="font-medium text-[#0F172A]">{plan.max_users ?? '∞'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Agreements/mo</span>
+                        <span className="font-medium text-[#0F172A]">{plan.max_agreements_per_month ?? '∞'}</span>
+                      </div>
+                    </div>
+
+                    {/* Features */}
+                    {activeFeatures.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {activeFeatures.map((f) => (
+                          <span key={f} className="px-1.5 py-0.5 bg-[#ECFEFF] text-[#0E7490] rounded text-[10px] font-medium">
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => handleSubscribe(plan.id)}
+                      disabled={!!subscribing}
+                      className="mt-auto w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-colors disabled:opacity-60 flex items-center justify-center gap-2 bg-[#0E7490] hover:bg-[#0C6680]"
+                    >
+                      {isSubscribing ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Subscribing...
+                        </>
+                      ) : (
+                        'Subscribe'
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // Admin / Owner Dashboard
 // ============================================================================
 
@@ -56,6 +248,7 @@ function AdminDashboard() {
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [company, setCompany] = useState<CompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -103,6 +296,17 @@ function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Subscribe Modal */}
+      {showSubscribeModal && (
+        <SubscribeModal
+          onClose={() => setShowSubscribeModal(false)}
+          onSubscribed={() => {
+            setShowSubscribeModal(false);
+            getMyCompany().then(setCompany).catch(() => {});
+          }}
+        />
+      )}
+
       {/* Trial Warning Banner */}
       {trialWarning !== null && trialWarning > 0 && (
         <div className={`rounded-xl p-4 flex items-center gap-3 ${trialWarning <= 3 ? 'bg-red-50 border border-red-200' : trialWarning <= 7 ? 'bg-orange-50 border border-orange-200' : 'bg-blue-50 border border-blue-200'}`}>
@@ -117,12 +321,12 @@ function AdminDashboard() {
               Subscribe to a plan to continue using all features after your trial ends.
             </p>
           </div>
-          <a
-            href="/subscribe"
+          <button
+            onClick={() => setShowSubscribeModal(true)}
             className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${trialWarning <= 3 ? 'bg-red-600 text-white hover:bg-red-700' : trialWarning <= 7 ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
           >
             View Plans
-          </a>
+          </button>
         </div>
       )}
       {trialWarning === 0 && (
@@ -132,42 +336,56 @@ function AdminDashboard() {
             <p className="text-sm font-semibold text-red-800">Trial period has ended</p>
             <p className="text-xs text-red-600 mt-0.5">Subscribe to a plan to regain access to all features.</p>
           </div>
-          <a href="/subscribe" className="px-4 py-2 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors">
+          <button
+            onClick={() => setShowSubscribeModal(true)}
+            className="px-4 py-2 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+          >
             Subscribe Now
-          </a>
+          </button>
         </div>
       )}
 
       {/* Company Info Bar */}
       {company && (
-        <div className="flex items-center justify-between bg-white rounded-xl border border-[#CBD5E1] shadow-sm p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-[#0E7490]/10 text-[#0E7490] rounded-xl">
+        <div className="flex items-center justify-between bg-white rounded-xl border border-[#CBD5E1] shadow-sm p-4 gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center justify-center w-10 h-10 bg-[#0E7490]/10 text-[#0E7490] rounded-xl shrink-0">
               <HiOutlineBuildingOffice2 size={20} />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-[#0F172A]">{company.name}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#0F172A] truncate">{company.name}</p>
               <p className="text-xs text-[#64748B]">
                 {company.plan_name || 'No Plan'} &middot; {company.subscription_status || company.status}
               </p>
             </div>
           </div>
-          {company.usage && (
-            <div className="hidden sm:flex items-center gap-6">
-              <div className="text-center">
-                <p className="text-lg font-bold text-[#0F172A]">{company.usage.vehicles_count}</p>
-                <p className="text-xs text-[#64748B]">Vehicles</p>
+          <div className="flex items-center gap-4 shrink-0">
+            {company.usage && (
+              <div className="hidden sm:flex items-center gap-6">
+                <div className="text-center">
+                  <p className="text-lg font-bold text-[#0F172A]">{company.usage.vehicles_count}</p>
+                  <p className="text-xs text-[#64748B]">Vehicles</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-[#0F172A]">{company.usage.users_count}</p>
+                  <p className="text-xs text-[#64748B]">Users</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-[#0F172A]">{company.usage.agreements_active}</p>
+                  <p className="text-xs text-[#64748B]">Active</p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-[#0F172A]">{company.usage.users_count}</p>
-                <p className="text-xs text-[#64748B]">Users</p>
-              </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-[#0F172A]">{company.usage.agreements_active}</p>
-                <p className="text-xs text-[#64748B]">Active</p>
-              </div>
-            </div>
-          )}
+            )}
+            {(!company.plan_name || company.status === 'TRIAL') && (
+              <button
+                onClick={() => setShowSubscribeModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0E7490] text-white rounded-lg text-xs font-semibold hover:bg-[#0C6680] transition-colors"
+              >
+                <HiOutlineSparkles className="w-3.5 h-3.5" />
+                Subscribe
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -770,6 +988,10 @@ export default function DashboardPage() {
     if (isLoading) return;
     if (!isAuthenticated) {
       router.replace('/login');
+      return;
+    }
+    if (user?.role === 'SUPER_ADMIN') {
+      router.replace('/superadmin');
       return;
     }
     if (user?.role === 'RENTAL_CUSTOMER') {

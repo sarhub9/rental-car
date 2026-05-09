@@ -57,10 +57,11 @@ async function updateStatus(req, res) {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['PENDING', 'REVIEWING', 'IMPLEMENTED', 'DECLINED'].includes(status)) {
+    const VALID = ['PENDING', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'REVIEWING', 'IMPLEMENTED', 'DECLINED'];
+    if (!VALID.includes(status)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid status',
+        error: `Invalid status. Allowed: ${VALID.join(', ')}`,
       });
     }
 

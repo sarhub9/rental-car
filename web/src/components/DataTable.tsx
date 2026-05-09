@@ -87,9 +87,11 @@ export function DataTable<T extends Record<string, any>>({
                   {columns.map((col, idx) => {
                     const value = col.key ? getNestedValue(row, col.key) : undefined;
                     const renderFn = col.render || col.accessor;
+                    // If column has a key, pass the resolved value; if no key, pass the full row
+                    const cellArg = col.key ? value : row;
                     return (
                       <td key={col.key || idx} className="px-4 py-3 text-[#0F172A] whitespace-nowrap">
-                        {renderFn ? (renderFn as any)(value ?? row, row, rowIdx) : (value ?? '—')}
+                        {renderFn ? (renderFn as any)(cellArg, row, rowIdx) : (value ?? '—')}
                       </td>
                     );
                   })}

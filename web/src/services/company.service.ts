@@ -171,3 +171,39 @@ export async function submitFeatureRequest(payload: FeatureRequestPayload) {
   const response = await apiClient.post('/v1/feature-requests', payload);
   return response.data.data;
 }
+
+// ============================================================================
+// Super Admin Plan Management
+// ============================================================================
+
+export interface PlanPayload {
+  name: string;
+  description?: string;
+  price_monthly: number;
+  price_annual?: number;
+  max_vehicles?: number | null;
+  max_users?: number | null;
+  max_agreements_per_month?: number | null;
+  features?: Record<string, boolean>;
+  sort_order?: number;
+}
+
+export async function getSuperAdminPlans(): Promise<SubscriptionPlan[]> {
+  const response = await apiClient.get('/v1/companies/super-admin/plans');
+  return response.data.data;
+}
+
+export async function createSuperAdminPlan(payload: PlanPayload): Promise<SubscriptionPlan> {
+  const response = await apiClient.post('/v1/companies/super-admin/plans', payload);
+  return response.data.data;
+}
+
+export async function updateSuperAdminPlan(id: string, payload: Partial<PlanPayload>): Promise<SubscriptionPlan> {
+  const response = await apiClient.patch(`/v1/companies/super-admin/plans/${id}`, payload);
+  return response.data.data;
+}
+
+export async function toggleSuperAdminPlan(id: string): Promise<SubscriptionPlan> {
+  const response = await apiClient.patch(`/v1/companies/super-admin/plans/${id}/toggle`);
+  return response.data.data;
+}
