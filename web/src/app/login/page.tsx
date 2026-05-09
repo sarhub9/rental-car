@@ -145,7 +145,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex bg-[#0C1A2E]">
 
         {/* ── LEFT PANEL ──────────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden flex-col justify-between p-12"
+        <div className="hidden lg:flex lg:w-[52%] lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col justify-between p-12"
           style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 50%, #0C1A2E 100%)' }}>
 
           {/* Animated blobs */}
@@ -213,11 +213,12 @@ export default function LoginPage() {
         </div>
 
         {/* ── RIGHT PANEL ─────────────────────────────────────── */}
-        <div className="flex-1 flex items-center justify-center p-6 bg-white relative overflow-hidden">
+        <div className="flex-1 bg-white overflow-y-auto">
+          <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 relative">
 
           {/* Subtle bg pattern */}
           <div className="absolute inset-0 pointer-events-none"
-            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(14,116,144,0.05) 0%, transparent 50%)', }} />
+            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(14,116,144,0.05) 0%, transparent 50%)' }} />
 
           <div className={`w-full max-w-sm relative z-10 ${mounted ? 'anim-fadeup' : 'opacity-0'}`}>
 
@@ -396,6 +397,7 @@ export default function LoginPage() {
               </a>
             </p>
 
+          </div>
           </div>
         </div>
       </div>
