@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -34,6 +34,7 @@ export default function LoginPage() {
 
   const [activeTab, setActiveTab]       = useState<LoginTab>('staff');
   const [mounted, setMounted]           = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
 
   // Staff
   const [email, setEmail]               = useState('');
@@ -140,7 +141,29 @@ export default function LoginPage() {
         .float3 { animation: float3 7s ease-in-out infinite; }
         .tab-content { animation: fadeUp 0.25s ease both; }
         input:-webkit-autofill { -webkit-box-shadow:0 0 0 50px white inset !important; }
+        @keyframes spinScale { 0%{transform:scale(0) rotate(0deg);opacity:0} 40%{opacity:1} 100%{transform:scale(1) rotate(720deg);opacity:1} }
+        @keyframes expandCircle { 0%{clip-path:circle(0% at 50% 50%)} 100%{clip-path:circle(150% at 50% 50%)} }
+        @keyframes textFade { 0%,60%{opacity:0;transform:translateY(10px)} 100%{opacity:1;transform:translateY(0)} }
+        .spin-enter { animation: spinScale 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .text-enter  { animation: textFade 0.8s 0.3s ease both; }
+        .expand      { animation: expandCircle 0.5s 0.5s ease-in both; }
       `}</style>
+
+      {/* ── Page transition overlay ── */}
+      {transitioning && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 100%)' }}>
+          <div className="spin-enter relative flex items-center justify-center w-24 h-24 mb-6">
+            <div className="absolute inset-0 rounded-full border-4 border-[#0E7490]/20" />
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#0E7490] border-r-[#22D3EE] animate-spin" />
+            <div className="w-10 h-10 bg-[#0E7490] rounded-2xl flex items-center justify-center shadow-lg shadow-[#0E7490]/40">
+              <HiOutlineTruck className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <p className="text-enter text-white font-semibold text-lg tracking-wide">Register</p>
+          <p className="text-enter text-slate-400 text-sm mt-1" style={{ animationDelay: '0.45s' }}>Setting up your account...</p>
+        </div>
+      )}
 
       <div className="min-h-screen flex bg-[#0C1A2E]">
 
@@ -213,28 +236,31 @@ export default function LoginPage() {
         </div>
 
         {/* ── RIGHT PANEL ─────────────────────────────────────── */}
-        <div className="flex-1 bg-white overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" style={{ background: 'linear-gradient(160deg, #0F2132 0%, #0C1A2E 100%)' }}>
           <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 relative">
 
-          {/* Subtle bg pattern */}
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(14,116,144,0.05) 0%, transparent 50%)' }} />
+          {/* Subtle glow behind card */}
+          <div className="absolute pointer-events-none w-96 h-96 rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, #0E7490, transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
 
           <div className={`w-full max-w-sm relative z-10 ${mounted ? 'anim-fadeup' : 'opacity-0'}`}>
 
             {/* Mobile brand */}
-            <div className="lg:hidden flex items-center gap-3 mb-8">
+            <div className="lg:hidden flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-[#0E7490] rounded-xl flex items-center justify-center">
                 <HiOutlineTruck className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="font-bold text-[#0F172A] text-base">Drivebx ERP</p>
-                <p className="text-xs text-[#64748B]">Car Rental Management</p>
+                <p className="font-bold text-white text-base">Drivebx ERP</p>
+                <p className="text-xs text-slate-400">Car Rental Management</p>
               </div>
             </div>
 
+            {/* Card */}
+            <div className="bg-white rounded-2xl shadow-2xl shadow-black/40 p-7">
+
             {/* Heading */}
-            <div className="mb-7">
+            <div className="mb-6">
               <h2 className="text-2xl font-bold text-[#0F172A]">Welcome back</h2>
               <p className="text-sm text-[#64748B] mt-1">Sign in to continue to your dashboard</p>
             </div>
@@ -389,12 +415,17 @@ export default function LoginPage() {
               </div>
             )}
 
+            </div>{/* end card */}
+
             {/* Register link */}
-            <p className="text-center text-xs text-[#94A3B8] mt-8">
+            <p className="text-center text-xs text-slate-400 mt-5">
               New rental business?{' '}
-              <a href="/register" className="text-[#0E7490] font-semibold hover:underline">
-                Start free trial
-              </a>
+              <button
+                onClick={() => { setTransitioning(true); setTimeout(() => router.push('/register'), 900); }}
+                className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors"
+              >
+                Start free trial →
+              </button>
             </p>
 
           </div>

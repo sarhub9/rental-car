@@ -201,23 +201,28 @@ export default function RegisterPage() {
         </div>
 
         {/* ── RIGHT PANEL ────────────────────────────────── */}
-        <div className="flex-1 bg-white overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" style={{ background: 'linear-gradient(160deg, #0F2132 0%, #0C1A2E 100%)' }}>
           <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 relative">
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ backgroundImage: 'radial-gradient(circle at 80% 10%, rgba(14,116,144,0.05) 0%, transparent 50%)' }} />
+
+          {/* Glow behind card */}
+          <div className="absolute pointer-events-none w-96 h-96 rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, #0E7490, transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
 
           <div className={`w-full max-w-sm relative z-10 ${mounted ? 'anim-up' : 'opacity-0'}`}>
 
             {/* Mobile brand */}
-            <div className="lg:hidden flex items-center gap-3 mb-7">
+            <div className="lg:hidden flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-[#0E7490] rounded-xl flex items-center justify-center">
                 <HiOutlineTruck className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="font-bold text-[#0F172A] text-base">Drivebx ERP</p>
-                <p className="text-xs text-[#64748B]">Car Rental Management</p>
+                <p className="font-bold text-white text-base">Drivebx ERP</p>
+                <p className="text-xs text-slate-400">Car Rental Management</p>
               </div>
             </div>
+
+            {/* Card */}
+            <div className="bg-white rounded-2xl shadow-2xl shadow-black/40 p-7">
 
             {/* Heading */}
             <div className="mb-6">
@@ -367,11 +372,13 @@ export default function RegisterPage() {
               </form>
             )}
 
+            </div>{/* end card */}
+
             {/* Sign in link */}
-            <p className="text-center text-xs text-[#94A3B8] mt-7">
+            <p className="text-center text-xs text-slate-400 mt-5">
               Already have an account?{' '}
-              <Link href="/login" className="text-[#0E7490] font-semibold hover:underline">
-                Sign in
+              <Link href="/login" className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">
+                Sign in →
               </Link>
             </p>
           </div>
