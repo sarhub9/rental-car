@@ -6,11 +6,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:3000/api/:path*",
+        destination: "https://rental-car-upg8.onrender.com/api/:path*",
       },
       {
         source: "/v1/:path*",
-        destination: "http://localhost:3000/v1/:path*",
+        destination: "https://rental-car-upg8.onrender.com/v1/:path*",
       },
     ];
   },
