@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         source: "/v1/:path*",
         destination: "https://rental-car-upg8.onrender.com/v1/:path*",
       },
+      {
+        source: "/auth/:path*",
+        destination: "https://rental-car-upg8.onrender.com/v1/auth/:path*",
+      },
     ];
   },
 };
