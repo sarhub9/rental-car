@@ -128,7 +128,7 @@ export default function RegisterPage() {
       <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 50%, #0C1A2E 100%)' }}>
 
         {/* ── LEFT PANEL ─────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-1/2 lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col py-10">
+        <div className="hidden lg:flex lg:w-1/2 lg:sticky lg:top-0 lg:h-screen relative flex-col overflow-y-auto py-10">
 
           {/* Animated blobs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -143,7 +143,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Content wrapper */}
-          <div className="relative z-10 flex flex-col h-full max-w-[420px] ml-auto mr-12 w-full">
+          <div className="relative z-10 flex flex-col max-w-[420px] ml-auto mr-12 w-full gap-8">
 
           {/* Brand */}
           <div className={`shrink-0 ${mounted ? 'anim-up' : 'opacity-0'}`}>
@@ -162,7 +162,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Main content */}
-          <div className={`flex-1 flex flex-col justify-center gap-5 ${mounted ? 'anim-up' : 'opacity-0'}`}
+          <div className={`flex flex-col gap-5 ${mounted ? 'anim-up' : 'opacity-0'}`}
             style={{ animationDelay: '0.1s' }}>
 
             {/* Badge */}
