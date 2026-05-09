@@ -145,7 +145,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex bg-[#0C1A2E]">
 
         {/* ── LEFT PANEL ──────────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-[52%] lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col justify-between p-12"
+        <div className="hidden lg:flex lg:w-[52%] lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col px-12 py-8"
           style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 50%, #0C1A2E 100%)' }}>
 
           {/* Animated blobs */}
@@ -161,9 +161,9 @@ export default function LoginPage() {
               style={{ backgroundImage: 'linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
           </div>
 
-          {/* Brand */}
-          <div className={mounted ? 'anim-fadeup relative z-10' : 'opacity-0'}>
-            <div className="flex items-center gap-3 mb-2">
+          {/* Brand — top */}
+          <div className={`relative z-10 shrink-0 ${mounted ? 'anim-fadeup' : 'opacity-0'}`}>
+            <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="w-12 h-12 bg-[#0E7490] rounded-2xl flex items-center justify-center shadow-lg shadow-[#0E7490]/30">
                   <HiOutlineTruck className="w-6 h-6 text-white" />
@@ -177,8 +177,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Headline */}
-          <div className={`relative z-10 ${mounted ? 'anim-fadeup-d1' : 'opacity-0'}`}>
+          {/* Headline — centred in remaining space */}
+          <div className={`relative z-10 flex-1 flex flex-col justify-center ${mounted ? 'anim-fadeup-d1' : 'opacity-0'}`}>
             <h1 className="text-4xl font-bold text-white leading-tight mb-4">
               Manage your<br />
               <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #22D3EE, #0E7490)' }}>
@@ -204,8 +204,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Footer */}
-          <div className={`relative z-10 ${mounted ? 'anim-fadeup-d2' : 'opacity-0'}`}>
+          {/* Footer — bottom */}
+          <div className={`relative z-10 shrink-0 ${mounted ? 'anim-fadeup-d2' : 'opacity-0'}`}>
             <p className="text-slate-500 text-xs">
               © {new Date().getFullYear()} Drivebx ERP · UAE Car Rental Management
             </p>

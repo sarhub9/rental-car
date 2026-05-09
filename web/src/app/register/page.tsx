@@ -128,7 +128,7 @@ export default function RegisterPage() {
       <div className="min-h-screen flex bg-[#0C1A2E]">
 
         {/* ── LEFT PANEL ─────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-[48%] lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col justify-between p-12"
+        <div className="hidden lg:flex lg:w-[48%] lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col px-10 py-8"
           style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 50%, #0C1A2E 100%)' }}>
 
           {/* Animated blobs */}
@@ -143,30 +143,31 @@ export default function RegisterPage() {
               style={{ backgroundImage: 'linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
           </div>
 
-          {/* Brand */}
-          <div className={`relative z-10 ${mounted ? 'anim-up' : 'opacity-0'}`}>
+          {/* Brand — top */}
+          <div className={`relative z-10 shrink-0 ${mounted ? 'anim-up' : 'opacity-0'}`}>
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-12 h-12 bg-[#0E7490] rounded-2xl flex items-center justify-center shadow-lg shadow-[#0E7490]/30">
-                  <HiOutlineTruck className="w-6 h-6 text-white" />
+                <div className="w-11 h-11 bg-[#0E7490] rounded-2xl flex items-center justify-center shadow-lg shadow-[#0E7490]/30">
+                  <HiOutlineTruck className="w-5 h-5 text-white" />
                 </div>
                 <div className="absolute inset-0 rounded-2xl border-2 border-[#0E7490]/40 scale-110 animate-ping" style={{ animationDuration: '3s' }} />
               </div>
               <div>
-                <p className="text-xl font-bold text-white">Drivebx ERP</p>
-                <p className="text-[11px] text-cyan-400 font-medium tracking-widest uppercase">Platform</p>
+                <p className="text-lg font-bold text-white">Drivebx ERP</p>
+                <p className="text-[10px] text-cyan-400 font-medium tracking-widest uppercase">Platform</p>
               </div>
             </div>
           </div>
 
-          {/* Main copy */}
-          <div className={`relative z-10 ${mounted ? 'anim-up' : 'opacity-0'}`} style={{ animationDelay: '0.1s' }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0E7490]/20 border border-[#0E7490]/30 mb-5">
+          {/* Main copy — centred in remaining space */}
+          <div className={`relative z-10 flex-1 flex flex-col justify-center ${mounted ? 'anim-up' : 'opacity-0'}`}
+            style={{ animationDelay: '0.1s' }}>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0E7490]/20 border border-[#0E7490]/30 mb-5 self-start">
               <HiOutlineSparkles className="w-3.5 h-3.5 text-cyan-400" />
               <span className="text-xs font-semibold text-cyan-300">14-day free trial</span>
             </div>
 
-            <h1 className="text-4xl font-bold text-white leading-tight mb-4">
+            <h1 className="text-3xl font-bold text-white leading-tight mb-3">
               Start your<br />
               <span className="text-transparent bg-clip-text"
                 style={{ backgroundImage: 'linear-gradient(90deg, #22D3EE, #0E7490)' }}>
@@ -174,7 +175,7 @@ export default function RegisterPage() {
               </span><br />
               journey today
             </h1>
-            <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-xs">
+            <p className="text-slate-400 text-sm leading-relaxed mb-6 max-w-xs">
               Set up your company in under 2 minutes and get full access to agreements, fleet, invoicing, and more.
             </p>
 
@@ -192,8 +193,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Footer */}
-          <p className={`relative z-10 text-slate-500 text-xs ${mounted ? 'anim-up' : 'opacity-0'}`}
+          {/* Footer — bottom */}
+          <p className={`relative z-10 shrink-0 text-slate-500 text-xs ${mounted ? 'anim-up' : 'opacity-0'}`}
             style={{ animationDelay: '0.2s' }}>
             © {new Date().getFullYear()} Drivebx ERP · UAE Car Rental Management
           </p>
