@@ -169,7 +169,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
             <HiOutlineTruck className="w-8 h-8 text-[#0E7490]" />
           </div>
-          <h1 className="text-2xl font-bold text-white">CarRental ERP</h1>
+          <h1 className="text-2xl font-bold text-white">Drivebx ERP</h1>
           <p className="text-white/60 text-sm mt-1">Sign in to your account</p>
         </div>
 
@@ -414,7 +414,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-white/40 text-xs mt-6">
-          CarRental ERP &mdash; Car Rental Management Platform
+          Drivebx ERP &mdash; Car Rental Management Platform — Drivebx
         </p>
         <p className="text-center text-white/60 text-sm mt-2">
           Want to start your own rental business?{' '}

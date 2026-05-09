@@ -47,7 +47,7 @@ const DEFAULT_FLAGS: Record<string, boolean> = {
 };
 
 const DEFAULT_THEME = {
-  company_name: 'CarRental ERP',
+  company_name: 'Drivebx ERP',
   primary_color: '#0E7490',
   sidebar_color: '#0F172A',
 };
@@ -302,7 +302,7 @@ export default function SettingsPage() {
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: theme.primary_color }}>
                     <HiOutlineTruck className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-bold text-white truncate">{theme.company_name || 'CarRental ERP'}</span>
+                  <span className="text-xs font-bold text-white truncate">{theme.company_name || 'Drivebx ERP'}</span>
                 </div>
                 <nav className="flex-1 p-2 space-y-0.5">
                   {[

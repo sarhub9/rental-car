@@ -82,7 +82,7 @@ export default function SuperAdminDashboard() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Platform Overview</h1>
-        <p className="text-sm text-gray-500 mt-1">CarRental ERP — SaaS Management</p>
+        <p className="text-sm text-gray-500 mt-1">Drivebx ERP — SaaS Management</p>
       </div>
 
       {/* Stats */}

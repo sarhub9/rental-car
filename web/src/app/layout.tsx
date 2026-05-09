@@ -6,8 +6,8 @@ import { Providers } from '@/components/Providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'CarRental ERP',
-  description: 'Car Rental Management Platform',
+  title: 'Drivebx ERP',
+  description: 'Drivebx — Car Rental Management Platform',
 };
 
 export default function RootLayout({

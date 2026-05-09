@@ -75,7 +75,7 @@ export default function SuperAdminLoginPage() {
           <div className="flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
             <HiOutlineTruck className="w-8 h-8 text-[#0E7490]" />
           </div>
-          <h1 className="text-2xl font-bold text-white">CarRental ERP</h1>
+          <h1 className="text-2xl font-bold text-white">Drivebx ERP</h1>
           <p className="text-white/60 text-sm mt-1">Super Admin Portal</p>
         </div>
 
@@ -151,7 +151,7 @@ export default function SuperAdminLoginPage() {
         </div>
 
         <p className="text-center text-xs text-white/30 mt-6">
-          CarRental ERP &copy; {new Date().getFullYear()} — Platform Management
+          Drivebx ERP &copy; {new Date().getFullYear()} — Platform Management
         </p>
       </div>
     </div>

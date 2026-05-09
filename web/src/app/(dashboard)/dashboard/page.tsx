@@ -34,6 +34,7 @@ import {
   HiOutlineTag,
   HiOutlineXMark,
   HiOutlineSparkles,
+  HiOutlineChartBarSquare,
 } from 'react-icons/hi2';
 import {
   BarChart,
@@ -308,174 +309,176 @@ function AdminDashboard() {
   if (loading) return <DashboardSkeleton />;
   if (!data) return <EmptyState message="No dashboard data available" />;
 
+  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const kpis = [
+    { label: 'Active Agreements', value: data.active_agreements ?? 0, icon: <HiOutlineDocumentText className="w-5 h-5" />, color: '#0E7490', bg: 'bg-[#0E7490]/10' },
+    { label: 'Total Revenue', value: `AED ${(data.total_revenue ?? 0).toLocaleString()}`, icon: <HiOutlineCurrencyDollar className="w-5 h-5" />, color: '#059669', bg: 'bg-emerald-100' },
+    { label: 'Fleet Utilization', value: `${data.fleet_utilization_percent ?? 0}%`, icon: <HiOutlineTruck className="w-5 h-5" />, color: '#7C3AED', bg: 'bg-violet-100' },
+    { label: 'Overdue Returns', value: data.overdue_returns ?? 0, icon: <HiOutlineExclamationTriangle className="w-5 h-5" />, color: '#DC2626', bg: 'bg-red-100' },
+  ];
+
+  const quickActions = [
+    { label: 'New Agreement', href: '/agreements/create', icon: <HiOutlineDocumentText className="w-4 h-4" /> },
+    { label: 'Add Customer', href: '/customers', icon: <HiOutlineUserGroup className="w-4 h-4" /> },
+    { label: 'View Vehicles', href: '/vehicles', icon: <HiOutlineTruck className="w-4 h-4" /> },
+    { label: 'Invoices', href: '/invoices', icon: <HiOutlineCurrencyDollar className="w-4 h-4" /> },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Subscribe Modal */}
+    <div className="space-y-5">
       {showSubscribeModal && (
         <SubscribeModal
           onClose={() => setShowSubscribeModal(false)}
-          onSubscribed={() => {
-            setShowSubscribeModal(false);
-            getMyCompany().then(setCompany).catch(() => {});
-          }}
+          onSubscribed={() => { getMyCompany().then(setCompany).catch(() => {}); }}
         />
       )}
 
-      {/* Trial Warning Banner */}
-      {trialWarning !== null && trialWarning > 0 && (
-        <div className={`rounded-xl p-4 flex items-center gap-3 ${trialWarning <= 3 ? 'bg-red-50 border border-red-200' : trialWarning <= 7 ? 'bg-orange-50 border border-orange-200' : 'bg-blue-50 border border-blue-200'}`}>
-          <HiOutlineMegaphone className={`w-6 h-6 shrink-0 ${trialWarning <= 3 ? 'text-red-600' : trialWarning <= 7 ? 'text-orange-600' : 'text-blue-600'}`} />
-          <div className="flex-1">
-            <p className={`text-sm font-semibold ${trialWarning <= 3 ? 'text-red-800' : trialWarning <= 7 ? 'text-orange-800' : 'text-blue-800'}`}>
-              {trialWarning <= 3
-                ? `Trial expires in ${trialWarning} day${trialWarning === 1 ? '' : 's'}!`
-                : `Trial expires in ${trialWarning} days`}
-            </p>
-            <p className={`text-xs mt-0.5 ${trialWarning <= 3 ? 'text-red-600' : trialWarning <= 7 ? 'text-orange-600' : 'text-blue-600'}`}>
-              Subscribe to a plan to continue using all features after your trial ends.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowSubscribeModal(true)}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${trialWarning <= 3 ? 'bg-red-600 text-white hover:bg-red-700' : trialWarning <= 7 ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-          >
-            View Plans
-          </button>
-        </div>
-      )}
-      {trialWarning === 0 && (
-        <div className="rounded-xl p-4 flex items-center gap-3 bg-red-50 border border-red-200">
-          <HiOutlineExclamationTriangle className="w-6 h-6 shrink-0 text-red-600" />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-red-800">Trial period has ended</p>
-            <p className="text-xs text-red-600 mt-0.5">Subscribe to a plan to regain access to all features.</p>
-          </div>
-          <button
-            onClick={() => setShowSubscribeModal(true)}
-            className="px-4 py-2 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
-          >
-            Subscribe Now
-          </button>
-        </div>
-      )}
-
-      {/* Company Info Bar */}
-      {company && (
-        <div className="flex items-center justify-between bg-white rounded-xl border border-[#CBD5E1] shadow-sm p-4 gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex items-center justify-center w-10 h-10 bg-[#0E7490]/10 text-[#0E7490] rounded-xl shrink-0">
-              <HiOutlineBuildingOffice2 size={20} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[#0F172A] truncate">{company.name}</p>
-              <p className="text-xs text-[#64748B]">
-                {company.plan_name || 'No Plan'} &middot; {company.subscription_status || company.status}
-              </p>
+      {/* Header */}
+      <div className="rounded-2xl overflow-hidden shadow-sm" style={{ background: 'linear-gradient(135deg, var(--sa-sidebar, #0F172A) 0%, #1E293B 100%)' }}>
+        <div className="px-6 py-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-medium text-slate-400 mb-1">{today}</p>
+            <h1 className="text-xl font-bold text-white">{company?.name ?? 'Dashboard'}</h1>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                company?.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-300' :
+                company?.status === 'TRIAL'  ? 'bg-blue-500/20 text-blue-300' :
+                'bg-red-500/20 text-red-300'
+              }`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                {company?.subscription_status || company?.status || 'Unknown'}
+              </span>
+              {company?.plan_name && (
+                <span className="text-[11px] text-slate-400">{company.plan_name}</span>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-4 shrink-0">
-            {company.usage && (
-              <div className="hidden sm:flex items-center gap-6">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-[#0F172A]">{company.usage.vehicles_count}</p>
-                  <p className="text-xs text-[#64748B]">Vehicles</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-[#0F172A]">{company.usage.users_count}</p>
-                  <p className="text-xs text-[#64748B]">Users</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-[#0F172A]">{company.usage.agreements_active}</p>
-                  <p className="text-xs text-[#64748B]">Active</p>
-                </div>
+          <div className="flex items-center gap-3">
+            {company?.usage && (
+              <div className="hidden sm:flex items-center gap-5 mr-2">
+                {[
+                  { v: company.usage.vehicles_count, l: 'Vehicles' },
+                  { v: company.usage.users_count, l: 'Users' },
+                  { v: company.usage.agreements_active, l: 'Active' },
+                ].map(s => (
+                  <div key={s.l} className="text-center">
+                    <p className="text-lg font-bold text-white">{s.v}</p>
+                    <p className="text-[10px] text-slate-400">{s.l}</p>
+                  </div>
+                ))}
               </div>
             )}
-            {(!company.plan_name || company.status === 'TRIAL') && (
-              <button
-                onClick={() => setShowSubscribeModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0E7490] text-white rounded-lg text-xs font-semibold hover:bg-[#0C6680] transition-colors"
-              >
+            {(!company?.plan_name || company?.status === 'TRIAL') && (
+              <button onClick={() => setShowSubscribeModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white border border-white/20 hover:bg-white/10 transition-colors">
                 <HiOutlineSparkles className="w-3.5 h-3.5" />
                 Subscribe
               </button>
             )}
           </div>
         </div>
-      )}
 
-      <div>
-        <h1 className="text-2xl font-bold text-[#0F172A]">Admin Dashboard</h1>
-        <p className="text-sm text-[#64748B] mt-1">Overview of your rental operations</p>
+        {/* Trial banner inside header */}
+        {trialWarning !== null && trialWarning <= 7 && (
+          <div className={`px-6 py-2.5 flex items-center gap-3 border-t border-white/10 ${trialWarning <= 3 ? 'bg-red-500/20' : 'bg-orange-500/15'}`}>
+            <HiOutlineMegaphone className={`w-4 h-4 shrink-0 ${trialWarning <= 3 ? 'text-red-300' : 'text-orange-300'}`} />
+            <p className={`text-xs flex-1 ${trialWarning <= 3 ? 'text-red-200' : 'text-orange-200'}`}>
+              {trialWarning === 0 ? 'Trial has ended — subscribe to regain access' : `Trial expires in ${trialWarning} day${trialWarning === 1 ? '' : 's'}`}
+            </p>
+            <button onClick={() => setShowSubscribeModal(true)}
+              className={`px-3 py-1 rounded-lg text-[11px] font-semibold ${trialWarning <= 3 ? 'bg-red-500 text-white' : 'bg-orange-500 text-white'}`}>
+              View Plans
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Active Agreements"
-          value={data.active_agreements}
-          icon={<HiOutlineDocumentText size={22} />}
-          color="#0E7490"
-        />
-        <StatsCard
-          title="Total Revenue"
-          value={`AED ${(data.total_revenue ?? 0).toLocaleString()}`}
-          icon={<HiOutlineCurrencyDollar size={22} />}
-          color="#059669"
-        />
-        <StatsCard
-          title="Fleet Utilization"
-          value={`${data.fleet_utilization_percent ?? 0}%`}
-          icon={<HiOutlineTruck size={22} />}
-          color="#7C3AED"
-        />
-        <StatsCard
-          title="Overdue Returns"
-          value={data.overdue_returns}
-          icon={<HiOutlineExclamationTriangle size={22} />}
-          color="#DC2626"
-        />
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpis.map(k => (
+          <div key={k.label} className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${k.bg}`} style={{ color: k.color }}>
+                {k.icon}
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-[#0F172A]">{k.value}</p>
+            <p className="text-xs text-[#64748B] mt-1">{k.label}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Monthly Trend Chart */}
-      {data.monthly_trend && data.monthly_trend.length > 0 && (
-        <div className="bg-white rounded-xl border border-[#CBD5E1] shadow-sm p-5">
-          <h2 className="text-lg font-semibold text-[#0F172A] mb-4">Monthly Revenue Trend</h2>
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={data.monthly_trend} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 12, fill: '#64748B' }} />
-              <Tooltip
-                contentStyle={{
-                  background: '#0F172A',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: '#F8FAFC',
-                  fontSize: 13,
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: 13 }} />
-              <Bar dataKey="agreements" fill="#0E7490" radius={[4, 4, 0, 0]} name="Agreements" />
-              <Bar
-                dataKey="estimated_revenue"
-                fill="#059669"
-                radius={[4, 4, 0, 0]}
-                name="Revenue (AED)"
-              />
-            </BarChart>
-          </ResponsiveContainer>
+      {/* Chart + Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Chart */}
+        {data.monthly_trend && data.monthly_trend.length > 0 ? (
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-[#0F172A]">Monthly Revenue</h2>
+              <span className="text-xs text-[#64748B]">Last {data.monthly_trend.length} months</span>
+            </div>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={data.monthly_trend} margin={{ top: 0, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ background: '#0F172A', border: 'none', borderRadius: '10px', color: '#F8FAFC', fontSize: 12 }} cursor={{ fill: '#F1F5F9' }} />
+                <Bar dataKey="agreements" fill="#0E7490" radius={[4, 4, 0, 0]} name="Agreements" maxBarSize={32} />
+                <Bar dataKey="estimated_revenue" fill="#059669" radius={[4, 4, 0, 0]} name="Revenue (AED)" maxBarSize={32} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <div className="text-center text-[#94A3B8]">
+              <HiOutlineChartBarSquare className="w-10 h-10 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">No chart data yet</p>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5">
+          <h2 className="text-sm font-bold text-[#0F172A] mb-3">Quick Actions</h2>
+          <div className="space-y-2">
+            {quickActions.map(a => (
+              <a key={a.label} href={a.href}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#F8FAFC] border border-transparent hover:border-[#E2E8F0] transition-all group">
+                <div className="w-8 h-8 rounded-lg bg-[#0E7490]/10 text-[#0E7490] flex items-center justify-center shrink-0 group-hover:bg-[#0E7490] group-hover:text-white transition-colors">
+                  {a.icon}
+                </div>
+                <span className="text-sm font-medium text-[#374151] group-hover:text-[#0F172A]">{a.label}</span>
+              </a>
+            ))}
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Recent Activity */}
-      <div>
-        <h2 className="text-lg font-semibold text-[#0F172A] mb-3">Recent Activity</h2>
-        <DataTable
-          columns={activityColumns}
-          data={data.recent_activity ?? []}
-          emptyMessage="No recent activity"
-        />
-      </div>
+      {(data.recent_activity ?? []).length > 0 && (
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm">
+          <div className="px-5 py-4 border-b border-[#F1F5F9]">
+            <h2 className="text-sm font-bold text-[#0F172A]">Recent Activity</h2>
+          </div>
+          <div className="divide-y divide-[#F8FAFC]">
+            {(data.recent_activity ?? []).slice(0, 8).map((ev: any, i: number) => (
+              <div key={i} className="flex items-center gap-3 px-5 py-3">
+                <div className="w-8 h-8 rounded-lg bg-[#F1F5F9] flex items-center justify-center shrink-0">
+                  <HiOutlineClipboardDocumentList className="w-4 h-4 text-[#64748B]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[#0F172A] truncate">{ev.event_description ?? ev.event_type}</p>
+                  {ev.event_timestamp && (
+                    <p className="text-[11px] text-[#94A3B8] mt-0.5">{new Date(ev.event_timestamp).toLocaleString()}</p>
+                  )}
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#64748B] shrink-0">{ev.event_type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1034,7 +1037,7 @@ export default function DashboardPage() {
   const DashboardComponent = ROLE_DASHBOARDS[user.role] ?? AdminDashboard;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto w-full">
+    <div className="p-6 w-full">
       <DashboardComponent />
     </div>
   );
