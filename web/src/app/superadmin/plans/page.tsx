@@ -537,12 +537,16 @@ export default function PlansPage() {
   useEffect(() => { load(); }, [load]);
 
   const handleToggle = async (plan: SubscriptionPlan) => {
+    // Optimistic update
+    setPlans((prev) => prev.map((p) => p.id === plan.id ? { ...p, is_active: !p.is_active } : p));
     try {
       const updated = await toggleSuperAdminPlan(plan.id);
       setPlans((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
       toast.success(updated.is_active ? 'Plan enabled' : 'Plan disabled');
-    } catch {
-      toast.error('Failed to update plan status');
+    } catch (err: any) {
+      // Revert on failure
+      setPlans((prev) => prev.map((p) => p.id === plan.id ? { ...p, is_active: plan.is_active } : p));
+      toast.error(err?.response?.data?.error || 'Failed to update plan status');
     }
   };
 

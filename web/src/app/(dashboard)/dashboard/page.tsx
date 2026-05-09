@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { StatsCard } from '@/components/StatsCard';
@@ -99,12 +100,22 @@ function SubscribeModal({ onClose, onSubscribed }: { onClose: () => void; onSubs
     white_label: 'White Label',
   };
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+  const modalContent = (
+    <>
+      {/* Backdrop rendered at document.body level — bypasses layout stacking contexts */}
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="fixed inset-0 bg-black/60"
+        style={{ zIndex: 9998, backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
+        onClick={onClose}
+      />
+      {/* Modal card */}
+      <div
+        className="fixed inset-0 flex items-center justify-center p-4"
+        style={{ zIndex: 9999, pointerEvents: 'none' }}
+      >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+        style={{ pointerEvents: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -236,8 +247,11 @@ function SubscribeModal({ onClose, onSubscribed }: { onClose: () => void; onSubs
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 // ============================================================================
