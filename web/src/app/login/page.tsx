@@ -168,7 +168,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 50%, #0C1A2E 100%)' }}>
 
         {/* ── LEFT PANEL ──────────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-1/2 lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col pl-14 pr-6 py-10">
+        <div className="hidden lg:flex lg:w-1/2 lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col py-10">
 
           {/* Animated blobs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -178,71 +178,115 @@ export default function LoginPage() {
               style={{ background: 'radial-gradient(circle, #0891B2, transparent 70%)' }} />
             <div className="float3 absolute top-[50%] left-[50%] w-48 h-48 rounded-full opacity-10"
               style={{ background: 'radial-gradient(circle, #06B6D4, transparent 70%)' }} />
-            {/* Grid pattern */}
             <div className="absolute inset-0 opacity-[0.03]"
               style={{ backgroundImage: 'linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
           </div>
 
-          {/* Brand — top */}
-          <div className={`relative z-10 shrink-0 ${mounted ? 'anim-fadeup' : 'opacity-0'}`}>
+          {/* Content wrapper — centred with max-width, pushed toward right edge */}
+          <div className="relative z-10 flex flex-col h-full max-w-[420px] ml-auto mr-12 w-full">
+
+          {/* Brand */}
+          <div className={`shrink-0 ${mounted ? 'anim-fadeup' : 'opacity-0'}`}>
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-12 h-12 bg-[#0E7490] rounded-2xl flex items-center justify-center shadow-lg shadow-[#0E7490]/30">
-                  <HiOutlineTruck className="w-6 h-6 text-white" />
+                <div className="w-11 h-11 bg-[#0E7490] rounded-xl flex items-center justify-center shadow-lg shadow-[#0E7490]/30">
+                  <HiOutlineTruck className="w-5 h-5 text-white" />
                 </div>
-                <div className="absolute inset-0 rounded-2xl border-2 border-[#0E7490]/40 scale-110 animate-ping" style={{ animationDuration: '3s' }} />
+                <div className="absolute inset-0 rounded-xl border-2 border-[#0E7490]/40 scale-110 animate-ping" style={{ animationDuration: '3s' }} />
               </div>
               <div>
-                <p className="text-xl font-bold text-white tracking-tight">Drivebx ERP</p>
-                <p className="text-[11px] text-cyan-400 font-medium tracking-widest uppercase">Platform</p>
+                <p className="text-lg font-bold text-white tracking-tight leading-none">Drivebx ERP</p>
+                <p className="text-[10px] text-cyan-400 font-semibold tracking-[0.2em] uppercase mt-0.5">Car Rental Platform</p>
               </div>
             </div>
           </div>
 
-          {/* Headline — centred in remaining space */}
-          <div className={`relative z-10 flex-1 flex flex-col justify-center ${mounted ? 'anim-fadeup-d1' : 'opacity-0'}`}>
-            <h1 className="text-4xl font-bold text-white leading-tight mb-4">
-              Manage your<br />
-              <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #22D3EE, #0E7490)' }}>
-                rental fleet
-              </span><br />
-              with confidence
-            </h1>
-            <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-xs">
-              The complete ERP solution for UAE car rental businesses. From agreements to invoicing, all in one place.
-            </p>
+          {/* Main content */}
+          <div className={`flex-1 flex flex-col justify-center gap-6 ${mounted ? 'anim-fadeup-d1' : 'opacity-0'}`}>
 
-            {/* Feature list */}
-            <div className="space-y-3">
-              {FEATURES.map((f, i) => (
-                <div key={i} className="flex items-center gap-3"
-                  style={{ animation: `fadeUp 0.4s ${0.3 + i * 0.08}s ease both`, opacity: mounted ? undefined : 0 }}>
-                  <div className="w-8 h-8 rounded-xl bg-[#0E7490]/20 border border-[#0E7490]/30 flex items-center justify-center shrink-0">
-                    <f.icon className="w-4 h-4 text-cyan-400" />
-                  </div>
-                  <p className="text-sm text-slate-300">{f.text}</p>
+            {/* Headline */}
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="text-[11px] font-semibold text-cyan-300 tracking-wide">Trusted by UAE rental businesses</span>
+              </div>
+              <h1 className="text-[2.4rem] font-extrabold text-white leading-[1.15] mb-3">
+                Your fleet.<br />
+                <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #22D3EE, #38BDF8)' }}>
+                  Your rules.
+                </span><br />
+                <span className="text-slate-300 font-semibold text-2xl">Total control.</span>
+              </h1>
+              <p className="text-slate-400 text-[13px] leading-relaxed max-w-[320px]">
+                From agreement to invoice — manage every aspect of your car rental operation in one powerful platform.
+              </p>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-3"
+              style={{ animation: mounted ? 'fadeUp 0.5s 0.25s ease both' : undefined, opacity: mounted ? undefined : 0 }}>
+              {[
+                { n: '500+', l: 'Agreements\nprocessed' },
+                { n: '99.9%', l: 'Platform\nuptime' },
+                { n: '14 day', l: 'Free trial\nno card' },
+              ].map((s, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-center">
+                  <p className="text-lg font-bold text-white leading-none">{s.n}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 leading-tight whitespace-pre-line">{s.l}</p>
                 </div>
               ))}
             </div>
+
+            {/* Features */}
+            <div className="space-y-2"
+              style={{ animation: mounted ? 'fadeUp 0.5s 0.35s ease both' : undefined, opacity: mounted ? undefined : 0 }}>
+              {FEATURES.map((f, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center shrink-0">
+                    <f.icon className="w-3 h-3 text-cyan-400" />
+                  </div>
+                  <p className="text-[13px] text-slate-300">{f.text}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Testimonial card */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4"
+              style={{ animation: mounted ? 'fadeUp 0.5s 0.45s ease both' : undefined, opacity: mounted ? undefined : 0 }}>
+              <p className="text-[13px] text-slate-300 leading-relaxed italic">
+                "Drivebx completely changed how we manage our 80-car fleet. Agreements, billing, and tracking — all in one place."
+              </p>
+              <div className="flex items-center gap-2.5 mt-3">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0">A</div>
+                <div>
+                  <p className="text-xs font-semibold text-white">Ahmed Al Rashidi</p>
+                  <p className="text-[10px] text-slate-500">Fleet Manager · Dubai</p>
+                </div>
+                <div className="ml-auto flex gap-0.5">
+                  {[1,2,3,4,5].map(s => <span key={s} className="text-yellow-400 text-[10px]">★</span>)}
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          {/* Footer — bottom */}
-          <div className={`relative z-10 shrink-0 ${mounted ? 'anim-fadeup-d2' : 'opacity-0'}`}>
-            <p className="text-slate-500 text-xs">
-              © {new Date().getFullYear()} Drivebx ERP · UAE Car Rental Management
-            </p>
+          {/* Footer */}
+          <div className={`shrink-0 ${mounted ? 'anim-fadeup-d2' : 'opacity-0'}`}>
+            <p className="text-slate-600 text-[11px]">© {new Date().getFullYear()} Drivebx ERP · UAE Car Rental Management</p>
           </div>
+
+          </div>{/* end content wrapper */}
         </div>
 
         {/* ── RIGHT PANEL ─────────────────────────────────────── */}
         <div className="lg:w-1/2 flex-1 overflow-y-auto">
-          <div className="min-h-screen flex flex-col items-center justify-center pl-6 pr-14 py-10 relative">
+          <div className="min-h-screen flex flex-col items-center justify-center py-10 relative">
 
           {/* Subtle glow behind card */}
           <div className="absolute pointer-events-none w-96 h-96 rounded-full opacity-20"
             style={{ background: 'radial-gradient(circle, #0E7490, transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
 
-          <div className={`w-full max-w-[360px] relative z-10 ${mounted ? 'anim-fadeup' : 'opacity-0'}`}>
+          <div className={`w-full max-w-[360px] ml-12 mr-auto relative z-10 ${mounted ? 'anim-fadeup' : 'opacity-0'}`}>
 
             {/* Mobile brand */}
             <div className="lg:hidden flex items-center gap-3 mb-6">
