@@ -8,421 +8,397 @@ import {
   HiOutlineDevicePhoneMobile,
   HiOutlineEnvelope,
   HiOutlineLockClosed,
-  HiOutlineBuildingOffice2,
   HiOutlineKey,
   HiOutlineTruck,
+  HiOutlineEye,
+  HiOutlineEyeSlash,
+  HiOutlineArrowRight,
+  HiOutlineCheckCircle,
+  HiOutlineDocumentText,
+  HiOutlineChartBarSquare,
+  HiOutlineShieldCheck,
 } from 'react-icons/hi2';
 
-type LoginTab = 'customer' | 'staff';
+type LoginTab = 'staff' | 'customer';
+
+const FEATURES = [
+  { icon: HiOutlineDocumentText, text: 'Rental agreement management' },
+  { icon: HiOutlineTruck,        text: 'Full fleet tracking & control' },
+  { icon: HiOutlineChartBarSquare, text: 'Real-time KPIs & reports' },
+  { icon: HiOutlineShieldCheck,  text: 'Multi-role access control' },
+];
 
 export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading, requestOtp, verifyOtp, staffLogin } = useAuth();
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<LoginTab>('staff');
+  const [activeTab, setActiveTab]       = useState<LoginTab>('staff');
+  const [mounted, setMounted]           = useState(false);
 
-  // Customer login state
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
-  const [otpTimer, setOtpTimer] = useState(0);
-  const [devOtp, setDevOtp] = useState<string | null>(null);
+  // Staff
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [showPw, setShowPw]             = useState(false);
+  const [loggingIn, setLoggingIn]       = useState(false);
+
+  // Customer / OTP
+  const [phoneNumber, setPhoneNumber]   = useState('');
+  const [otpSent, setOtpSent]           = useState(false);
+  const [otpCode, setOtpCode]           = useState('');
+  const [otpTimer, setOtpTimer]         = useState(0);
+  const [devOtp, setDevOtp]             = useState<string | null>(null);
   const [requestingOtp, setRequestingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
 
-  // Staff login state
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loggingIn, setLoggingIn] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Redirect if already authenticated
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.replace('/dashboard');
-    }
+    if (!isLoading && isAuthenticated) router.replace('/dashboard');
   }, [isAuthenticated, isLoading, router]);
 
-  // OTP countdown timer
   useEffect(() => {
     if (otpTimer <= 0) return;
-    const interval = setInterval(() => {
-      setOtpTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
+    const t = setInterval(() => setOtpTimer(p => (p <= 1 ? (clearInterval(t), 0) : p - 1)), 1000);
+    return () => clearInterval(t);
   }, [otpTimer]);
 
-  const formatTimer = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
   const handleRequestOtp = useCallback(async () => {
-    if (!phoneNumber.trim()) {
-      toast.error('Please enter your phone number');
-      return;
-    }
-
+    if (!phoneNumber.trim()) { toast.error('Enter your phone number'); return; }
     setRequestingOtp(true);
     try {
-      const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `+971${phoneNumber}`;
-      await requestOtp(fullPhone, '');
+      const phone = phoneNumber.startsWith('+') ? phoneNumber : `+971${phoneNumber}`;
+      await requestOtp(phone, '');
       setOtpSent(true);
-      setOtpTimer(120); // 2-minute countdown
-      toast.success('OTP sent to your phone number');
+      setOtpTimer(120);
+      toast.success('OTP sent!');
     } catch (err: any) {
-      const message =
-        err?.response?.data?.error?.message ||
-        err?.response?.data?.message ||
-        'Failed to send OTP. Please try again.';
-      toast.error(message);
-
-      // Dev mode: check if OTP is returned in error/response
-      if (err?.response?.data?.data?.otp_code) {
-        setDevOtp(err.response.data.data.otp_code);
-      }
-    } finally {
-      setRequestingOtp(false);
-    }
+      toast.error(err?.response?.data?.message || 'Failed to send OTP');
+      if (err?.response?.data?.data?.otp_code) setDevOtp(err.response.data.data.otp_code);
+    } finally { setRequestingOtp(false); }
   }, [phoneNumber, requestOtp]);
 
   const handleVerifyOtp = useCallback(async () => {
-    if (!otpCode.trim() || otpCode.length !== 6) {
-      toast.error('Please enter the 6-digit OTP');
-      return;
-    }
-
+    if (otpCode.length !== 6) { toast.error('Enter the 6-digit OTP'); return; }
     setVerifyingOtp(true);
     try {
-      const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `+971${phoneNumber}`;
-      await verifyOtp(fullPhone, '', otpCode.trim());
-      toast.success('Login successful!');
+      const phone = phoneNumber.startsWith('+') ? phoneNumber : `+971${phoneNumber}`;
+      await verifyOtp(phone, '', otpCode);
+      toast.success('Welcome back!');
       router.replace('/dashboard');
     } catch (err: any) {
-      const message =
-        err?.response?.data?.error?.message ||
-        err?.response?.data?.message ||
-        'Invalid OTP. Please try again.';
-      toast.error(message);
-    } finally {
-      setVerifyingOtp(false);
-    }
+      toast.error(err?.response?.data?.message || 'Invalid OTP');
+    } finally { setVerifyingOtp(false); }
   }, [otpCode, phoneNumber, verifyOtp, router]);
 
-  const handleStaffLogin = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!email.trim() || !password.trim()) {
-        toast.error('Please fill in all fields');
-        return;
-      }
+  const handleStaffLogin = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) { toast.error('Fill in all fields'); return; }
+    setLoggingIn(true);
+    try {
+      await staffLogin(email.trim(), password, '');
+      const u = JSON.parse(localStorage.getItem('auth_user') || '{}');
+      toast.success('Welcome back!');
+      router.replace(u?.role === 'SUPER_ADMIN' ? '/superadmin' : '/dashboard');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Invalid credentials');
+    } finally { setLoggingIn(false); }
+  }, [email, password, staffLogin, router]);
 
-      setLoggingIn(true);
-      try {
-        await staffLogin(email.trim(), password, '');
-        const loggedUser = JSON.parse(localStorage.getItem('auth_user') || '{}');
-        toast.success('Login successful!');
-        if (loggedUser?.role === 'SUPER_ADMIN') {
-          router.replace('/superadmin');
-        } else {
-          router.replace('/dashboard');
-        }
-      } catch (err: any) {
-        const message =
-          err?.response?.data?.error?.message ||
-          err?.response?.data?.message ||
-          'Invalid credentials. Please try again.';
-        toast.error(message);
-      } finally {
-        setLoggingIn(false);
-      }
-    },
-    [email, password, staffLogin, router]
-  );
+  const switchTab = (tab: LoginTab) => {
+    setActiveTab(tab);
+    setOtpSent(false);
+    setOtpCode('');
+    setDevOtp(null);
+    setOtpTimer(0);
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0E7490] to-[#164E63]">
-        <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-[#0C1A2E]">
+        <div className="w-10 h-10 border-3 border-[#0E7490]/30 border-t-[#0E7490] rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0E7490] via-[#155E75] to-[#164E63] p-4">
-      {/* Background pattern */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/5 rounded-full blur-3xl" />
-      </div>
+    <>
+      <style>{`
+        @keyframes float1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-40px) scale(1.05)} }
+        @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-20px,30px) scale(0.95)} }
+        @keyframes float3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(15px,20px) scale(1.08)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes slideIn { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes pulse-ring { 0%{transform:scale(0.9);opacity:0.8} 70%{transform:scale(1.3);opacity:0} 100%{transform:scale(1.3);opacity:0} }
+        .anim-fadeup { animation: fadeUp 0.5s ease both; }
+        .anim-fadeup-d1 { animation: fadeUp 0.5s 0.1s ease both; }
+        .anim-fadeup-d2 { animation: fadeUp 0.5s 0.2s ease both; }
+        .anim-slideIn { animation: slideIn 0.3s ease both; }
+        .float1 { animation: float1 8s ease-in-out infinite; }
+        .float2 { animation: float2 11s ease-in-out infinite; }
+        .float3 { animation: float3 7s ease-in-out infinite; }
+        .tab-content { animation: fadeUp 0.25s ease both; }
+        input:-webkit-autofill { -webkit-box-shadow:0 0 0 50px white inset !important; }
+      `}</style>
 
-      <div className="relative w-full max-w-md">
-        {/* Logo / Brand */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
-            <HiOutlineTruck className="w-8 h-8 text-[#0E7490]" />
+      <div className="min-h-screen flex bg-[#0C1A2E]">
+
+        {/* ── LEFT PANEL ──────────────────────────────────────── */}
+        <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden flex-col justify-between p-12"
+          style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 50%, #0C1A2E 100%)' }}>
+
+          {/* Animated blobs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="float1 absolute top-[10%] left-[15%] w-72 h-72 rounded-full opacity-20"
+              style={{ background: 'radial-gradient(circle, #0E7490, transparent 70%)' }} />
+            <div className="float2 absolute bottom-[15%] right-[10%] w-96 h-96 rounded-full opacity-15"
+              style={{ background: 'radial-gradient(circle, #0891B2, transparent 70%)' }} />
+            <div className="float3 absolute top-[50%] left-[50%] w-48 h-48 rounded-full opacity-10"
+              style={{ background: 'radial-gradient(circle, #06B6D4, transparent 70%)' }} />
+            {/* Grid pattern */}
+            <div className="absolute inset-0 opacity-[0.03]"
+              style={{ backgroundImage: 'linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
           </div>
-          <h1 className="text-2xl font-bold text-white">Drivebx ERP</h1>
-          <p className="text-white/60 text-sm mt-1">Sign in to your account</p>
+
+          {/* Brand */}
+          <div className={mounted ? 'anim-fadeup relative z-10' : 'opacity-0'}>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="relative">
+                <div className="w-12 h-12 bg-[#0E7490] rounded-2xl flex items-center justify-center shadow-lg shadow-[#0E7490]/30">
+                  <HiOutlineTruck className="w-6 h-6 text-white" />
+                </div>
+                <div className="absolute inset-0 rounded-2xl border-2 border-[#0E7490]/40 scale-110 animate-ping" style={{ animationDuration: '3s' }} />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-white tracking-tight">Drivebx ERP</p>
+                <p className="text-[11px] text-cyan-400 font-medium tracking-widest uppercase">Platform</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Headline */}
+          <div className={`relative z-10 ${mounted ? 'anim-fadeup-d1' : 'opacity-0'}`}>
+            <h1 className="text-4xl font-bold text-white leading-tight mb-4">
+              Manage your<br />
+              <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #22D3EE, #0E7490)' }}>
+                rental fleet
+              </span><br />
+              with confidence
+            </h1>
+            <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-xs">
+              The complete ERP solution for UAE car rental businesses. From agreements to invoicing, all in one place.
+            </p>
+
+            {/* Feature list */}
+            <div className="space-y-3">
+              {FEATURES.map((f, i) => (
+                <div key={i} className="flex items-center gap-3"
+                  style={{ animation: `fadeUp 0.4s ${0.3 + i * 0.08}s ease both`, opacity: mounted ? undefined : 0 }}>
+                  <div className="w-8 h-8 rounded-xl bg-[#0E7490]/20 border border-[#0E7490]/30 flex items-center justify-center shrink-0">
+                    <f.icon className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <p className="text-sm text-slate-300">{f.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className={`relative z-10 ${mounted ? 'anim-fadeup-d2' : 'opacity-0'}`}>
+            <p className="text-slate-500 text-xs">
+              © {new Date().getFullYear()} Drivebx ERP · UAE Car Rental Management
+            </p>
+          </div>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => {
-                setActiveTab('customer');
-                setOtpSent(false);
-                setOtpCode('');
-                setDevOtp(null);
-              }}
-              className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${
-                activeTab === 'customer'
-                  ? 'text-[#0E7490] border-b-2 border-[#0E7490] bg-[#ECFEFF]'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Customer Login
-            </button>
-            <button
-              onClick={() => setActiveTab('staff')}
-              className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${
-                activeTab === 'staff'
-                  ? 'text-[#0E7490] border-b-2 border-[#0E7490] bg-[#ECFEFF]'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Staff Login
-            </button>
-          </div>
+        {/* ── RIGHT PANEL ─────────────────────────────────────── */}
+        <div className="flex-1 flex items-center justify-center p-6 bg-white relative overflow-hidden">
 
-          <div className="p-6">
-            {/* ===== Customer Login ===== */}
-            {activeTab === 'customer' && (
-              <div className="space-y-4">
-                {!otpSent ? (
-                  <>
-                    {/* Phone Number */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Phone Number
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <HiOutlineDevicePhoneMobile className="w-5 h-5 text-gray-400" />
-                        </div>
-                        <div className="absolute inset-y-0 left-10 flex items-center pointer-events-none">
-                          <span className="text-sm text-gray-500 font-medium">+971</span>
-                        </div>
-                        <input
-                          type="tel"
-                          value={phoneNumber}
-                          onChange={(e) =>
-                            setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))
-                          }
-                          placeholder="5XXXXXXXX"
-                          className="w-full pl-[5.5rem] pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#0E7490]/20 focus:border-[#0E7490] outline-none transition-all"
-                        />
-                      </div>
-                    </div>
+          {/* Subtle bg pattern */}
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(14,116,144,0.05) 0%, transparent 50%)', }} />
 
-                    {/* Request OTP Button */}
-                    <button
-                      onClick={handleRequestOtp}
-                      disabled={requestingOtp}
-                      className="w-full py-2.5 bg-[#0E7490] text-white rounded-xl text-sm font-semibold hover:bg-[#0C6680] disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                    >
-                      {requestingOtp ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Sending OTP...
-                        </>
-                      ) : (
-                        'Request OTP'
-                      )}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {/* OTP Input */}
-                    <div className="text-center mb-2">
-                      <p className="text-sm text-gray-600">
-                        OTP sent to{' '}
-                        <span className="font-semibold text-gray-900">
-                          +971{phoneNumber}
-                        </span>
-                      </p>
-                      {otpTimer > 0 && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Expires in{' '}
-                          <span className="font-mono font-semibold text-[#0E7490]">
-                            {formatTimer(otpTimer)}
-                          </span>
-                        </p>
-                      )}
-                      {otpTimer === 0 && (
-                        <p className="text-xs text-red-500 mt-1">
-                          OTP expired.{' '}
-                          <button
-                            onClick={() => {
-                              setOtpSent(false);
-                              setOtpCode('');
-                            }}
-                            className="text-[#0E7490] underline font-medium"
-                          >
-                            Request again
-                          </button>
-                        </p>
-                      )}
-                    </div>
+          <div className={`w-full max-w-sm relative z-10 ${mounted ? 'anim-fadeup' : 'opacity-0'}`}>
 
-                    {/* Dev mode OTP display */}
-                    {devOtp && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center">
-                        <p className="text-xs text-yellow-700 font-medium">
-                          DEV MODE - OTP:{' '}
-                          <span className="font-mono text-base font-bold text-yellow-900">
-                            {devOtp}
-                          </span>
-                        </p>
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Enter OTP
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <HiOutlineKey className="w-5 h-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          value={otpCode}
-                          onChange={(e) =>
-                            setOtpCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))
-                          }
-                          placeholder="000000"
-                          maxLength={6}
-                          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm text-center tracking-[0.5em] font-mono font-bold focus:ring-2 focus:ring-[#0E7490]/20 focus:border-[#0E7490] outline-none transition-all"
-                          autoFocus
-                        />
-                      </div>
-                    </div>
-
-                    {/* Verify OTP Button */}
-                    <button
-                      onClick={handleVerifyOtp}
-                      disabled={verifyingOtp || otpCode.length !== 6}
-                      className="w-full py-2.5 bg-[#0E7490] text-white rounded-xl text-sm font-semibold hover:bg-[#0C6680] disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                    >
-                      {verifyingOtp ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Verifying...
-                        </>
-                      ) : (
-                        'Verify OTP'
-                      )}
-                    </button>
-
-                    {/* Back button */}
-                    <button
-                      onClick={() => {
-                        setOtpSent(false);
-                        setOtpCode('');
-                        setDevOtp(null);
-                        setOtpTimer(0);
-                      }}
-                      className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                    >
-                      Back to phone number
-                    </button>
-                  </>
-                )}
+            {/* Mobile brand */}
+            <div className="lg:hidden flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-[#0E7490] rounded-xl flex items-center justify-center">
+                <HiOutlineTruck className="w-5 h-5 text-white" />
               </div>
-            )}
+              <div>
+                <p className="font-bold text-[#0F172A] text-base">Drivebx ERP</p>
+                <p className="text-xs text-[#64748B]">Car Rental Management</p>
+              </div>
+            </div>
 
-            {/* ===== Staff Login ===== */}
+            {/* Heading */}
+            <div className="mb-7">
+              <h2 className="text-2xl font-bold text-[#0F172A]">Welcome back</h2>
+              <p className="text-sm text-[#64748B] mt-1">Sign in to continue to your dashboard</p>
+            </div>
+
+            {/* Tab switcher */}
+            <div className="flex bg-[#F1F5F9] rounded-xl p-1 mb-6 gap-1">
+              {(['staff', 'customer'] as LoginTab[]).map(tab => (
+                <button key={tab} onClick={() => switchTab(tab)}
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                    activeTab === tab
+                      ? 'bg-white text-[#0E7490] shadow-sm'
+                      : 'text-[#64748B] hover:text-[#374151]'
+                  }`}>
+                  {tab === 'staff' ? 'Staff / Admin' : 'Customer'}
+                </button>
+              ))}
+            </div>
+
+            {/* ── Staff form ── */}
             {activeTab === 'staff' && (
-              <form onSubmit={handleStaffLogin} className="space-y-4">
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Email Address
-                  </label>
+              <form onSubmit={handleStaffLogin} className="space-y-4 tab-content">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-[#374151]">Email Address</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <HiOutlineEnvelope className="w-5 h-5 text-gray-400" />
-                    </div>
+                    <HiOutlineEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@company.com"
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#0E7490]/20 focus:border-[#0E7490] outline-none transition-all"
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="you@company.com"
+                      autoComplete="email"
+                      className="w-full pl-10 pr-4 py-3 border border-[#E2E8F0] rounded-xl text-sm bg-[#F8FAFC] focus:bg-white focus:border-[#0E7490] focus:ring-3 focus:ring-[#0E7490]/10 outline-none transition-all"
                     />
                   </div>
                 </div>
 
-                {/* Password */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Password
-                  </label>
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-[#374151]">Password</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <HiOutlineLockClosed className="w-5 h-5 text-gray-400" />
-                    </div>
+                    <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
                     <input
-                      type="password"
+                      type={showPw ? 'text' : 'password'}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={e => setPassword(e.target.value)}
                       placeholder="Enter your password"
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#0E7490]/20 focus:border-[#0E7490] outline-none transition-all"
+                      autoComplete="current-password"
+                      className="w-full pl-10 pr-11 py-3 border border-[#E2E8F0] rounded-xl text-sm bg-[#F8FAFC] focus:bg-white focus:border-[#0E7490] focus:ring-3 focus:ring-[#0E7490]/10 outline-none transition-all"
                     />
+                    <button type="button" onClick={() => setShowPw(p => !p)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B] transition-colors">
+                      {showPw ? <HiOutlineEyeSlash className="w-4 h-4" /> : <HiOutlineEye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
-                {/* Login Button */}
-                <button
-                  type="submit"
-                  disabled={loggingIn}
-                  className="w-full py-2.5 bg-[#0E7490] text-white rounded-xl text-sm font-semibold hover:bg-[#0C6680] disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                >
+                <button type="submit" disabled={loggingIn}
+                  className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-60 active:scale-[0.98]"
+                  style={{ background: loggingIn ? '#0E7490' : 'linear-gradient(135deg, #0E7490, #0891B2)', boxShadow: '0 4px 14px rgba(14,116,144,0.35)' }}>
                   {loggingIn ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Signing in...
-                    </>
+                    <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Signing in...</>
                   ) : (
-                    'Sign In'
+                    <>Sign In <HiOutlineArrowRight className="w-4 h-4" /></>
                   )}
                 </button>
               </form>
             )}
+
+            {/* ── Customer / OTP form ── */}
+            {activeTab === 'customer' && (
+              <div className="tab-content">
+                {!otpSent ? (
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-semibold text-[#374151]">Phone Number</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 gap-2 pointer-events-none">
+                          <HiOutlineDevicePhoneMobile className="w-4 h-4 text-[#94A3B8]" />
+                          <span className="text-sm font-semibold text-[#64748B] border-r border-[#E2E8F0] pr-2">+971</span>
+                        </div>
+                        <input
+                          type="tel"
+                          value={phoneNumber}
+                          onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                          placeholder="5XXXXXXXX"
+                          className="w-full pl-24 pr-4 py-3 border border-[#E2E8F0] rounded-xl text-sm bg-[#F8FAFC] focus:bg-white focus:border-[#0E7490] focus:ring-3 focus:ring-[#0E7490]/10 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                    <button onClick={handleRequestOtp} disabled={requestingOtp || !phoneNumber.trim()}
+                      className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-60 active:scale-[0.98]"
+                      style={{ background: 'linear-gradient(135deg, #0E7490, #0891B2)', boxShadow: '0 4px 14px rgba(14,116,144,0.35)' }}>
+                      {requestingOtp ? (
+                        <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending...</>
+                      ) : (
+                        <>Send OTP <HiOutlineArrowRight className="w-4 h-4" /></>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4 anim-slideIn">
+                    {/* OTP sent confirmation */}
+                    <div className="flex items-start gap-3 p-3.5 bg-[#ECFEFF] border border-[#A5F3FC] rounded-xl">
+                      <HiOutlineCheckCircle className="w-5 h-5 text-[#0E7490] shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-semibold text-[#0E7490]">OTP sent successfully</p>
+                        <p className="text-xs text-[#0E7490]/70 mt-0.5">
+                          Sent to +971{phoneNumber}
+                          {otpTimer > 0 && <> · Expires in <span className="font-mono font-bold">{fmt(otpTimer)}</span></>}
+                          {otpTimer === 0 && <> · <button onClick={() => { setOtpSent(false); setOtpCode(''); }} className="underline font-semibold">Resend</button></>}
+                        </p>
+                      </div>
+                    </div>
+
+                    {devOtp && (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
+                        <p className="text-xs text-amber-700 font-medium">DEV · OTP: <span className="font-mono font-bold text-amber-900 text-base">{devOtp}</span></p>
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <label className="block text-xs font-semibold text-[#374151]">Enter 6-digit OTP</label>
+                      <div className="relative">
+                        <HiOutlineKey className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+                        <input
+                          type="text"
+                          value={otpCode}
+                          onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          placeholder="· · · · · ·"
+                          maxLength={6}
+                          autoFocus
+                          className="w-full pl-10 pr-4 py-3 border border-[#E2E8F0] rounded-xl text-sm text-center tracking-[0.6em] font-mono font-bold bg-[#F8FAFC] focus:bg-white focus:border-[#0E7490] focus:ring-3 focus:ring-[#0E7490]/10 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <button onClick={handleVerifyOtp} disabled={verifyingOtp || otpCode.length !== 6}
+                      className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-60 active:scale-[0.98]"
+                      style={{ background: 'linear-gradient(135deg, #0E7490, #0891B2)', boxShadow: '0 4px 14px rgba(14,116,144,0.35)' }}>
+                      {verifyingOtp ? (
+                        <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Verifying...</>
+                      ) : (
+                        <>Verify & Sign In <HiOutlineArrowRight className="w-4 h-4" /></>
+                      )}
+                    </button>
+
+                    <button onClick={() => { setOtpSent(false); setOtpCode(''); setDevOtp(null); setOtpTimer(0); }}
+                      className="w-full py-2 text-xs text-[#64748B] hover:text-[#374151] transition-colors">
+                      ← Back to phone number
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Register link */}
+            <p className="text-center text-xs text-[#94A3B8] mt-8">
+              New rental business?{' '}
+              <a href="/register" className="text-[#0E7490] font-semibold hover:underline">
+                Start free trial
+              </a>
+            </p>
+
           </div>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-white/40 text-xs mt-6">
-          Drivebx ERP &mdash; Car Rental Management Platform — Drivebx
-        </p>
-        <p className="text-center text-white/60 text-sm mt-2">
-          Want to start your own rental business?{' '}
-          <a href="/register" className="text-white font-semibold hover:underline">
-            Register your company
-          </a>
-        </p>
       </div>
-    </div>
+    </>
   );
 }
