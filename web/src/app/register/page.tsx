@@ -125,11 +125,10 @@ export default function RegisterPage() {
         input:-webkit-autofill{-webkit-box-shadow:0 0 0 50px white inset!important}
       `}</style>
 
-      <div className="min-h-screen flex bg-[#0C1A2E]">
+      <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 50%, #0C1A2E 100%)' }}>
 
         {/* ── LEFT PANEL ─────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-[48%] lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col px-10 py-8"
-          style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 50%, #0C1A2E 100%)' }}>
+        <div className="hidden lg:flex lg:w-[48%] lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col px-10 py-8">
 
           {/* Animated blobs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -201,7 +200,7 @@ export default function RegisterPage() {
         </div>
 
         {/* ── RIGHT PANEL ────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto" style={{ background: 'linear-gradient(160deg, #0F2132 0%, #0C1A2E 100%)' }}>
+        <div className="flex-1 overflow-y-auto">
           <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 relative">
 
           {/* Glow behind card */}
