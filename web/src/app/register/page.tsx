@@ -128,7 +128,7 @@ export default function RegisterPage() {
       <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg, #0C1A2E 0%, #0E3A52 50%, #0C1A2E 100%)' }}>
 
         {/* ── LEFT PANEL ─────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-1/2 lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col px-14 py-10">
+        <div className="hidden lg:flex lg:w-1/2 lg:sticky lg:top-0 lg:h-screen relative overflow-hidden flex-col pl-14 pr-6 py-10">
 
           {/* Animated blobs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -200,8 +200,8 @@ export default function RegisterPage() {
         </div>
 
         {/* ── RIGHT PANEL ────────────────────────────────── */}
-        <div className="lg:w-1/2 flex-1 overflow-y-auto border-l border-white/5">
-          <div className="min-h-screen flex flex-col items-center justify-center px-10 py-10 relative">
+        <div className="lg:w-1/2 flex-1 overflow-y-auto">
+          <div className="min-h-screen flex flex-col items-center justify-center pl-6 pr-14 py-10 relative">
 
           {/* Glow behind card */}
           <div className="absolute pointer-events-none w-96 h-96 rounded-full opacity-20"
