@@ -72,27 +72,27 @@ export default function ReservationsPage() {
 
   useEffect(() => { fetchReservations(); }, [fetchReservations]);
 
-  // Load categories and branches once on page mount
-  useEffect(() => {
-    const loadLookups = async () => {
-      try {
-        const cats = await vehicleCategoryService.listVehicleCategories();
-        setCategories(Array.isArray(cats) ? cats : []);
-      } catch (err) {
-        toast.error('Failed to load vehicle categories');
-      }
-      try {
-        const brs = await branchService.listBranches();
-        setBranches(Array.isArray(brs) ? brs : (brs?.data || []));
-      } catch { /* branches optional */ }
-      setLookupsLoaded(true);
-    };
-    loadLookups();
+  const loadLookups = useCallback(async () => {
+    try {
+      const cats = await vehicleCategoryService.listVehicleCategories();
+      setCategories(Array.isArray(cats) ? cats : []);
+    } catch {
+      toast.error('Failed to load vehicle categories');
+    }
+    try {
+      const brs = await branchService.listBranches();
+      setBranches(Array.isArray(brs) ? brs : (brs?.data || []));
+    } catch { /* branches optional */ }
+    setLookupsLoaded(true);
   }, []);
 
-  // Reset customer search when modal opens
+  // Load on mount
+  useEffect(() => { loadLookups(); }, [loadLookups]);
+
+  // Also reload when modal opens (in case mount failed)
   useEffect(() => {
     if (showCreateModal) {
+      if (categories.length === 0) loadLookups();
       setCustomerSearch('');
       setCustomers([]);
       setSelectedCustomer(null);
