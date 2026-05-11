@@ -37,12 +37,12 @@ export default function CorporateAccountDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [form, setForm] = useState({
     company_name: '',
-    contact_email: '',
-    contact_phone: '',
-    address: '',
+    contact_person: '',
+    email: '',
+    phone: '',
+    billing_address: '',
     credit_limit: '',
-    credit_days: '',
-    notes: '',
+    payment_terms_days: '',
   });
 
   const fetchAccount = useCallback(async () => {
@@ -53,12 +53,12 @@ export default function CorporateAccountDetailPage() {
       setAccount(data);
       setForm({
         company_name: data.company_name ?? '',
-        contact_email: data.contact_email ?? '',
-        contact_phone: data.contact_phone ?? '',
-        address: data.address ?? '',
+        contact_person: data.contact_person ?? '',
+        email: data.email ?? '',
+        phone: data.phone ?? '',
+        billing_address: data.billing_address ?? '',
         credit_limit: data.credit_limit != null ? String(data.credit_limit) : '',
-        credit_days: data.credit_days != null ? String(data.credit_days) : '',
-        notes: data.notes ?? '',
+        payment_terms_days: data.payment_terms_days != null ? String(data.payment_terms_days) : '',
       });
     } catch (err: any) {
       toast.error(extractApiError(err, 'Failed to load account'));
@@ -90,8 +90,8 @@ export default function CorporateAccountDetailPage() {
       const payload: Record<string, any> = { ...form };
       if (payload.credit_limit) payload.credit_limit = Number(payload.credit_limit);
       else delete payload.credit_limit;
-      if (payload.credit_days) payload.credit_days = Number(payload.credit_days);
-      else delete payload.credit_days;
+      if (payload.payment_terms_days) payload.payment_terms_days = Number(payload.payment_terms_days);
+      else delete payload.payment_terms_days;
       await corporateAccountService.updateCorporateAccount(id as string, cleanPayload(payload));
       toast.success('Account updated');
       setShowEditModal(false);
@@ -137,10 +137,12 @@ export default function CorporateAccountDetailPage() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           <InfoRow label="Company Name" value={account.company_name} />
+          <InfoRow label="Account #" value={account.account_number} />
           <InfoRow label="Status" value={<StatusBadge status={account.status ?? 'ACTIVE'} />} />
-          <InfoRow label="Contact Email" value={account.contact_email} />
-          <InfoRow label="Contact Phone" value={account.contact_phone} />
-          <InfoRow label="Address" value={account.address} />
+          <InfoRow label="Contact Person" value={account.contact_person} />
+          <InfoRow label="Email" value={account.email} />
+          <InfoRow label="Phone" value={account.phone} />
+          <InfoRow label="Billing Address" value={account.billing_address} />
           <InfoRow
             label="Credit Limit"
             value={account.credit_limit != null ? `AED ${Number(account.credit_limit).toLocaleString()}` : '—'}
@@ -155,15 +157,9 @@ export default function CorporateAccountDetailPage() {
                 : '—'
             }
           />
-          <InfoRow label="Credit Days" value={account.credit_days != null ? `${account.credit_days} days` : '—'} />
+          <InfoRow label="Payment Terms" value={account.payment_terms_days != null ? `${account.payment_terms_days} days` : '—'} />
           <InfoRow label="Created" value={account.created_at ? new Date(account.created_at).toLocaleDateString() : '—'} />
         </div>
-        {account.notes && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 mb-1">Notes</p>
-            <p className="text-sm text-gray-700">{account.notes}</p>
-          </div>
-        )}
       </div>
 
       {/* AR Aging */}
@@ -214,21 +210,26 @@ export default function CorporateAccountDetailPage() {
             <input type="text" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
           </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Contact Person</label>
+            <input type="text" value={form.contact_person} onChange={(e) => setForm({ ...form, contact_person: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Contact Email</label>
-              <input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email</label>
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Contact Phone</label>
-              <input type="text" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Phone</label>
+              <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Address</label>
-            <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Billing Address</label>
+            <input type="text" value={form.billing_address} onChange={(e) => setForm({ ...form, billing_address: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -238,15 +239,10 @@ export default function CorporateAccountDetailPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Credit Days</label>
-              <input type="number" value={form.credit_days} onChange={(e) => setForm({ ...form, credit_days: e.target.value })}
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Payment Terms (days)</label>
+              <input type="number" value={form.payment_terms_days} onChange={(e) => setForm({ ...form, payment_terms_days: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Notes</label>
-            <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button onClick={() => setShowEditModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>

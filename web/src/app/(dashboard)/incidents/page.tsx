@@ -18,18 +18,17 @@ import { Spinner } from '@/components/Spinner';
 import { cleanPayload } from '@/lib/clean-payload';
 import { extractApiError } from '@/lib/api-error';
 
-const STATUS_OPTIONS = ['ALL', 'OPEN', 'INVESTIGATING', 'RESOLVED', 'CLOSED'];
-const TYPE_OPTIONS = ['ALL', 'accident', 'theft', 'damage', 'vandalism', 'other'];
-const SEVERITY_OPTIONS = ['minor', 'moderate', 'severe', 'total_loss'];
+const STATUS_OPTIONS = ['ALL', 'OPEN', 'UNDER_REVIEW', 'CLAIMED', 'SETTLED', 'CLOSED', 'REJECTED'];
+const TYPE_OPTIONS = ['ALL', 'ACCIDENT', 'THEFT', 'VANDALISM', 'FIRE', 'FLOOD', 'OTHER'];
 
 const emptyForm = {
   vehicle_id: '',
+  customer_id: '',
   agreement_id: '',
-  type: 'accident',
-  severity: 'minor',
+  incident_type: 'ACCIDENT',
   description: '',
   location: '',
-  incident_date: '',
+  incident_datetime: '',
 };
 
 export default function IncidentsPage() {
@@ -63,8 +62,8 @@ export default function IncidentsPage() {
   useEffect(() => { fetchIncidents(); }, [fetchIncidents]);
 
   const handleCreate = async () => {
-    if (!form.vehicle_id.trim() || !form.description.trim()) {
-      toast.error('Vehicle ID and description are required');
+    if (!form.vehicle_id.trim() || !form.customer_id.trim() || !form.agreement_id.trim() || !form.description.trim() || !form.incident_datetime) {
+      toast.error('Vehicle, customer, agreement, description and datetime are required');
       return;
     }
     try {
@@ -81,13 +80,6 @@ export default function IncidentsPage() {
     }
   };
 
-  const sevColor: Record<string, string> = {
-    minor: 'bg-yellow-100 text-yellow-700',
-    moderate: 'bg-orange-100 text-orange-700',
-    severe: 'bg-red-100 text-red-700',
-    total_loss: 'bg-red-900/10 text-red-900',
-  };
-
   const columns = [
     {
       header: 'Incident #',
@@ -97,20 +89,12 @@ export default function IncidentsPage() {
     },
     {
       header: 'Vehicle',
-      render: (row: any) => row.vehicle?.plate_number ?? row.vehicle_plate ?? row.vehicle_id?.slice(0, 8) ?? '—',
+      render: (row: any) => row.plate_number ?? row.vehicle?.plate_number ?? row.vehicle_id?.slice(0, 8) ?? '—',
     },
     {
       header: 'Type',
       render: (row: any) => (
-        <span className="capitalize text-sm text-gray-700">{(row.type ?? '').replace(/_/g, ' ')}</span>
-      ),
-    },
-    {
-      header: 'Severity',
-      render: (row: any) => (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${sevColor[row.severity] ?? 'bg-gray-100 text-gray-700'}`}>
-          {(row.severity ?? '').replace(/_/g, ' ')}
-        </span>
+        <span className="capitalize text-sm text-gray-700">{(row.incident_type ?? '').replace(/_/g, ' ')}</span>
       ),
     },
     {
@@ -120,8 +104,8 @@ export default function IncidentsPage() {
     {
       header: 'Date',
       render: (row: any) =>
-        row.incident_date
-          ? new Date(row.incident_date).toLocaleDateString()
+        row.incident_datetime
+          ? new Date(row.incident_datetime).toLocaleDateString()
           : row.created_at
           ? new Date(row.created_at).toLocaleDateString()
           : '—',
@@ -196,20 +180,36 @@ export default function IncidentsPage() {
       {/* Create Modal */}
       <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Report Incident">
         <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-              Vehicle ID <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.vehicle_id}
-              onChange={(e) => setForm({ ...form, vehicle_id: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Vehicle UUID"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Vehicle ID <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.vehicle_id}
+                onChange={(e) => setForm({ ...form, vehicle_id: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Vehicle UUID"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Customer ID <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.customer_id}
+                onChange={(e) => setForm({ ...form, customer_id: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Customer UUID"
+              />
+            </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Agreement ID (optional)</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              Agreement ID <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={form.agreement_id}
@@ -223,53 +223,38 @@ export default function IncidentsPage() {
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">Type</label>
               <div className="relative">
                 <select
-                  value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
-                  className="appearance-none w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white capitalize"
+                  value={form.incident_type}
+                  onChange={(e) => setForm({ ...form, incident_type: e.target.value })}
+                  className="appearance-none w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
                   {TYPE_OPTIONS.filter(t => t !== 'ALL').map((t) => (
-                    <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+                    <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
                 <HiOutlineChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Severity</label>
-              <div className="relative">
-                <select
-                  value={form.severity}
-                  onChange={(e) => setForm({ ...form, severity: e.target.value })}
-                  className="appearance-none w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white capitalize"
-                >
-                  {SEVERITY_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
-                  ))}
-                </select>
-                <HiOutlineChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Incident Date &amp; Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={form.incident_datetime}
+                onChange={(e) => setForm({ ...form, incident_datetime: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Incident Date</label>
-              <input
-                type="date"
-                value={form.incident_date}
-                onChange={(e) => setForm({ ...form, incident_date: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Location</label>
-              <input
-                type="text"
-                value={form.location}
-                onChange={(e) => setForm({ ...form, location: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g. Sheikh Zayed Rd"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Location</label>
+            <input
+              type="text"
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g. Sheikh Zayed Rd, Dubai"
+            />
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">

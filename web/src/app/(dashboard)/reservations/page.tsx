@@ -23,8 +23,8 @@ const STATUS_OPTIONS = ['ALL', 'PENDING', 'CONFIRMED', 'VEHICLE_ASSIGNED', 'ACTI
 const emptyForm = {
   customer_id: '',
   vehicle_category_id: '',
-  pickup_date: '',
-  return_date: '',
+  pickup_datetime: '',
+  return_datetime: '',
   branch_id: '',
   notes: '',
 };
@@ -58,8 +58,8 @@ export default function ReservationsPage() {
   useEffect(() => { fetchReservations(); }, [fetchReservations]);
 
   const handleCreate = async () => {
-    if (!form.customer_id || !form.vehicle_category_id || !form.pickup_date || !form.return_date) {
-      toast.error('Customer, category, pickup date and return date are required');
+    if (!form.customer_id || !form.vehicle_category_id || !form.pickup_datetime || !form.return_datetime) {
+      toast.error('Customer, category, pickup datetime and return datetime are required');
       return;
     }
     try {
@@ -99,12 +99,12 @@ export default function ReservationsPage() {
     {
       header: 'Pickup',
       render: (row: any) =>
-        row.pickup_date ? new Date(row.pickup_date).toLocaleDateString() : 'N/A',
+        row.pickup_datetime ? new Date(row.pickup_datetime).toLocaleDateString() : 'N/A',
     },
     {
       header: 'Return',
       render: (row: any) =>
-        row.return_date ? new Date(row.return_date).toLocaleDateString() : 'N/A',
+        row.return_datetime ? new Date(row.return_datetime).toLocaleDateString() : 'N/A',
     },
     {
       header: 'Status',
@@ -199,23 +199,23 @@ export default function ReservationsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Pickup Date <span className="text-red-500">*</span>
+                Pickup Date &amp; Time <span className="text-red-500">*</span>
               </label>
               <input
-                type="date"
-                value={form.pickup_date}
-                onChange={(e) => setForm({ ...form, pickup_date: e.target.value })}
+                type="datetime-local"
+                value={form.pickup_datetime}
+                onChange={(e) => setForm({ ...form, pickup_datetime: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Return Date <span className="text-red-500">*</span>
+                Return Date &amp; Time <span className="text-red-500">*</span>
               </label>
               <input
-                type="date"
-                value={form.return_date}
-                onChange={(e) => setForm({ ...form, return_date: e.target.value })}
+                type="datetime-local"
+                value={form.return_datetime}
+                onChange={(e) => setForm({ ...form, return_datetime: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>

@@ -18,10 +18,10 @@ import { cleanPayload } from '@/lib/clean-payload';
 import { extractApiError } from '@/lib/api-error';
 
 const emptyForm = {
-  name: '',
-  city: '',
+  branch_name: '',
+  branch_code: '',
   address: '',
-  phone_number: '',
+  phone: '',
   email: '',
 };
 
@@ -53,10 +53,10 @@ export default function BranchesPage() {
   const openEdit = (branch: any) => {
     setSelectedBranch(branch);
     setForm({
-      name: branch.name ?? '',
-      city: branch.city ?? '',
+      branch_name: branch.branch_name ?? '',
+      branch_code: branch.branch_code ?? '',
       address: branch.address ?? '',
-      phone_number: branch.phone_number ?? '',
+      phone: branch.phone ?? '',
       email: branch.email ?? '',
     });
     setShowEditModal(true);
@@ -68,7 +68,8 @@ export default function BranchesPage() {
   };
 
   const handleCreate = async () => {
-    if (!form.name.trim()) { toast.error('Branch name is required'); return; }
+    if (!form.branch_name.trim()) { toast.error('Branch name is required'); return; }
+    if (!form.branch_code.trim()) { toast.error('Branch code is required'); return; }
     try {
       setSubmitting(true);
       await branchService.createBranch(cleanPayload(form));
@@ -84,7 +85,7 @@ export default function BranchesPage() {
   };
 
   const handleEdit = async () => {
-    if (!form.name.trim()) { toast.error('Branch name is required'); return; }
+    if (!form.branch_name.trim()) { toast.error('Branch name is required'); return; }
     try {
       setSubmitting(true);
       await branchService.updateBranch(selectedBranch.id, cleanPayload(form));
@@ -116,12 +117,14 @@ export default function BranchesPage() {
     {
       header: 'Name',
       render: (row: any) => (
-        <span className="font-medium text-gray-900">{row.name}</span>
+        <span className="font-medium text-gray-900">{row.branch_name}</span>
       ),
     },
     {
-      header: 'City',
-      render: (row: any) => row.city ?? '—',
+      header: 'Code',
+      render: (row: any) => (
+        <span className="font-mono text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">{row.branch_code ?? '—'}</span>
+      ),
     },
     {
       header: 'Address',
@@ -162,37 +165,51 @@ export default function BranchesPage() {
 
   const BranchForm = () => (
     <div className="space-y-4">
-      <div>
-        <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-          Branch Name <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="e.g. Dubai Marina Branch"
-        />
-      </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1.5">City</label>
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+            Branch Name <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
+            value={form.branch_name}
+            onChange={(e) => setForm({ ...form, branch_name: e.target.value })}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Dubai"
+            placeholder="e.g. Dubai Marina Branch"
           />
         </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+            Branch Code <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={form.branch_code}
+            onChange={(e) => setForm({ ...form, branch_code: e.target.value.toUpperCase() })}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+            placeholder="e.g. DXB-01"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1.5">Phone</label>
           <input
             type="text"
-            value={form.phone_number}
-            onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="+971 4 xxx xxxx"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="branch@company.com"
           />
         </div>
       </div>
@@ -204,16 +221,6 @@ export default function BranchesPage() {
           onChange={(e) => setForm({ ...form, address: e.target.value })}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="Full address"
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email</label>
-        <input
-          type="email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="branch@company.com"
         />
       </div>
     </div>
@@ -229,7 +236,7 @@ export default function BranchesPage() {
           <PageHeader title="Branches" />
         </div>
         <button
-          onClick={() => { setForm({ ...emptyForm }); setShowCreateModal(true); }}
+          onClick={() => { setForm({ branch_name: '', branch_code: '', address: '', phone: '', email: '' }); setShowCreateModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
         >
           <HiOutlinePlusCircle className="h-5 w-5" />

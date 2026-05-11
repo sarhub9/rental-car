@@ -17,7 +17,7 @@ import { Modal } from '@/components/Modal';
 import { Spinner } from '@/components/Spinner';
 import { extractApiError } from '@/lib/api-error';
 
-const STATUS_OPTIONS = ['OPEN', 'INVESTIGATING', 'RESOLVED', 'CLOSED'];
+const STATUS_OPTIONS = ['OPEN', 'UNDER_REVIEW', 'CLAIMED', 'SETTLED', 'CLOSED', 'REJECTED'];
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -27,13 +27,6 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
-
-const sevColor: Record<string, string> = {
-  minor: 'bg-yellow-100 text-yellow-700',
-  moderate: 'bg-orange-100 text-orange-700',
-  severe: 'bg-red-100 text-red-700',
-  total_loss: 'bg-red-900/10 text-red-900',
-};
 
 export default function IncidentDetailPage() {
   const { id } = useParams();
@@ -125,23 +118,16 @@ export default function IncidentDetailPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           <InfoRow label="Incident #" value={incident.incident_number ?? incident.id} />
           <InfoRow label="Status" value={<StatusBadge status={incident.status} />} />
-          <InfoRow
-            label="Severity"
-            value={
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${sevColor[incident.severity] ?? 'bg-gray-100 text-gray-700'}`}>
-                {(incident.severity ?? '').replace(/_/g, ' ')}
-              </span>
-            }
-          />
-          <InfoRow label="Type" value={<span className="capitalize">{(incident.type ?? '').replace(/_/g, ' ')}</span>} />
-          <InfoRow label="Vehicle" value={incident.vehicle?.plate_number ?? incident.vehicle_plate ?? incident.vehicle_id} />
+          <InfoRow label="Type" value={<span className="capitalize">{(incident.incident_type ?? '').replace(/_/g, ' ')}</span>} />
+          <InfoRow label="Vehicle" value={incident.vehicle?.plate_number ?? incident.plate_number ?? incident.vehicle_id} />
+          <InfoRow label="Customer" value={incident.customer?.full_name ?? incident.customer_id?.slice(0, 8) ?? '—'} />
           <InfoRow label="Agreement" value={incident.agreement?.agreement_number ?? incident.agreement_id?.slice(0, 8) ?? '—'} />
           <InfoRow
             label="Incident Date"
-            value={incident.incident_date ? new Date(incident.incident_date).toLocaleDateString() : '—'}
+            value={incident.incident_datetime ? new Date(incident.incident_datetime).toLocaleString() : '—'}
           />
           <InfoRow label="Location" value={incident.location} />
-          <InfoRow label="Reported By" value={incident.reported_by?.full_name ?? '—'} />
+          <InfoRow label="Police Report #" value={incident.police_report_number} />
           <InfoRow label="Created" value={incident.created_at ? new Date(incident.created_at).toLocaleString() : '—'} />
         </div>
         {incident.description && (

@@ -19,12 +19,12 @@ import { extractApiError } from '@/lib/api-error';
 
 const emptyForm = {
   company_name: '',
-  contact_email: '',
-  contact_phone: '',
-  address: '',
+  contact_person: '',
+  email: '',
+  phone: '',
+  billing_address: '',
   credit_limit: '',
-  credit_days: '',
-  notes: '',
+  payment_terms_days: '',
 };
 
 export default function CorporateAccountsPage() {
@@ -58,7 +58,7 @@ export default function CorporateAccountsPage() {
       setSubmitting(true);
       const payload: Record<string, any> = { ...form };
       if (payload.credit_limit) payload.credit_limit = Number(payload.credit_limit);
-      if (payload.credit_days) payload.credit_days = Number(payload.credit_days);
+      if (payload.payment_terms_days) payload.payment_terms_days = Number(payload.payment_terms_days);
       await corporateAccountService.createCorporateAccount(cleanPayload(payload));
       toast.success('Corporate account created');
       setShowCreateModal(false);
@@ -79,12 +79,12 @@ export default function CorporateAccountsPage() {
       ),
     },
     {
-      header: 'Contact Email',
-      render: (row: any) => row.contact_email ?? '—',
+      header: 'Contact',
+      render: (row: any) => row.contact_person ?? row.email ?? '—',
     },
     {
       header: 'Phone',
-      render: (row: any) => row.contact_phone ?? '—',
+      render: (row: any) => row.phone ?? '—',
     },
     {
       header: 'Credit Limit',
@@ -163,34 +163,44 @@ export default function CorporateAccountsPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Contact Email</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Contact Person</label>
               <input
-                type="email"
-                value={form.contact_email}
-                onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
+                type="text"
+                value={form.contact_person}
+                onChange={(e) => setForm({ ...form, contact_person: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="billing@company.com"
+                placeholder="e.g. John Smith"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Contact Phone</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Phone</label>
               <input
                 type="text"
-                value={form.contact_phone}
-                onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="+971 4 xxx xxxx"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Address</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="billing@company.com"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Billing Address</label>
             <input
               type="text"
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              value={form.billing_address}
+              onChange={(e) => setForm({ ...form, billing_address: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Company address"
+              placeholder="Company billing address"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -205,25 +215,15 @@ export default function CorporateAccountsPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Credit Days</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Payment Terms (days)</label>
               <input
                 type="number"
-                value={form.credit_days}
-                onChange={(e) => setForm({ ...form, credit_days: e.target.value })}
+                value={form.payment_terms_days}
+                onChange={(e) => setForm({ ...form, payment_terms_days: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="30"
               />
             </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Notes</label>
-            <textarea
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              rows={2}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-              placeholder="Optional notes..."
-            />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">

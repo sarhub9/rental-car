@@ -21,13 +21,13 @@ import { cleanPayload } from '@/lib/clean-payload';
 import { extractApiError } from '@/lib/api-error';
 
 const STATUS_OPTIONS = ['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'PROCESSED'];
-const METHOD_OPTIONS = ['cash', 'bank_transfer', 'card_reversal', 'cheque'];
 
 const emptyForm = {
+  payment_id: '',
+  customer_id: '',
   invoice_id: '',
   amount: '',
-  method: 'cash',
-  notes: '',
+  reason: '',
 };
 
 export default function RefundsPage() {
@@ -62,7 +62,9 @@ export default function RefundsPage() {
   useEffect(() => { fetchRefunds(); }, [fetchRefunds]);
 
   const handleCreate = async () => {
-    if (!form.invoice_id.trim() || !form.amount) { toast.error('Invoice ID and amount are required'); return; }
+    if (!form.payment_id.trim()) { toast.error('Payment ID is required'); return; }
+    if (!form.customer_id.trim()) { toast.error('Customer ID is required'); return; }
+    if (!form.amount) { toast.error('Amount is required'); return; }
     try {
       setSubmitting(true);
       await refundService.requestRefund(cleanPayload({ ...form, amount: Number(form.amount) }));
@@ -247,10 +249,34 @@ export default function RefundsPage() {
       {/* Request Refund Modal */}
       <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Request Refund">
         <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Payment ID <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.payment_id}
+                onChange={(e) => setForm({ ...form, payment_id: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Payment UUID"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Customer ID <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.customer_id}
+                onChange={(e) => setForm({ ...form, customer_id: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Customer UUID"
+              />
+            </div>
+          </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-              Invoice ID <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Invoice ID (optional)</label>
             <input
               type="text"
               value={form.invoice_id}
@@ -259,40 +285,23 @@ export default function RefundsPage() {
               placeholder="Invoice UUID"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Amount (AED) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Method</label>
-              <div className="relative">
-                <select
-                  value={form.method}
-                  onChange={(e) => setForm({ ...form, method: e.target.value })}
-                  className="appearance-none w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                  {METHOD_OPTIONS.map((m) => (
-                    <option key={m} value={m}>{m.replace(/_/g, ' ')}</option>
-                  ))}
-                </select>
-                <HiOutlineChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
-            </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              Amount (AED) <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="0.00"
+            />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Notes</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Reason</label>
             <textarea
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              value={form.reason}
+              onChange={(e) => setForm({ ...form, reason: e.target.value })}
               rows={2}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               placeholder="Reason for refund..."
