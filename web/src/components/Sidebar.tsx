@@ -33,6 +33,7 @@ import {
   HiOutlineCalendarDays,
   HiOutlineArrowUturnLeft,
   HiOutlineCog6Tooth,
+  HiOutlineSquares2X2,
 } from 'react-icons/hi2';
 import type { ReactNode } from 'react';
 

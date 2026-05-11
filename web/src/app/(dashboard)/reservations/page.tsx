@@ -14,6 +14,7 @@ import {
 import { reservationService } from '@/services/reservation.service';
 import { customerService } from '@/services/customer.service';
 import { branchService } from '@/services/branch.service';
+import { vehicleCategoryService } from '@/services/vehicle-category.service';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -21,7 +22,6 @@ import { Modal } from '@/components/Modal';
 import { Spinner } from '@/components/Spinner';
 import { cleanPayload } from '@/lib/clean-payload';
 import { extractApiError } from '@/lib/api-error';
-import apiClient from '@/lib/api-client';
 
 const STATUS_OPTIONS = ['ALL', 'DRAFT', 'CONFIRMED', 'ASSIGNED', 'CHECKED_OUT', 'CANCELLED', 'NO_SHOW'];
 
@@ -47,6 +47,7 @@ export default function ReservationsPage() {
   // Lookup data
   const [categories, setCategories] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
+  const [lookupsLoaded, setLookupsLoaded] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
@@ -71,29 +72,31 @@ export default function ReservationsPage() {
 
   useEffect(() => { fetchReservations(); }, [fetchReservations]);
 
-  // Load categories and branches when modal opens
+  // Load categories and branches once on page mount
   useEffect(() => {
-    if (!showCreateModal) return;
     const loadLookups = async () => {
       try {
-        const [catRes, branchRes] = await Promise.allSettled([
-          apiClient.get('/v1/vehicle-categories'),
-          branchService.listBranches(),
-        ]);
-        if (catRes.status === 'fulfilled') {
-          const d = catRes.value?.data ?? catRes.value;
-          setCategories(Array.isArray(d) ? d : (d?.data || []));
-        }
-        if (branchRes.status === 'fulfilled') {
-          const d = branchRes.value;
-          setBranches(Array.isArray(d) ? d : (d?.data || []));
-        }
-      } catch { /* non-critical */ }
+        const cats = await vehicleCategoryService.listVehicleCategories();
+        setCategories(Array.isArray(cats) ? cats : []);
+      } catch (err) {
+        toast.error('Failed to load vehicle categories');
+      }
+      try {
+        const brs = await branchService.listBranches();
+        setBranches(Array.isArray(brs) ? brs : (brs?.data || []));
+      } catch { /* branches optional */ }
+      setLookupsLoaded(true);
     };
     loadLookups();
-    setCustomerSearch('');
-    setCustomers([]);
-    setSelectedCustomer(null);
+  }, []);
+
+  // Reset customer search when modal opens
+  useEffect(() => {
+    if (showCreateModal) {
+      setCustomerSearch('');
+      setCustomers([]);
+      setSelectedCustomer(null);
+    }
   }, [showCreateModal]);
 
   // Customer search
