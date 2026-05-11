@@ -10,6 +10,7 @@ import {
   HiOutlineChevronDown,
   HiOutlineMagnifyingGlass,
   HiOutlineUser,
+  HiOutlineSquares2X2,
 } from 'react-icons/hi2';
 import { reservationService } from '@/services/reservation.service';
 import { customerService } from '@/services/customer.service';
@@ -44,15 +45,22 @@ export default function ReservationsPage() {
   const [form, setForm] = useState({ ...emptyForm });
   const [submitting, setSubmitting] = useState(false);
 
-  // Lookup data
-  const [categories, setCategories] = useState<any[]>([]);
-  const [branches, setBranches] = useState<any[]>([]);
-  const [lookupsLoaded, setLookupsLoaded] = useState(false);
+  // Customer search
   const [customerSearch, setCustomerSearch] = useState('');
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [showCustomerDrop, setShowCustomerDrop] = useState(false);
   const customerRef = useRef<HTMLDivElement>(null);
+
+  // Category search
+  const [allCategories, setAllCategories] = useState<any[]>([]);
+  const [catSearch, setCatSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [showCatDrop, setShowCatDrop] = useState(false);
+  const catRef = useRef<HTMLDivElement>(null);
+
+  // Branch
+  const [branches, setBranches] = useState<any[]>([]);
 
   useEffect(() => { router.prefetch('/reservations'); }, [router]);
 
@@ -72,34 +80,27 @@ export default function ReservationsPage() {
 
   useEffect(() => { fetchReservations(); }, [fetchReservations]);
 
-  const loadLookups = useCallback(async () => {
-    try {
-      const cats = await vehicleCategoryService.listVehicleCategories();
-      setCategories(Array.isArray(cats) ? cats : []);
-    } catch {
-      toast.error('Failed to load vehicle categories');
-    }
-    try {
-      const brs = await branchService.listBranches();
-      setBranches(Array.isArray(brs) ? brs : (brs?.data || []));
-    } catch { /* branches optional */ }
-    setLookupsLoaded(true);
+  // Load categories + branches once
+  useEffect(() => {
+    vehicleCategoryService.listVehicleCategories()
+      .then(d => setAllCategories(Array.isArray(d) ? d : []))
+      .catch(() => {});
+    branchService.listBranches()
+      .then(d => setBranches(Array.isArray(d) ? d : (d?.data || [])))
+      .catch(() => {});
   }, []);
 
-  // Load on mount
-  useEffect(() => { loadLookups(); }, [loadLookups]);
-
-  // Also reload when modal opens (in case mount failed)
+  // Reload categories when modal opens (fresh fetch every time)
   useEffect(() => {
-    if (showCreateModal) {
-      if (categories.length === 0) loadLookups();
-      setCustomerSearch('');
-      setCustomers([]);
-      setSelectedCustomer(null);
-    }
+    if (!showCreateModal) return;
+    vehicleCategoryService.listVehicleCategories()
+      .then(d => setAllCategories(Array.isArray(d) ? d : []))
+      .catch(() => {});
+    setCustomerSearch(''); setCustomers([]); setSelectedCustomer(null);
+    setCatSearch(''); setSelectedCategory(null);
   }, [showCreateModal]);
 
-  // Customer search
+  // Customer search debounce
   useEffect(() => {
     if (!customerSearch.trim()) { setCustomers([]); return; }
     const t = setTimeout(async () => {
@@ -111,22 +112,32 @@ export default function ReservationsPage() {
     return () => clearTimeout(t);
   }, [customerSearch]);
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (customerRef.current && !customerRef.current.contains(e.target as Node)) {
-        setShowCustomerDropdown(false);
-      }
+      if (customerRef.current && !customerRef.current.contains(e.target as Node)) setShowCustomerDrop(false);
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setShowCatDrop(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const filteredCats = allCategories.filter(c =>
+    (c.category_name ?? '').toLowerCase().includes(catSearch.toLowerCase())
+  );
+
   const selectCustomer = (c: any) => {
     setSelectedCustomer(c);
-    setForm((f) => ({ ...f, customer_id: c.id }));
+    setForm(f => ({ ...f, customer_id: c.id }));
     setCustomerSearch(c.full_name_en ?? c.full_name ?? c.name ?? '');
-    setShowCustomerDropdown(false);
+    setShowCustomerDrop(false);
+  };
+
+  const selectCategory = (c: any) => {
+    setSelectedCategory(c);
+    setForm(f => ({ ...f, vehicle_category_id: c.id }));
+    setCatSearch(c.category_name);
+    setShowCatDrop(false);
   };
 
   const handleCreate = async () => {
@@ -151,31 +162,23 @@ export default function ReservationsPage() {
   const columns = [
     {
       header: 'Ref #',
-      render: (row: any) => (
-        <span className="font-mono text-xs text-gray-700">
-          {row.reservation_number ?? row.id?.slice(0, 8)}
-        </span>
-      ),
+      render: (row: any) => <span className="font-mono text-xs text-gray-700">{row.reservation_number ?? row.id?.slice(0, 8)}</span>,
     },
     {
       header: 'Customer',
-      render: (row: any) =>
-        row.customer_name ?? row.customer?.full_name_en ?? row.customer?.full_name ?? '—',
+      render: (row: any) => row.customer_name ?? row.customer?.full_name_en ?? '—',
     },
     {
       header: 'Vehicle Category',
-      render: (row: any) =>
-        row.category_name ?? row.vehicle_category?.category_name ?? '—',
+      render: (row: any) => row.category_name ?? row.vehicle_category?.category_name ?? '—',
     },
     {
       header: 'Pickup',
-      render: (row: any) =>
-        row.pickup_datetime ? new Date(row.pickup_datetime).toLocaleDateString() : '—',
+      render: (row: any) => row.pickup_datetime ? new Date(row.pickup_datetime).toLocaleDateString() : '—',
     },
     {
       header: 'Return',
-      render: (row: any) =>
-        row.return_datetime ? new Date(row.return_datetime).toLocaleDateString() : '—',
+      render: (row: any) => row.return_datetime ? new Date(row.return_datetime).toLocaleDateString() : '—',
     },
     {
       header: 'Status',
@@ -184,12 +187,8 @@ export default function ReservationsPage() {
     {
       header: '',
       render: (row: any) => (
-        <button
-          onClick={(e) => { e.stopPropagation(); router.push(`/reservations/${row.id}`); }}
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          View
-        </button>
+        <button onClick={(e) => { e.stopPropagation(); router.push(`/reservations/${row.id}`); }}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
       ),
     },
   ];
@@ -223,7 +222,7 @@ export default function ReservationsPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="appearance-none border border-gray-300 rounded-lg px-3 py-1.5 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             >
-              {STATUS_OPTIONS.map((s) => (
+              {STATUS_OPTIONS.map(s => (
                 <option key={s} value={s}>{s === 'ALL' ? 'All Statuses' : s.replace(/_/g, ' ')}</option>
               ))}
             </select>
@@ -235,44 +234,35 @@ export default function ReservationsPage() {
       {loading ? (
         <div className="flex justify-center py-12"><Spinner /></div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={reservations}
+        <DataTable columns={columns} data={reservations}
           onRowClick={(row: any) => router.push(`/reservations/${row.id}`)}
-          emptyMessage="No reservations found."
-        />
+          emptyMessage="No reservations found." />
       )}
 
       {/* Create Modal */}
       <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="New Reservation">
         <div className="space-y-4">
 
-          {/* Customer search */}
+          {/* Customer */}
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">
               Customer <span className="text-red-500">*</span>
             </label>
             <div className="relative" ref={customerRef}>
-              <div className="relative">
-                <HiOutlineMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={customerSearch}
-                  onChange={(e) => { setCustomerSearch(e.target.value); setShowCustomerDropdown(true); setSelectedCustomer(null); setForm((f) => ({ ...f, customer_id: '' })); }}
-                  onFocus={() => setShowCustomerDropdown(true)}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Search by name or phone..."
-                />
-              </div>
-              {showCustomerDropdown && customers.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              <HiOutlineMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                value={customerSearch}
+                onChange={(e) => { setCustomerSearch(e.target.value); setShowCustomerDrop(true); setSelectedCustomer(null); setForm(f => ({ ...f, customer_id: '' })); }}
+                onFocus={() => setShowCustomerDrop(true)}
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Search by name or phone..."
+              />
+              {showCustomerDrop && customers.length > 0 && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto">
                   {customers.map((c: any) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => selectCustomer(c)}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 text-sm"
-                    >
+                    <button key={c.id} type="button" onClick={() => selectCustomer(c)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 text-sm">
                       <HiOutlineUser className="h-4 w-4 text-gray-400 shrink-0" />
                       <div>
                         <p className="font-medium text-gray-900">{c.full_name_en ?? c.full_name ?? c.name}</p>
@@ -282,10 +272,10 @@ export default function ReservationsPage() {
                   ))}
                 </div>
               )}
+              {selectedCustomer && (
+                <p className="text-xs text-green-600 mt-1">✓ {selectedCustomer.full_name_en ?? selectedCustomer.full_name}</p>
+              )}
             </div>
-            {selectedCustomer && (
-              <p className="text-xs text-green-600 mt-1">Selected: {selectedCustomer.full_name_en ?? selectedCustomer.full_name}</p>
-            )}
           </div>
 
           {/* Vehicle Category */}
@@ -293,18 +283,34 @@ export default function ReservationsPage() {
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">
               Vehicle Category <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <select
-                value={form.vehicle_category_id}
-                onChange={(e) => setForm({ ...form, vehicle_category_id: e.target.value })}
-                className="appearance-none w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              >
-                <option value="">-- Select category --</option>
-                {categories.map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.category_name}</option>
-                ))}
-              </select>
-              <HiOutlineChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className="relative" ref={catRef}>
+              <HiOutlineSquares2X2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                value={catSearch}
+                onChange={(e) => { setCatSearch(e.target.value); setShowCatDrop(true); setSelectedCategory(null); setForm(f => ({ ...f, vehicle_category_id: '' })); }}
+                onFocus={() => setShowCatDrop(true)}
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Type to search category..."
+              />
+              {showCatDrop && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                  {filteredCats.length > 0 ? filteredCats.map((c: any) => (
+                    <button key={c.id} type="button" onClick={() => selectCategory(c)}
+                      className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 text-sm">
+                      <span className="font-medium text-gray-900">{c.category_name}</span>
+                      <span className="font-mono text-xs text-gray-400">{c.category_code}</span>
+                    </button>
+                  )) : (
+                    <p className="px-3 py-2 text-sm text-gray-400">
+                      {allCategories.length === 0 ? 'No categories found — add from Vehicle Categories page' : 'No match'}
+                    </p>
+                  )}
+                </div>
+              )}
+              {selectedCategory && (
+                <p className="text-xs text-green-600 mt-1">✓ {selectedCategory.category_name}</p>
+              )}
             </div>
           </div>
 
@@ -314,23 +320,17 @@ export default function ReservationsPage() {
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Pickup Date &amp; Time <span className="text-red-500">*</span>
               </label>
-              <input
-                type="datetime-local"
-                value={form.pickup_datetime}
+              <input type="datetime-local" value={form.pickup_datetime}
                 onChange={(e) => setForm({ ...form, pickup_datetime: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Return Date &amp; Time <span className="text-red-500">*</span>
               </label>
-              <input
-                type="datetime-local"
-                value={form.return_datetime}
+              <input type="datetime-local" value={form.return_datetime}
                 onChange={(e) => setForm({ ...form, return_datetime: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             </div>
           </div>
 
@@ -338,15 +338,10 @@ export default function ReservationsPage() {
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">Branch (optional)</label>
             <div className="relative">
-              <select
-                value={form.branch_id}
-                onChange={(e) => setForm({ ...form, branch_id: e.target.value })}
-                className="appearance-none w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              >
+              <select value={form.branch_id} onChange={(e) => setForm({ ...form, branch_id: e.target.value })}
+                className="appearance-none w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                 <option value="">-- No specific branch --</option>
-                {branches.map((b: any) => (
-                  <option key={b.id} value={b.id}>{b.branch_name}</option>
-                ))}
+                {branches.map((b: any) => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
               </select>
               <HiOutlineChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
@@ -355,27 +350,16 @@ export default function ReservationsPage() {
           {/* Notes */}
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">Notes (optional)</label>
-            <textarea
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              rows={2}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-              placeholder="Any special requests..."
-            />
+            <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              placeholder="Any special requests..." />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCreate}
-              disabled={submitting}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-            >
+            <button onClick={() => setShowCreateModal(false)}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
+            <button onClick={handleCreate} disabled={submitting}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
               {submitting && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               {submitting ? 'Creating...' : 'Create Reservation'}
             </button>
