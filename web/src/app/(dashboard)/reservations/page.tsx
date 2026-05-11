@@ -84,7 +84,7 @@ export default function ReservationsPage() {
   useEffect(() => {
     vehicleCategoryService.listVehicleCategories()
       .then(d => setAllCategories(Array.isArray(d) ? d : []))
-      .catch(() => {});
+      .catch(err => toast.error('Categories error: ' + (err?.response?.data?.error ?? err?.message ?? 'unknown')));
     branchService.listBranches()
       .then(d => setBranches(Array.isArray(d) ? d : (d?.data || [])))
       .catch(() => {});
@@ -95,7 +95,7 @@ export default function ReservationsPage() {
     if (!showCreateModal) return;
     vehicleCategoryService.listVehicleCategories()
       .then(d => setAllCategories(Array.isArray(d) ? d : []))
-      .catch(() => {});
+      .catch(err => toast.error('Categories error: ' + (err?.response?.data?.error ?? err?.message ?? 'unknown')));
     setCustomerSearch(''); setCustomers([]); setSelectedCustomer(null);
     setCatSearch(''); setSelectedCategory(null);
   }, [showCreateModal]);
