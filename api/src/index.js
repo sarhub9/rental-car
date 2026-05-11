@@ -32,6 +32,7 @@ import cashDrawerRoutes from './routes/cash-drawer.routes.js';
 import refundRoutes from './routes/refund.routes.js';
 import incidentRoutes from './routes/incident.routes.js';
 import vehicleDocumentRoutes from './routes/vehicle-document.routes.js';
+import vehicleCategoryRoutes from './routes/vehicle-category.routes.js';
 import { requestLogger } from './middleware/logger.middleware.js';
 import { apiRateLimiter } from './middleware/rate-limit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.middleware.js';
@@ -89,6 +90,7 @@ app.use('/v1/cash-drawer', cashDrawerRoutes);
 app.use('/v1/refunds', refundRoutes);
 app.use('/v1/incidents', incidentRoutes);
 app.use('/v1/vehicles/:vehicleId/documents', vehicleDocumentRoutes);
+app.use('/v1/vehicle-categories', vehicleCategoryRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
