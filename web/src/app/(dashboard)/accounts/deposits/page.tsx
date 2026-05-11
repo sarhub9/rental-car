@@ -17,6 +17,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { Spinner } from '@/components/Spinner';
 import { cleanPayload } from '@/lib/clean-payload';
+import { extractApiError } from '@/lib/api-error';
 
 type DepositStatus = 'ALL' | 'HELD' | 'USED' | 'RELEASED' | 'FORFEITED' | 'REFUNDED';
 
@@ -55,7 +56,7 @@ export default function DepositsPage() {
         setDeposits(res);
       }
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load deposits');
+      toast.error(extractApiError(err, 'Failed to load deposits'));
     } finally {
       setLoading(false);
     }
@@ -77,7 +78,7 @@ export default function DepositsPage() {
       setSelectedDeposit(null);
       fetchDeposits();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to use deposit');
+      toast.error(extractApiError(err, 'Failed to use deposit'));
     } finally {
       setSubmitting(false);
     }
@@ -89,7 +90,7 @@ export default function DepositsPage() {
       toast.success('Deposit released');
       fetchDeposits();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to release deposit');
+      toast.error(extractApiError(err, 'Failed to release deposit'));
     }
   };
 
@@ -105,7 +106,7 @@ export default function DepositsPage() {
       setSelectedDeposit(null);
       fetchDeposits();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to forfeit deposit');
+      toast.error(extractApiError(err, 'Failed to forfeit deposit'));
     } finally {
       setSubmitting(false);
     }
@@ -117,7 +118,7 @@ export default function DepositsPage() {
       toast.success('Deposit refunded');
       fetchDeposits();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to refund deposit');
+      toast.error(extractApiError(err, 'Failed to refund deposit'));
     }
   };
 

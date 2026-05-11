@@ -12,6 +12,7 @@ import { ratePlanService } from '@/services/rate-plan.service';
 import type { CreateRatePlanPayload } from '@/services/rate-plan.service';
 import { PageHeader } from '@/components/PageHeader';
 import { cleanPayload } from '@/lib/clean-payload';
+import { extractApiError } from '@/lib/api-error';
 
 export default function CreateRatePlanPage() {
   const router = useRouter();
@@ -100,8 +101,7 @@ export default function CreateRatePlanPage() {
       toast.success('Rate plan created');
       router.push('/rate-plans');
     } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Failed to create rate plan';
-      toast.error(message);
+      toast.error(extractApiError(err, 'Failed to create rate plan'));
     } finally {
       setSubmitting(false);
     }

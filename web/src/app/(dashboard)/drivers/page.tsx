@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { driverService, DriverProfile } from '@/services/driver.service';
 import { StatusBadge } from '@/components/StatusBadge';
 import toast from 'react-hot-toast';
+import { extractApiError } from '@/lib/api-error';
 import {
   HiPlus, HiMagnifyingGlass, HiPencilSquare, HiXMark,
   HiShieldExclamation, HiShieldCheck, HiIdentification,
@@ -154,7 +156,7 @@ function DriverDrawer({ open, onClose, driver, onSaved }: {
       onSaved();
       onClose();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || err.message || 'Failed to save driver');
+      toast.error(extractApiError(err, 'Failed to save driver'));
     } finally {
       setSaving(false);
     }
@@ -167,7 +169,7 @@ function DriverDrawer({ open, onClose, driver, onSaved }: {
       toast.success('Driver blacklisted');
       setShowBlacklist(false);
       onSaved(); onClose();
-    } catch { toast.error('Failed'); }
+    } catch (err: any) { toast.error(extractApiError(err, 'Failed')); }
   };
 
   const handleUnblacklist = async () => {
@@ -176,7 +178,7 @@ function DriverDrawer({ open, onClose, driver, onSaved }: {
       await driverService.unblacklistDriver(driver.id);
       toast.success('Removed from blacklist');
       onSaved(); onClose();
-    } catch { toast.error('Failed'); }
+    } catch (err: any) { toast.error(extractApiError(err, 'Failed')); }
   };
 
   const typeInfo = DRIVER_TYPES.find(t => t.value === form.driver_type);
@@ -402,6 +404,7 @@ function DriverDrawer({ open, onClose, driver, onSaved }: {
 
 // ── Main Page ────────────────────────────────────────────────────────────────
 export default function DriversPage() {
+  const router = useRouter();
   const [drivers, setDrivers] = useState<DriverProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -412,6 +415,8 @@ export default function DriversPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState<DriverProfile | null>(null);
+
+  useEffect(() => { router.prefetch('/drivers/create'); }, [router]);
 
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 400);
@@ -437,8 +442,8 @@ export default function DriversPage() {
         setTotalCount(res?.total ?? items.length ?? 0);
         setTotalPages(res?.pages ?? 1);
       }
-    } catch {
-      toast.error('Failed to load drivers');
+    } catch (err: any) {
+      toast.error(extractApiError(err, 'Failed to load drivers'));
     } finally {
       setLoading(false);
     }
@@ -446,7 +451,7 @@ export default function DriversPage() {
 
   useEffect(() => { fetchDrivers(); }, [fetchDrivers]);
 
-  const openAdd = () => { setSelected(null); setDrawerOpen(true); };
+  const openAdd = () => router.push('/drivers/create');
   const openEdit = (d: DriverProfile) => { setSelected(d); setDrawerOpen(true); };
 
   const handleUnblacklist = async (e: React.MouseEvent, d: DriverProfile) => {
@@ -455,7 +460,7 @@ export default function DriversPage() {
       await driverService.unblacklistDriver(d.id);
       toast.success('Removed from blacklist');
       fetchDrivers();
-    } catch { toast.error('Failed'); }
+    } catch (err: any) { toast.error(extractApiError(err, 'Failed')); }
   };
 
   const typeInfo = (val: string) => DRIVER_TYPES.find(t => t.value === val);

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { customerService } from '@/services/customer.service';
 import toast from 'react-hot-toast';
 import { cleanPayload } from '@/lib/clean-payload';
+import { extractApiError } from '@/lib/api-error';
 import {
   HiPlus, HiMagnifyingGlass, HiPencilSquare, HiXMark,
   HiExclamationTriangle, HiShieldExclamation, HiChevronRight,
@@ -160,7 +162,7 @@ function CustomerDrawer({ open, onClose, customer, onSaved }: {
       onSaved();
       onClose();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || err.message || 'Failed to save customer');
+      toast.error(extractApiError(err, 'Failed to save customer'));
     } finally {
       setSaving(false);
     }
@@ -446,6 +448,7 @@ function CustomerDrawer({ open, onClose, customer, onSaved }: {
 
 // ── Main Page ────────────────────────────────────────────────────────────────
 export default function CustomersPage() {
+  const router = useRouter();
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -456,6 +459,8 @@ export default function CustomersPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState<any | null>(null);
+
+  useEffect(() => { router.prefetch('/customers/create'); }, [router]);
 
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 400);
@@ -478,8 +483,8 @@ export default function CustomersPage() {
         setTotalCount(res?.total || items.length);
         setTotalPages(res?.pages || 1);
       }
-    } catch {
-      toast.error('Failed to load customers');
+    } catch (err: any) {
+      toast.error(extractApiError(err, 'Failed to load customers'));
     } finally {
       setLoading(false);
     }
@@ -487,7 +492,7 @@ export default function CustomersPage() {
 
   useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
 
-  const openAdd = () => { setSelected(null); setDrawerOpen(true); };
+  const openAdd = () => router.push('/customers/create');
   const openEdit = (c: any) => { setSelected(c); setDrawerOpen(true); };
 
   const docWarnings = (c: any) => {

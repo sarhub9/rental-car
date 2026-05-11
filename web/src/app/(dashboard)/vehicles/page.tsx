@@ -7,6 +7,7 @@ import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Vehicle } from '@/types';
 import toast from 'react-hot-toast';
+import { extractApiError } from '@/lib/api-error';
 import { HiPlus, HiEye } from 'react-icons/hi2';
 
 const STATUS_OPTIONS = ['ALL', 'AVAILABLE', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE'];
@@ -41,12 +42,14 @@ export default function VehiclesPage() {
       setVehicles(items);
       setTotalCount(items.length);
       setTotalPages(1);
-    } catch {
-      toast.error('Failed to load vehicles');
+    } catch (err: any) {
+      toast.error(extractApiError(err, 'Failed to load vehicles'));
     } finally {
       setLoading(false);
     }
   }, [page, statusFilter]);
+
+  useEffect(() => { router.prefetch('/vehicles/create'); }, [router]);
 
   useEffect(() => {
     fetchVehicles();

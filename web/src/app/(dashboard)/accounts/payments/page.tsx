@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { HiOutlineFunnel, HiOutlineBanknotes } from 'react-icons/hi2';
 import { invoiceService } from '@/services/invoice.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -24,7 +25,7 @@ export default function PaymentsPage() {
       const invoices = res.data ?? res;
       setPayments(Array.isArray(invoices) ? invoices : []);
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load payments');
+      toast.error(extractApiError(err, 'Failed to load payments'));
     } finally {
       setLoading(false);
     }

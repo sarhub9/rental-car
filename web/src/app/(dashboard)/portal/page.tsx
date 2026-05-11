@@ -12,6 +12,7 @@ import {
   HiOutlineArrowRight,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { extractApiError } from '@/lib/api-error';
 
 export default function CustomerDashboardPage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function CustomerDashboardPage() {
       const res = await customerPortalService.getCustomerDashboard();
       setDashboard(res.data);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to load dashboard');
+      toast.error(extractApiError(err, 'Failed to load dashboard'));
     } finally {
       setLoading(false);
     }

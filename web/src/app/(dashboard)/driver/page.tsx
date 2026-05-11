@@ -11,6 +11,7 @@ import {
   HiOutlineFunnel,
 } from 'react-icons/hi2';
 import { driverTaskService } from '@/services/driver-task.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { StatsCard } from '@/components/StatsCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -54,7 +55,7 @@ export default function DriverDashboardPage() {
         inProgress: statsData.in_progress ?? 0,
       });
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load driver tasks');
+      toast.error(extractApiError(err, 'Failed to load driver tasks'));
     } finally {
       setLoading(false);
     }

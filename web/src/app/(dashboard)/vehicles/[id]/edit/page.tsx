@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { vehicleService } from '@/services/vehicle.service';
 import { Vehicle } from '@/types';
 import toast from 'react-hot-toast';
+import { extractApiError } from '@/lib/api-error';
 import { HiArrowLeft } from 'react-icons/hi2';
 
 const TRANSMISSION_TYPES = ['AUTOMATIC', 'MANUAL'];
@@ -66,8 +67,8 @@ export default function EditVehiclePage({ params }: { params: Promise<{ id: stri
           insurance_expiry: vehicle.insurance_expiry ? vehicle.insurance_expiry.substring(0, 10) : '',
           category_id: vehicle.category_id || '',
         });
-      } catch {
-        toast.error('Failed to load vehicle');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to load vehicle'));
       } finally {
         setLoading(false);
       }
@@ -94,8 +95,8 @@ export default function EditVehiclePage({ params }: { params: Promise<{ id: stri
       await vehicleService.updateVehicle(id, formData);
       toast.success('Vehicle updated successfully');
       router.push(`/vehicles/${id}`);
-    } catch {
-      toast.error('Failed to update vehicle');
+    } catch (err: any) {
+      toast.error(extractApiError(err, 'Failed to update vehicle'));
     } finally {
       setSubmitting(false);
     }

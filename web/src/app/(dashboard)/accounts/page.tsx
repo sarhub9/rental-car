@@ -12,6 +12,7 @@ import {
   HiOutlineArrowRight,
 } from 'react-icons/hi2';
 import { adminService } from '@/services/admin.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { StatsCard } from '@/components/StatsCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -29,7 +30,7 @@ export default function AccountsDashboardPage() {
         const res = await adminService.getAdminDashboard();
         setDashboard(res.data ?? res);
       } catch (err: any) {
-        toast.error(err?.message ?? 'Failed to load accounts dashboard');
+        toast.error(extractApiError(err, 'Failed to load accounts dashboard'));
       } finally {
         setLoading(false);
       }

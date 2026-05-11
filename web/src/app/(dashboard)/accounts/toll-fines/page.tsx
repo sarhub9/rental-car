@@ -9,6 +9,7 @@ import {
   HiOutlineLink,
 } from 'react-icons/hi2';
 import { accountsService } from '@/services/accounts.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -48,7 +49,7 @@ export default function TollFinesPage() {
         setFines(res);
       }
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load toll fines');
+      toast.error(extractApiError(err, 'Failed to load toll fines'));
     } finally {
       setLoading(false);
     }
@@ -68,7 +69,7 @@ export default function TollFinesPage() {
       toast.success('CSV imported successfully');
       fetchFines();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to import CSV');
+      toast.error(extractApiError(err, 'Failed to import CSV'));
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -79,7 +80,7 @@ export default function TollFinesPage() {
       toast.success('Reprocessing started');
       fetchFines();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to reprocess matching');
+      toast.error(extractApiError(err, 'Failed to reprocess matching'));
     }
   };
 
@@ -94,7 +95,7 @@ export default function TollFinesPage() {
       setSelectedFine(null);
       fetchFines();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to assign fine');
+      toast.error(extractApiError(err, 'Failed to assign fine'));
     } finally {
       setSubmitting(false);
     }

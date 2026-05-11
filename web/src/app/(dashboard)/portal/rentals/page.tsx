@@ -10,6 +10,7 @@ import {
   HiOutlineChevronRight,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { extractApiError } from '@/lib/api-error';
 
 const TABS = [
   { key: 'active', label: 'Active' },
@@ -53,7 +54,7 @@ export default function MyRentalsPage() {
         setTotalPages(1);
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to load rentals');
+      toast.error(extractApiError(err, 'Failed to load rentals'));
     } finally {
       setLoading(false);
     }

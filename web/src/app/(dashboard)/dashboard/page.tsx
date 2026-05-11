@@ -11,6 +11,7 @@ import { getInvoices } from '@/services/invoice.service';
 import { getDriverTasks } from '@/services/driver-task.service';
 import { getMyCompany, CompanyProfile, getPlans, subscribe, SubscriptionPlan } from '@/services/company.service';
 import toast from 'react-hot-toast';
+import { extractApiError } from '@/lib/api-error';
 import {
   HiOutlineDocumentText,
   HiOutlineCurrencyDollar,
@@ -78,7 +79,7 @@ function SubscribeModal({ onClose, onSubscribed }: { onClose: () => void; onSubs
       onSubscribed();
       onClose();
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || 'Subscription failed');
+      toast.error(extractApiError(err, 'Subscription failed'));
     } finally {
       setSubscribing(null);
     }
@@ -274,8 +275,8 @@ function AdminDashboard() {
         ]);
         setData(dashRes.data || dashRes);
         if (companyRes) setCompany(companyRes);
-      } catch {
-        toast.error('Failed to load dashboard data');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to load dashboard data'));
       } finally {
         setLoading(false);
       }
@@ -560,8 +561,8 @@ function FleetManagerDashboard() {
       try {
         const res = await getVehicleStats();
         setStats(res.data);
-      } catch {
-        toast.error('Failed to load fleet stats');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to load fleet stats'));
       } finally {
         setLoading(false);
       }
@@ -713,8 +714,8 @@ function AccountsDashboard() {
           overdue_count: overdueCount,
           recent_payments: invoices.slice(0, 5),
         });
-      } catch {
-        toast.error('Failed to load accounts data');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to load accounts data'));
       } finally {
         setLoading(false);
       }
@@ -850,8 +851,8 @@ function DriverDashboard() {
         });
 
         setStats({ completed_today: completedToday, pending, in_progress: inProgress });
-      } catch {
-        toast.error('Failed to load tasks');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to load tasks'));
       } finally {
         setLoading(false);
       }

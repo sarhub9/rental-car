@@ -9,6 +9,7 @@ import {
   HiOutlineXMark,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { extractApiError } from '@/lib/api-error';
 
 export default function MessagesPage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function MessagesPage() {
       const res = await customerPortalService.getCustomerMessages();
       setThreads(res.data?.data || res.data || []);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to load messages');
+      toast.error(extractApiError(err, 'Failed to load messages'));
     } finally {
       setLoading(false);
     }
@@ -56,7 +57,7 @@ export default function MessagesPage() {
       setNewThread({ subject: '', message: '' });
       await fetchThreads();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to send message');
+      toast.error(extractApiError(err, 'Failed to send message'));
     } finally {
       setCreating(false);
     }

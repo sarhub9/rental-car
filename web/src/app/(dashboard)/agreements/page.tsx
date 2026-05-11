@@ -12,6 +12,7 @@ import {
   HiChevronRight,
 } from 'react-icons/hi2';
 import { agreementService } from '@/services/agreement.service';
+import { extractApiError } from '@/lib/api-error';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DataTable } from '@/components/DataTable';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -58,11 +59,13 @@ export default function AgreementsPage() {
       setTotalCount(total);
     } catch (error: any) {
       console.error('Failed to load agreements:', error);
-      toast.error(error?.message || 'Failed to load agreements');
+      toast.error(extractApiError(error, 'Failed to load agreements'));
     } finally {
       setLoading(false);
     }
   }, [page, search, statusFilter, limit]);
+
+  useEffect(() => { router.prefetch('/agreements/create'); }, [router]);
 
   useEffect(() => {
     fetchAgreements();

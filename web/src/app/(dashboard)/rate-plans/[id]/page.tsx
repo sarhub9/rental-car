@@ -11,6 +11,7 @@ import {
   HiOutlineTrash,
 } from 'react-icons/hi2';
 import { ratePlanService } from '@/services/rate-plan.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Spinner } from '@/components/Spinner';
@@ -45,7 +46,7 @@ export default function RatePlanDetailPage() {
       setRatePlan(plan);
       populateForm(plan);
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load rate plan');
+      toast.error(extractApiError(err, 'Failed to load rate plan'));
     } finally {
       setLoading(false);
     }
@@ -146,7 +147,7 @@ export default function RatePlanDetailPage() {
       setEditing(false);
       fetchRatePlan();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to update rate plan');
+      toast.error(extractApiError(err, 'Failed to update rate plan'));
     } finally {
       setSubmitting(false);
     }
@@ -158,7 +159,7 @@ export default function RatePlanDetailPage() {
       toast.success('Rate plan deactivated');
       fetchRatePlan();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to deactivate rate plan');
+      toast.error(extractApiError(err, 'Failed to deactivate rate plan'));
     }
   };
 

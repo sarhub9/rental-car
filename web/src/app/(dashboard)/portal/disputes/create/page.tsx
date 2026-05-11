@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { HiOutlineArrowLeft } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
 import { cleanPayload, sanitizeUuidFields } from '@/lib/clean-payload';
+import { extractApiError } from '@/lib/api-error';
 
 export default function CreateDisputePage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function CreateDisputePage() {
       const res = await customerPortalService.getCustomerAgreements({ limit: 100 });
       setAgreements(res.data?.data || res.data || []);
     } catch (err: any) {
-      toast.error('Failed to load agreements');
+      toast.error(extractApiError(err, 'Failed to load agreements'));
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,7 @@ export default function CreateDisputePage() {
       toast.success('Dispute raised successfully');
       router.push('/portal/disputes');
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to create dispute');
+      toast.error(extractApiError(err, 'Failed to create dispute'));
     } finally {
       setSubmitting(false);
     }

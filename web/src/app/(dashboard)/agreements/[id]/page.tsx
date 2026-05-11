@@ -18,6 +18,7 @@ import {
   HiDocumentText,
 } from 'react-icons/hi2';
 import { agreementService } from '@/services/agreement.service';
+import { extractApiError } from '@/lib/api-error';
 import { StatusBadge } from '@/components/StatusBadge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { Agreement } from '@/types';
@@ -46,7 +47,7 @@ export default function AgreementDetailPage() {
         if (ev.status === 'fulfilled') setEvidence(ev.value.data || ev.value);
         if (ch.status === 'fulfilled') setCharges(ch.value.data || ch.value || []);
       } catch (error: any) {
-        toast.error(error?.message || 'Failed to load agreement');
+        toast.error(extractApiError(error, 'Failed to load agreement'));
       } finally {
         setLoading(false);
       }

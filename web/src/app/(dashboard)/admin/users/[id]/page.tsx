@@ -11,6 +11,7 @@ import {
   HiXMark,
 } from 'react-icons/hi2';
 import { adminService } from '@/services/admin.service';
+import { extractApiError } from '@/lib/api-error';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/Button';
 import type { StaffUser } from '@/types';
@@ -52,8 +53,8 @@ export default function UserDetailPage() {
         phone_number: data.phone_number || '',
         role: data.role || 'VIEWER',
       });
-    } catch (error) {
-      toast.error('Failed to load user');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to load user'));
     } finally {
       setLoading(false);
     }
@@ -75,7 +76,7 @@ export default function UserDetailPage() {
       setEditing(false);
       fetchUser();
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to update user');
+      toast.error(extractApiError(error, 'Failed to update user'));
     } finally {
       setSubmitting(false);
     }
@@ -93,8 +94,8 @@ export default function UserDetailPage() {
         toast.success('User activated');
       }
       fetchUser();
-    } catch (error) {
-      toast.error('Failed to update user status');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to update user status'));
     } finally {
       setSubmitting(false);
     }
@@ -105,8 +106,8 @@ export default function UserDetailPage() {
       setSubmitting(true);
       await adminService.resetUserPassword(userId);
       toast.success('Password reset email sent');
-    } catch (error) {
-      toast.error('Failed to reset password');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to reset password'));
     } finally {
       setSubmitting(false);
     }

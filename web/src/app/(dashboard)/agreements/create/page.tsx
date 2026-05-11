@@ -22,6 +22,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Modal } from '@/components/Modal';
 import { SearchInput } from '@/components/SearchInput';
 import { cleanPayload, sanitizeUuidFields, UUID_REGEX } from '@/lib/clean-payload';
+import { extractApiError } from '@/lib/api-error';
 import type { Customer, Vehicle } from '@/types';
 import type { CreateAgreementPayload } from '@/services/agreement.service';
 
@@ -115,8 +116,8 @@ export default function CreateAgreementPage() {
         const res = await customerService.searchCustomers(customerSearch);
         const items = Array.isArray(res) ? res : (res?.data || []);
         setCustomers(items);
-      } catch {
-        toast.error('Failed to search customers');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to search customers'));
       } finally {
         setLoadingCustomers(false);
       }
@@ -124,22 +125,23 @@ export default function CreateAgreementPage() {
     return () => clearTimeout(timeout);
   }, [customerSearch]);
 
-  // Search vehicles
+  // Search vehicles — no debounce on initial empty load, 400ms debounce while typing
   useEffect(() => {
+    const delay = vehicleSearch.trim() ? 400 : 0;
+    setLoadingVehicles(true);
     const timeout = setTimeout(async () => {
       try {
-        setLoadingVehicles(true);
         const params: Record<string, any> = { limit: 20, status: 'AVAILABLE' };
         if (vehicleSearch.trim()) params.search = vehicleSearch;
         const res = await vehicleService.getVehicles(params);
         const items = Array.isArray(res) ? res : (res?.data || []);
         setVehicles(items);
-      } catch {
-        toast.error('Failed to search vehicles');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to search vehicles'));
       } finally {
         setLoadingVehicles(false);
       }
-    }, 400);
+    }, delay);
     return () => clearTimeout(timeout);
   }, [vehicleSearch]);
 
@@ -188,9 +190,7 @@ export default function CreateAgreementPage() {
       toast.success('Agreement created successfully');
       router.push(`/agreements/${result.id || result.data?.id}`);
     } catch (error: any) {
-      const details = error?.response?.data?.details;
-      const msg = details?.map((d: any) => d.message).join(', ') || error?.response?.data?.message || error?.message || 'Failed to create agreement';
-      toast.error(msg);
+      toast.error(extractApiError(error, 'Failed to create agreement'));
     } finally {
       setSubmitting(false);
     }

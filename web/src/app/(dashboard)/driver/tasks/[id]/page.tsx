@@ -17,6 +17,7 @@ import {
   HiOutlinePlayCircle,
 } from 'react-icons/hi2';
 import { driverTaskService } from '@/services/driver-task.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Spinner } from '@/components/Spinner';
@@ -58,7 +59,7 @@ export default function TaskDetailPage() {
       const res = await driverTaskService.getDriverTaskById(id as string);
       setTask(res.data ?? res);
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load task');
+      toast.error(extractApiError(err, 'Failed to load task'));
     } finally {
       setLoading(false);
     }
@@ -75,7 +76,7 @@ export default function TaskDetailPage() {
       toast.success('Task started');
       fetchTask();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to start task');
+      toast.error(extractApiError(err, 'Failed to start task'));
     } finally {
       setSubmitting(false);
     }
@@ -94,7 +95,7 @@ export default function TaskDetailPage() {
       setShowCompleteModal(false);
       fetchTask();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to complete task');
+      toast.error(extractApiError(err, 'Failed to complete task'));
     } finally {
       setSubmitting(false);
     }
@@ -108,7 +109,7 @@ export default function TaskDetailPage() {
       setShowCancelModal(false);
       fetchTask();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to cancel task');
+      toast.error(extractApiError(err, 'Failed to cancel task'));
     } finally {
       setSubmitting(false);
     }
@@ -127,7 +128,7 @@ export default function TaskDetailPage() {
       setRecoveryForm({ notes: '', outcome: 'unsuccessful', location_lat: '', location_lng: '' });
       fetchTask();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to add recovery attempt');
+      toast.error(extractApiError(err, 'Failed to add recovery attempt'));
     } finally {
       setSubmitting(false);
     }

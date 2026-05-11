@@ -16,6 +16,7 @@ import {
   HiPlus,
 } from 'react-icons/hi2';
 import { agreementService } from '@/services/agreement.service';
+import { extractApiError } from '@/lib/api-error';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const STEPS = [
@@ -152,7 +153,7 @@ export default function CheckoutPage() {
       toast.success('Checkout completed successfully');
       router.push(`/agreements/${id}`);
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to complete checkout');
+      toast.error(extractApiError(error, 'Failed to complete checkout'));
     } finally {
       setSubmitting(false);
     }

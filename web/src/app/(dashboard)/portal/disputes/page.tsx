@@ -10,6 +10,7 @@ import {
   HiOutlineChevronRight,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { extractApiError } from '@/lib/api-error';
 
 export default function DisputesPage() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function DisputesPage() {
         setTotalPages(1);
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to load disputes');
+      toast.error(extractApiError(err, 'Failed to load disputes'));
     } finally {
       setLoading(false);
     }

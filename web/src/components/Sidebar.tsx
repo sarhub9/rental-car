@@ -30,6 +30,9 @@ import {
   HiOutlineIdentification,
   HiOutlineShieldCheck,
   HiOutlineBuildingOffice2,
+  HiOutlineCalendarDays,
+  HiOutlineArrowUturnLeft,
+  HiOutlineCog6Tooth,
 } from 'react-icons/hi2';
 import type { ReactNode } from 'react';
 
@@ -55,9 +58,11 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
       title: 'Operations',
       items: [
         { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={18} /> },
+        { label: 'Reservations', href: '/reservations', icon: <HiOutlineCalendarDays size={18} /> },
         { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={18} /> },
         { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={18} /> },
         { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={18} /> },
+        { label: 'Incidents', href: '/incidents', icon: <HiOutlineExclamationTriangle size={18} /> },
       ],
     },
     {
@@ -65,15 +70,20 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
       items: [
         { label: 'Invoices', href: '/invoices', icon: <HiOutlineCurrencyDollar size={18} /> },
         { label: 'Deposits', href: '/accounts/deposits', icon: <HiOutlineBanknotes size={18} /> },
+        { label: 'Refunds', href: '/accounts/refunds', icon: <HiOutlineArrowUturnLeft size={18} /> },
+        { label: 'Cash Drawer', href: '/accounts/cash-drawer', icon: <HiOutlineBanknotes size={18} /> },
         { label: 'Toll Fines', href: '/accounts/toll-fines', icon: <HiOutlineExclamationTriangle size={18} /> },
       ],
     },
     {
       title: 'Management',
       items: [
+        { label: 'Branches', href: '/branches', icon: <HiOutlineBuildingOffice2 size={18} /> },
+        { label: 'Corporate Accounts', href: '/corporate-accounts', icon: <HiOutlineBuildingOffice2 size={18} /> },
         { label: 'Users', href: '/admin/users', icon: <HiOutlineUserGroup size={18} /> },
         { label: 'Rate Plans', href: '/rate-plans', icon: <HiOutlineTag size={18} /> },
         { label: 'Maintenance', href: '/maintenance', icon: <HiOutlineWrenchScrewdriver size={18} /> },
+        { label: 'Work Orders', href: '/work-orders', icon: <HiOutlineClipboardDocumentList size={18} /> },
         { label: 'KPIs', href: '/admin/kpis', icon: <HiOutlineChartBar size={18} /> },
         { label: 'Reports', href: '/admin/reports', icon: <HiOutlineDocumentChartBar size={18} /> },
       ],
@@ -81,6 +91,8 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
     {
       title: 'Platform',
       items: [
+        { label: 'Settings', href: '/admin/settings', icon: <HiOutlineCog6Tooth size={18} /> },
+        { label: 'Audit Logs', href: '/admin/audit-logs', icon: <HiOutlineClipboardDocumentList size={18} /> },
         { label: 'Super Admin', href: '/superadmin', icon: <HiOutlineShieldCheck size={18} /> },
       ],
     },
@@ -95,9 +107,11 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
       title: 'Operations',
       items: [
         { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={18} /> },
+        { label: 'Reservations', href: '/reservations', icon: <HiOutlineCalendarDays size={18} /> },
         { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={18} /> },
         { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={18} /> },
         { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={18} /> },
+        { label: 'Incidents', href: '/incidents', icon: <HiOutlineExclamationTriangle size={18} /> },
       ],
     },
     {
@@ -105,17 +119,24 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
       items: [
         { label: 'Invoices', href: '/invoices', icon: <HiOutlineCurrencyDollar size={18} /> },
         { label: 'Deposits', href: '/accounts/deposits', icon: <HiOutlineBanknotes size={18} /> },
+        { label: 'Refunds', href: '/accounts/refunds', icon: <HiOutlineArrowUturnLeft size={18} /> },
+        { label: 'Cash Drawer', href: '/accounts/cash-drawer', icon: <HiOutlineBanknotes size={18} /> },
         { label: 'Toll Fines', href: '/accounts/toll-fines', icon: <HiOutlineExclamationTriangle size={18} /> },
       ],
     },
     {
       title: 'Management',
       items: [
+        { label: 'Branches', href: '/branches', icon: <HiOutlineBuildingOffice2 size={18} /> },
+        { label: 'Corporate Accounts', href: '/corporate-accounts', icon: <HiOutlineBuildingOffice2 size={18} /> },
         { label: 'Users', href: '/admin/users', icon: <HiOutlineUserGroup size={18} /> },
         { label: 'Rate Plans', href: '/rate-plans', icon: <HiOutlineTag size={18} /> },
         { label: 'Maintenance', href: '/maintenance', icon: <HiOutlineWrenchScrewdriver size={18} /> },
+        { label: 'Work Orders', href: '/work-orders', icon: <HiOutlineClipboardDocumentList size={18} /> },
         { label: 'KPIs', href: '/admin/kpis', icon: <HiOutlineChartBar size={18} /> },
         { label: 'Reports', href: '/admin/reports', icon: <HiOutlineDocumentChartBar size={18} /> },
+        { label: 'Settings', href: '/admin/settings', icon: <HiOutlineCog6Tooth size={18} /> },
+        { label: 'Audit Logs', href: '/admin/audit-logs', icon: <HiOutlineClipboardDocumentList size={18} /> },
       ],
     },
   ],
@@ -129,9 +150,17 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
       title: 'Operations',
       items: [
         { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={18} /> },
+        { label: 'Reservations', href: '/reservations', icon: <HiOutlineCalendarDays size={18} /> },
         { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={18} /> },
         { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={18} /> },
         { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={18} /> },
+        { label: 'Incidents', href: '/incidents', icon: <HiOutlineExclamationTriangle size={18} /> },
+      ],
+    },
+    {
+      title: 'Finance',
+      items: [
+        { label: 'Cash Drawer', href: '/accounts/cash-drawer', icon: <HiOutlineBanknotes size={18} /> },
       ],
     },
   ],
@@ -146,6 +175,8 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
       items: [
         { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={18} /> },
         { label: 'Maintenance', href: '/maintenance', icon: <HiOutlineWrenchScrewdriver size={18} /> },
+        { label: 'Work Orders', href: '/work-orders', icon: <HiOutlineClipboardDocumentList size={18} /> },
+        { label: 'Incidents', href: '/incidents', icon: <HiOutlineExclamationTriangle size={18} /> },
       ],
     },
   ],
@@ -161,7 +192,10 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
         { label: 'Invoices', href: '/invoices', icon: <HiOutlineCurrencyDollar size={18} /> },
         { label: 'Payments', href: '/accounts/payments', icon: <HiOutlineBanknotes size={18} /> },
         { label: 'Deposits', href: '/accounts/deposits', icon: <HiOutlineBanknotes size={18} /> },
+        { label: 'Refunds', href: '/accounts/refunds', icon: <HiOutlineArrowUturnLeft size={18} /> },
+        { label: 'Cash Drawer', href: '/accounts/cash-drawer', icon: <HiOutlineBanknotes size={18} /> },
         { label: 'Toll Fines', href: '/accounts/toll-fines', icon: <HiOutlineExclamationTriangle size={18} /> },
+        { label: 'Corporate Accounts', href: '/corporate-accounts', icon: <HiOutlineBuildingOffice2 size={18} /> },
       ],
     },
   ],

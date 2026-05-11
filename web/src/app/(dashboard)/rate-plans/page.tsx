@@ -9,6 +9,7 @@ import {
   HiOutlineXCircle,
 } from 'react-icons/hi2';
 import { ratePlanService } from '@/services/rate-plan.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/Spinner';
@@ -25,7 +26,7 @@ export default function RatePlansPage() {
       const items = Array.isArray(res) ? res : (res?.data || []);
       setRatePlans(items);
     } catch (err: any) {
-      toast.error((err?.response?.data?.message || err?.message) ?? 'Failed to load rate plans');
+      toast.error(extractApiError(err, 'Failed to load rate plans'));
     } finally {
       setLoading(false);
     }
@@ -47,7 +48,7 @@ export default function RatePlansPage() {
       }
       fetchRatePlans();
     } catch (err: any) {
-      toast.error((err?.response?.data?.message || err?.message) ?? 'Failed to update rate plan');
+      toast.error(extractApiError(err, 'Failed to update rate plan'));
     }
   };
 

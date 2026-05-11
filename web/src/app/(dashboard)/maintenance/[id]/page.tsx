@@ -11,6 +11,7 @@ import {
   HiOutlineXCircle,
 } from 'react-icons/hi2';
 import { accountsService } from '@/services/accounts.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Spinner } from '@/components/Spinner';
@@ -36,7 +37,7 @@ export default function WorkOrderDetailPage() {
       const res = await accountsService.getMaintenanceById(id as string);
       setWorkOrder(res.data ?? res);
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load work order');
+      toast.error(extractApiError(err, 'Failed to load work order'));
     } finally {
       setLoading(false);
     }
@@ -53,7 +54,7 @@ export default function WorkOrderDetailPage() {
       toast.success('Work order started');
       fetchWorkOrder();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to start work order');
+      toast.error(extractApiError(err, 'Failed to start work order'));
     } finally {
       setSubmitting(false);
     }
@@ -67,7 +68,7 @@ export default function WorkOrderDetailPage() {
       setShowCompleteModal(false);
       fetchWorkOrder();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to complete work order');
+      toast.error(extractApiError(err, 'Failed to complete work order'));
     } finally {
       setSubmitting(false);
     }
@@ -81,7 +82,7 @@ export default function WorkOrderDetailPage() {
       setShowCancelModal(false);
       fetchWorkOrder();
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to cancel work order');
+      toast.error(extractApiError(err, 'Failed to cancel work order'));
     } finally {
       setSubmitting(false);
     }

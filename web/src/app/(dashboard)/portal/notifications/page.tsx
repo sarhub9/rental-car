@@ -11,6 +11,7 @@ import {
   HiOutlineTruck,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { extractApiError } from '@/lib/api-error';
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -26,7 +27,7 @@ export default function NotificationsPage() {
       const res = await customerPortalService.getCustomerNotifications();
       setNotifications(res.data?.data || res.data || []);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to load notifications');
+      toast.error(extractApiError(err, 'Failed to load notifications'));
     } finally {
       setLoading(false);
     }
@@ -49,7 +50,7 @@ export default function NotificationsPage() {
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       toast.success('All notifications marked as read');
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to mark all as read');
+      toast.error(extractApiError(err, 'Failed to mark all as read'));
     }
   };
 

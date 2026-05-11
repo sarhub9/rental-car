@@ -11,6 +11,7 @@ import {
   HiCurrencyDollar,
 } from 'react-icons/hi2';
 import { invoiceService } from '@/services/invoice.service';
+import { extractApiError } from '@/lib/api-error';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
@@ -54,8 +55,8 @@ export default function InvoiceDetailPage() {
       setLoading(true);
       const data = await invoiceService.getInvoiceById(invoiceId);
       setInvoice(data);
-    } catch (error) {
-      toast.error('Failed to load invoice');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to load invoice'));
     } finally {
       setLoading(false);
     }
@@ -71,8 +72,8 @@ export default function InvoiceDetailPage() {
       await invoiceService.issueInvoice(invoiceId);
       toast.success('Invoice issued successfully');
       fetchInvoice();
-    } catch (error) {
-      toast.error('Failed to issue invoice');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to issue invoice'));
     } finally {
       setSubmitting(false);
     }
@@ -100,8 +101,8 @@ export default function InvoiceDetailPage() {
         payment_date: new Date().toISOString().split('T')[0],
       });
       fetchInvoice();
-    } catch (error) {
-      toast.error('Failed to record payment');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to record payment'));
     } finally {
       setSubmitting(false);
     }
@@ -119,8 +120,8 @@ export default function InvoiceDetailPage() {
       setShowVoidModal(false);
       setVoidReason('');
       fetchInvoice();
-    } catch (error) {
-      toast.error('Failed to void invoice');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to void invoice'));
     } finally {
       setSubmitting(false);
     }

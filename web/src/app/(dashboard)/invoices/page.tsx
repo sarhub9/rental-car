@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { HiMagnifyingGlass, HiDocumentText } from 'react-icons/hi2';
 import { invoiceService } from '@/services/invoice.service';
+import { extractApiError } from '@/lib/api-error';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Pagination } from '@/components/Pagination';
@@ -61,8 +62,8 @@ export default function InvoicesPage() {
         setTotalCount(response.length || 0);
         setTotalPages(1);
       }
-    } catch (error) {
-      toast.error('Failed to load invoices');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to load invoices'));
     } finally {
       setLoading(false);
     }

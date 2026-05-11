@@ -6,6 +6,7 @@ import { vehicleService } from '@/services/vehicle.service';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Vehicle } from '@/types';
 import toast from 'react-hot-toast';
+import { extractApiError } from '@/lib/api-error';
 import { HiArrowLeft, HiPencilSquare, HiWrench } from 'react-icons/hi2';
 
 const VEHICLE_STATUSES = ['AVAILABLE', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE'];
@@ -24,8 +25,8 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
       try {
         const res = await vehicleService.getVehicleById(id);
         setVehicle(res);
-      } catch {
-        toast.error('Failed to load vehicle details');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to load vehicle details'));
       } finally {
         setLoading(false);
       }
@@ -41,8 +42,8 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
       setVehicle((prev) => prev ? { ...prev, status: newStatus as Vehicle['status'] } : prev);
       toast.success(`Status changed to ${newStatus}`);
       setShowStatusMenu(false);
-    } catch {
-      toast.error('Failed to change status');
+    } catch (err: any) {
+      toast.error(extractApiError(err, 'Failed to change status'));
     } finally {
       setChangingStatus(false);
     }

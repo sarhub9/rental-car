@@ -12,6 +12,7 @@ import {
   HiOutlineDocumentText,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { extractApiError } from '@/lib/api-error';
 
 export default function RentalDetailPage() {
   const params = useParams();
@@ -39,7 +40,7 @@ export default function RentalDetailPage() {
       setEvidence(evRes.data?.data || evRes.data || []);
       setCharges(chRes.data?.data || chRes.data || []);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to load rental details');
+      toast.error(extractApiError(err, 'Failed to load rental details'));
     } finally {
       setLoading(false);
     }

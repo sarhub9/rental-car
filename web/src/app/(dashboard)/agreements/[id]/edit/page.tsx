@@ -12,6 +12,7 @@ import {
   HiMagnifyingGlass,
 } from 'react-icons/hi2';
 import { agreementService } from '@/services/agreement.service';
+import { extractApiError } from '@/lib/api-error';
 import { customerService } from '@/services/customer.service';
 import { vehicleService } from '@/services/vehicle.service';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -109,7 +110,7 @@ export default function EditAgreementPage() {
         setDailyRate(Number(agr.daily_rate) || 0);
         setWeeklyRate(Number(agr.weekly_rate) || 0);
       } catch (error: any) {
-        toast.error(error?.message || 'Failed to load agreement');
+        toast.error(extractApiError(error, 'Failed to load agreement'));
         router.push('/agreements');
       } finally {
         setLoading(false);
@@ -129,8 +130,8 @@ export default function EditAgreementPage() {
         setLoadingCustomers(true);
         const res = await customerService.getCustomers({ search: customerSearch, limit: 10 });
         setCustomers(res.data || []);
-      } catch {
-        toast.error('Failed to search customers');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to search customers'));
       } finally {
         setLoadingCustomers(false);
       }
@@ -148,8 +149,8 @@ export default function EditAgreementPage() {
         if (vehicleSearch.trim()) p.search = vehicleSearch;
         const res = await vehicleService.getVehicles(p);
         setVehicles(res.data || []);
-      } catch {
-        toast.error('Failed to search vehicles');
+      } catch (err: any) {
+        toast.error(extractApiError(err, 'Failed to search vehicles'));
       } finally {
         setLoadingVehicles(false);
       }
@@ -189,7 +190,7 @@ export default function EditAgreementPage() {
       toast.success('Agreement updated successfully');
       router.push(`/agreements/${id}`);
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to update agreement');
+      toast.error(extractApiError(error, 'Failed to update agreement'));
     } finally {
       setSubmitting(false);
     }

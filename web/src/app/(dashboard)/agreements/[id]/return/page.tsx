@@ -15,6 +15,7 @@ import {
   HiXMark,
 } from 'react-icons/hi2';
 import { agreementService } from '@/services/agreement.service';
+import { extractApiError } from '@/lib/api-error';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const STEPS = [
@@ -128,7 +129,7 @@ export default function ReturnPage() {
       toast.success('Return completed successfully');
       router.push(`/agreements/${id}`);
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to process return');
+      toast.error(extractApiError(error, 'Failed to process return'));
     } finally {
       setSubmitting(false);
     }

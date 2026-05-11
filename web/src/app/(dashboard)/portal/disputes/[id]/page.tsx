@@ -8,6 +8,7 @@ import {
   HiOutlinePaperAirplane,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { extractApiError } from '@/lib/api-error';
 
 export default function DisputeDetailPage() {
   const params = useParams();
@@ -34,7 +35,7 @@ export default function DisputeDetailPage() {
       const res = await customerPortalService.getCustomerDisputeById(id);
       setDispute(res.data);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to load dispute');
+      toast.error(extractApiError(err, 'Failed to load dispute'));
     } finally {
       setLoading(false);
     }
@@ -54,7 +55,7 @@ export default function DisputeDetailPage() {
       toast.success('Message sent');
       await fetchDispute();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to send message');
+      toast.error(extractApiError(err, 'Failed to send message'));
     } finally {
       setSending(false);
     }

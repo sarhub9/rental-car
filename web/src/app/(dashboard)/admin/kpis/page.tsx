@@ -23,6 +23,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { adminService } from '@/services/admin.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { StatsCard } from '@/components/StatsCard';
 import type { KpiResponse } from '@/types';
@@ -58,8 +59,8 @@ export default function KpiDashboardPage() {
         to: dateTo,
       });
       setKpiData(data);
-    } catch (error) {
-      toast.error('Failed to load KPI data');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to load KPI data'));
     } finally {
       setLoading(false);
     }

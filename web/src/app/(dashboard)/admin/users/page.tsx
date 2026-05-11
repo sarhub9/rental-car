@@ -12,6 +12,7 @@ import {
   HiXMark,
 } from 'react-icons/hi2';
 import { adminService } from '@/services/admin.service';
+import { extractApiError } from '@/lib/api-error';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Pagination } from '@/components/Pagination';
@@ -80,7 +81,7 @@ export default function UsersPage() {
       setTotalCount(items.length);
       setTotalPages(1);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to load users');
+      toast.error(extractApiError(error, 'Failed to load users'));
     } finally {
       setLoading(false);
     }
@@ -111,9 +112,7 @@ export default function UsersPage() {
       setForm(INITIAL_FORM);
       fetchUsers();
     } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || error?.response?.data?.error || 'Failed to create user'
-      );
+      toast.error(extractApiError(error, 'Failed to create user'));
     } finally {
       setSubmitting(false);
     }
@@ -130,8 +129,8 @@ export default function UsersPage() {
         toast.success('User activated');
       }
       fetchUsers();
-    } catch (error) {
-      toast.error('Failed to update user status');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to update user status'));
     }
   };
 
@@ -140,8 +139,8 @@ export default function UsersPage() {
     try {
       await adminService.resetUserPassword(userId);
       toast.success('Password reset email sent');
-    } catch (error) {
-      toast.error('Failed to reset password');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to reset password'));
     }
   };
 

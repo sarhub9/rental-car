@@ -21,6 +21,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { adminService } from '@/services/admin.service';
+import { extractApiError } from '@/lib/api-error';
 import { PageHeader } from '@/components/PageHeader';
 import { StatsCard } from '@/components/StatsCard';
 import type { RevenueReport } from '@/types';
@@ -75,8 +76,8 @@ export default function ReportsPage() {
         period: period as 'monthly' | 'weekly',
       });
       setRevenueData(data);
-    } catch (error) {
-      toast.error('Failed to load revenue report');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to load revenue report'));
     } finally {
       setLoading(false);
     }
@@ -88,8 +89,8 @@ export default function ReportsPage() {
       setLoading(true);
       const data = await adminService.getReceivablesReport();
       setReceivablesData(data);
-    } catch (error) {
-      toast.error('Failed to load receivables report');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to load receivables report'));
     } finally {
       setLoading(false);
     }
@@ -101,8 +102,8 @@ export default function ReportsPage() {
       setLoading(true);
       const data = await adminService.getAgreementsReport();
       setAgreementData(data);
-    } catch (error) {
-      toast.error('Failed to load agreement statistics');
+    } catch (error: any) {
+      toast.error(extractApiError(error, 'Failed to load agreement statistics'));
     } finally {
       setLoading(false);
     }

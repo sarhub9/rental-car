@@ -8,6 +8,7 @@ import {
   HiOutlinePaperAirplane,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { extractApiError } from '@/lib/api-error';
 
 export default function MessageThreadPage() {
   const params = useParams();
@@ -37,7 +38,7 @@ export default function MessageThreadPage() {
       const res = await customerPortalService.getCustomerMessageById(id);
       setThread(res.data);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to load thread');
+      toast.error(extractApiError(err, 'Failed to load thread'));
     } finally {
       setLoading(false);
     }
@@ -65,7 +66,7 @@ export default function MessageThreadPage() {
       toast.success('Message sent');
       await fetchThread();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to send message');
+      toast.error(extractApiError(err, 'Failed to send message'));
     } finally {
       setSending(false);
     }

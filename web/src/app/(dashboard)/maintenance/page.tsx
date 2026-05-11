@@ -16,6 +16,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { Spinner } from '@/components/Spinner';
 import { cleanPayload, sanitizeUuidFields } from '@/lib/clean-payload';
+import { extractApiError } from '@/lib/api-error';
 
 interface VehicleOption {
   id: string;
@@ -77,7 +78,7 @@ export default function MaintenancePage() {
       const items = Array.isArray(res) ? res : (res?.data || []);
       setWorkOrders(items);
     } catch (err: any) {
-      toast.error((err?.response?.data?.message || err?.message) ?? 'Failed to load work orders');
+      toast.error(extractApiError(err, 'Failed to load work orders'));
     } finally {
       setLoading(false);
     }
@@ -115,8 +116,7 @@ export default function MaintenancePage() {
       });
       fetchWorkOrders();
     } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Failed to create work order';
-      toast.error(message);
+      toast.error(extractApiError(err, 'Failed to create work order'));
     } finally {
       setSubmitting(false);
     }

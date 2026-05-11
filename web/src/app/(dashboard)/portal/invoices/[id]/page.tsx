@@ -10,6 +10,7 @@ import {
   HiOutlineClock,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
+import { extractApiError } from '@/lib/api-error';
 
 export default function InvoiceDetailPage() {
   const params = useParams();
@@ -29,7 +30,7 @@ export default function InvoiceDetailPage() {
       const res = await customerPortalService.getCustomerInvoiceById(id);
       setInvoice(res.data);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to load invoice');
+      toast.error(extractApiError(err, 'Failed to load invoice'));
     } finally {
       setLoading(false);
     }
