@@ -32,8 +32,9 @@ class ReservationController {
       const reservation = await ReservationService.getById(req.params.id, req.tenantId);
       return res.status(200).json({ success: true, data: reservation });
     } catch (error) {
+      console.error('Reservation getById error:', error.message, error.stack);
       if (error.statusCode) return res.status(error.statusCode).json({ error: error.message });
-      return res.status(500).json({ error: 'Internal Server Error' });
+      return res.status(500).json({ error: 'Internal Server Error', detail: error.message });
     }
   }
 

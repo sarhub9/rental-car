@@ -27,21 +27,37 @@ class ReservationModel {
   }
 
   async findById(id, tenantId) {
-    const query = `
-      SELECT r.*,
-        c.full_name_en AS customer_name, c.phone_number AS customer_phone,
-        v.plate_number, v.make, v.model,
-        vc.category_name,
-        rp.plan_name AS rate_plan_name
-      FROM reservations r
-      LEFT JOIN customers c ON c.id = r.customer_id
-      LEFT JOIN vehicles v ON v.id = r.vehicle_id
-      LEFT JOIN vehicle_categories vc ON vc.id = r.vehicle_category_id
-      LEFT JOIN rate_plans rp ON rp.id = r.rate_plan_id
-      WHERE r.id = $1 AND r.tenant_id = $2
-    `;
-    const result = await pool.query(query, [id, tenantId]);
-    return result.rows[0];
+    try {
+      const query = `
+        SELECT r.*,
+          c.full_name_en AS customer_name, c.phone_number AS customer_phone,
+          v.plate_number, v.make, v.model,
+          vc.category_name
+        FROM reservations r
+        LEFT JOIN customers c ON c.id = r.customer_id
+        LEFT JOIN vehicles v ON v.id = r.vehicle_id
+        LEFT JOIN vehicle_categories vc ON vc.id = r.vehicle_category_id
+        WHERE r.id = $1 AND r.tenant_id = $2
+      `;
+      const result = await pool.query(query, [id, tenantId]);
+      return result.rows[0];
+    } catch (err) {
+      if (err.code === '42P01') {
+        // vehicle_categories table doesn't exist yet — fallback
+        const fallback = `
+          SELECT r.*,
+            c.full_name_en AS customer_name, c.phone_number AS customer_phone,
+            v.plate_number, v.make, v.model
+          FROM reservations r
+          LEFT JOIN customers c ON c.id = r.customer_id
+          LEFT JOIN vehicles v ON v.id = r.vehicle_id
+          WHERE r.id = $1 AND r.tenant_id = $2
+        `;
+        const result = await pool.query(fallback, [id, tenantId]);
+        return result.rows[0];
+      }
+      throw err;
+    }
   }
 
   async list(tenantId, filters = {}) {

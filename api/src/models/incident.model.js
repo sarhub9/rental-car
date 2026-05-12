@@ -28,9 +28,9 @@ class IncidentModel {
         c.full_name_en AS customer_name,
         ra.agreement_number
       FROM incidents i
-      JOIN vehicles v ON v.id = i.vehicle_id
-      JOIN customers c ON c.id = i.customer_id
-      JOIN rental_agreements ra ON ra.id = i.agreement_id
+      LEFT JOIN vehicles v ON v.id = i.vehicle_id
+      LEFT JOIN customers c ON c.id = i.customer_id
+      LEFT JOIN rental_agreements ra ON ra.id = i.agreement_id
       WHERE i.id = $1 AND i.tenant_id = $2
     `;
     const result = await pool.query(query, [id, tenantId]);
@@ -43,8 +43,8 @@ class IncidentModel {
         v.plate_number, v.make, v.model,
         c.full_name_en AS customer_name
       FROM incidents i
-      JOIN vehicles v ON v.id = i.vehicle_id
-      JOIN customers c ON c.id = i.customer_id
+      LEFT JOIN vehicles v ON v.id = i.vehicle_id
+      LEFT JOIN customers c ON c.id = i.customer_id
       WHERE i.tenant_id = $1
     `;
     const values = [tenantId];

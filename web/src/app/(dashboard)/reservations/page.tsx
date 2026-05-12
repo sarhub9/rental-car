@@ -11,11 +11,13 @@ import {
   HiOutlineMagnifyingGlass,
   HiOutlineUser,
   HiOutlineSquares2X2,
+  HiOutlineTruck,
 } from 'react-icons/hi2';
 import { reservationService } from '@/services/reservation.service';
 import { customerService } from '@/services/customer.service';
 import { branchService } from '@/services/branch.service';
 import { vehicleCategoryService } from '@/services/vehicle-category.service';
+import { vehicleService } from '@/services/vehicle.service';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -28,6 +30,7 @@ const STATUS_OPTIONS = ['ALL', 'DRAFT', 'CONFIRMED', 'ASSIGNED', 'CHECKED_OUT', 
 
 const emptyForm = {
   customer_id: '',
+  vehicle_id: '',
   vehicle_category_id: '',
   pickup_datetime: '',
   return_datetime: '',
@@ -58,6 +61,12 @@ export default function ReservationsPage() {
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [showCatDrop, setShowCatDrop] = useState(false);
   const catRef = useRef<HTMLDivElement>(null);
+
+  // Vehicle search
+  const [vehicleSearch, setVehicleSearch] = useState('');
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  const [showVehicleDrop, setShowVehicleDrop] = useState(false);
+  const vehicleRef = useRef<HTMLDivElement>(null);
 
   // Branch
   const [branches, setBranches] = useState<any[]>([]);
@@ -90,14 +99,18 @@ export default function ReservationsPage() {
       .catch(() => {});
   }, []);
 
-  // Reload categories when modal opens (fresh fetch every time)
+  // Reload categories + vehicles when modal opens
   useEffect(() => {
     if (!showCreateModal) return;
     vehicleCategoryService.listVehicleCategories()
       .then(d => setAllCategories(Array.isArray(d) ? d : []))
       .catch(err => toast.error('Categories error: ' + (err?.response?.data?.error ?? err?.message ?? 'unknown')));
+    vehicleService.getVehicles({ limit: 200 })
+      .then(d => setAllVehicles(Array.isArray(d) ? d : (d?.data || [])))
+      .catch(err => toast.error('Vehicles error: ' + (err?.response?.data?.error ?? err?.message ?? 'unknown')));
     setCustomerSearch(''); setCustomers([]); setSelectedCustomer(null);
     setCatSearch(''); setSelectedCategory(null);
+    setVehicleSearch(''); setSelectedVehicle(null);
   }, [showCreateModal]);
 
   // Customer search debounce
@@ -112,11 +125,25 @@ export default function ReservationsPage() {
     return () => clearTimeout(t);
   }, [customerSearch]);
 
+  // All vehicles (loaded once when modal opens, filtered locally)
+  const [allVehicles, setAllVehicles] = useState<any[]>([]);
+
+  const filteredVehicles = allVehicles.filter(v => {
+    if (!vehicleSearch.trim()) return true;
+    const q = vehicleSearch.toLowerCase();
+    return (
+      (v.plate_number ?? '').toLowerCase().includes(q) ||
+      (v.make ?? '').toLowerCase().includes(q) ||
+      (v.model ?? '').toLowerCase().includes(q)
+    );
+  });
+
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (customerRef.current && !customerRef.current.contains(e.target as Node)) setShowCustomerDrop(false);
       if (catRef.current && !catRef.current.contains(e.target as Node)) setShowCatDrop(false);
+      if (vehicleRef.current && !vehicleRef.current.contains(e.target as Node)) setShowVehicleDrop(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -140,9 +167,16 @@ export default function ReservationsPage() {
     setShowCatDrop(false);
   };
 
+  const selectVehicle = (v: any) => {
+    setSelectedVehicle(v);
+    setForm(f => ({ ...f, vehicle_id: v.id }));
+    setVehicleSearch(`${v.make} ${v.model} — ${v.plate_number}`);
+    setShowVehicleDrop(false);
+  };
+
   const handleCreate = async () => {
     if (!form.customer_id) { toast.error('Please select a customer'); return; }
-    if (!form.vehicle_category_id) { toast.error('Please select a vehicle category'); return; }
+    if (!form.vehicle_id && !form.vehicle_category_id) { toast.error('Please select a vehicle or vehicle category'); return; }
     if (!form.pickup_datetime) { toast.error('Pickup datetime is required'); return; }
     if (!form.return_datetime) { toast.error('Return datetime is required'); return; }
     try {
@@ -278,39 +312,84 @@ export default function ReservationsPage() {
             </div>
           </div>
 
-          {/* Vehicle Category */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-              Vehicle Category <span className="text-red-500">*</span>
-            </label>
-            <div className="relative" ref={catRef}>
-              <HiOutlineSquares2X2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              <input
-                type="text"
-                value={catSearch}
-                onChange={(e) => { setCatSearch(e.target.value); setShowCatDrop(true); setSelectedCategory(null); setForm(f => ({ ...f, vehicle_category_id: '' })); }}
-                onFocus={() => setShowCatDrop(true)}
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Type to search category..."
-              />
-              {showCatDrop && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto">
-                  {filteredCats.length > 0 ? filteredCats.map((c: any) => (
-                    <button key={c.id} type="button" onClick={() => selectCategory(c)}
-                      className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 text-sm">
-                      <span className="font-medium text-gray-900">{c.category_name}</span>
-                      <span className="font-mono text-xs text-gray-400">{c.category_code}</span>
-                    </button>
-                  )) : (
-                    <p className="px-3 py-2 text-sm text-gray-400">
-                      {allCategories.length === 0 ? 'No categories found — add from Vehicle Categories page' : 'No match'}
-                    </p>
-                  )}
-                </div>
-              )}
-              {selectedCategory && (
-                <p className="text-xs text-green-600 mt-1">✓ {selectedCategory.category_name}</p>
-              )}
+          {/* Vehicle OR Category — at least one required */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-gray-700">
+              Vehicle / Category <span className="text-red-500">*</span>
+              <span className="font-normal text-gray-400 ml-1">(select one or both)</span>
+            </p>
+
+            {/* Specific Vehicle */}
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Specific Vehicle</label>
+              <div className="relative" ref={vehicleRef}>
+                <HiOutlineTruck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={vehicleSearch}
+                  onChange={(e) => { setVehicleSearch(e.target.value); setShowVehicleDrop(true); setSelectedVehicle(null); setForm(f => ({ ...f, vehicle_id: '' })); }}
+                  onFocus={() => setShowVehicleDrop(true)}
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Search by plate, make or model..."
+                />
+                {showVehicleDrop && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                    {filteredVehicles.length > 0 ? filteredVehicles.map((v: any) => (
+                      <button key={v.id} type="button" onClick={() => selectVehicle(v)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 text-sm">
+                        <span className="font-medium text-gray-900">{v.make} {v.model} <span className="text-gray-500">({v.year})</span></span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${v.status === 'AVAILABLE' ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
+                            {v.status}
+                          </span>
+                          <span className="font-mono text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{v.plate_number}</span>
+                        </div>
+                      </button>
+                    )) : (
+                      <p className="px-3 py-2 text-sm text-gray-400">
+                        {allVehicles.length === 0 ? 'No vehicles found — add from Fleet page' : 'No match'}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {selectedVehicle && (
+                  <p className="text-xs text-green-600 mt-1">✓ {selectedVehicle.make} {selectedVehicle.model} — {selectedVehicle.plate_number}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Vehicle Category */}
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Vehicle Category</label>
+              <div className="relative" ref={catRef}>
+                <HiOutlineSquares2X2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={catSearch}
+                  onChange={(e) => { setCatSearch(e.target.value); setShowCatDrop(true); setSelectedCategory(null); setForm(f => ({ ...f, vehicle_category_id: '' })); }}
+                  onFocus={() => setShowCatDrop(true)}
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Type to search category..."
+                />
+                {showCatDrop && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                    {filteredCats.length > 0 ? filteredCats.map((c: any) => (
+                      <button key={c.id} type="button" onClick={() => selectCategory(c)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 text-sm">
+                        <span className="font-medium text-gray-900">{c.category_name}</span>
+                        <span className="font-mono text-xs text-gray-400">{c.category_code}</span>
+                      </button>
+                    )) : (
+                      <p className="px-3 py-2 text-sm text-gray-400">
+                        {allCategories.length === 0 ? 'No categories yet — add from Vehicle Categories page' : 'No match'}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {selectedCategory && (
+                  <p className="text-xs text-green-600 mt-1">✓ {selectedCategory.category_name}</p>
+                )}
+              </div>
             </div>
           </div>
 

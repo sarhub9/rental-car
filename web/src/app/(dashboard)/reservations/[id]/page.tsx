@@ -43,7 +43,7 @@ export default function ReservationDetailPage() {
     try {
       setLoading(true);
       const res = await reservationService.getReservationById(id as string);
-      setReservation(res?.data ?? res);
+      setReservation(res);
     } catch (err: any) {
       toast.error(extractApiError(err, 'Failed to load reservation'));
     } finally {
@@ -138,13 +138,15 @@ export default function ReservationDetailPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           <InfoRow label="Ref Number" value={reservation.reservation_number ?? reservation.id} />
           <InfoRow label="Status" value={<StatusBadge status={status} />} />
-          <InfoRow label="Customer" value={reservation.customer?.full_name ?? reservation.customer?.name ?? reservation.customer_id} />
-          <InfoRow label="Customer Email" value={reservation.customer?.email ?? '—'} />
-          <InfoRow label="Vehicle Category" value={reservation.vehicle_category?.name ?? reservation.vehicle_category_id ?? '—'} />
-          <InfoRow label="Assigned Vehicle" value={reservation.vehicle?.plate_number ?? (reservation.vehicle_id ? reservation.vehicle_id.slice(0, 8) : '—')} />
-          <InfoRow label="Pickup Date" value={reservation.pickup_date ? new Date(reservation.pickup_date).toLocaleDateString() : '—'} />
-          <InfoRow label="Return Date" value={reservation.return_date ? new Date(reservation.return_date).toLocaleDateString() : '—'} />
-          <InfoRow label="Branch" value={reservation.branch?.name ?? reservation.branch_id ?? '—'} />
+          <InfoRow label="Customer" value={reservation.customer_name ?? reservation.customer_id} />
+          <InfoRow label="Customer Phone" value={reservation.customer_phone ?? '—'} />
+          <InfoRow label="Vehicle Category" value={reservation.category_name ?? '—'} />
+          <InfoRow label="Assigned Vehicle" value={reservation.plate_number ? `${reservation.make ?? ''} ${reservation.model ?? ''} — ${reservation.plate_number}`.trim() : '—'} />
+          <InfoRow label="Pickup Date" value={reservation.pickup_datetime ? new Date(reservation.pickup_datetime).toLocaleString() : '—'} />
+          <InfoRow label="Return Date" value={reservation.return_datetime ? new Date(reservation.return_datetime).toLocaleString() : '—'} />
+          <InfoRow label="Branch" value={reservation.branch_id ?? '—'} />
+          <InfoRow label="Source" value={reservation.source ?? '—'} />
+          <InfoRow label="Estimated Amount" value={reservation.estimated_amount ? `AED ${Number(reservation.estimated_amount).toFixed(2)}` : '—'} />
           <InfoRow label="Created" value={reservation.created_at ? new Date(reservation.created_at).toLocaleString() : '—'} />
         </div>
         {reservation.notes && (

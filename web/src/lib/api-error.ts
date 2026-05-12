@@ -21,7 +21,10 @@ export function extractApiError(err: any, fallback = 'Something went wrong'): st
   if (status === 403) return 'You do not have permission to perform this action';
   if (status === 404) return 'Record not found';
   if (status === 409) return err?.response?.data?.message || 'Conflict — record already exists';
-  if (status >= 500) return 'Server error — please try again later';
+  if (status >= 500) {
+    const detail = err?.response?.data?.detail;
+    return detail ? `Server error: ${detail}` : 'Server error — please try again later';
+  }
 
   // Network / JS errors
   if (err?.code === 'NETWORK_ERROR' || err?.message === 'Network Error') {

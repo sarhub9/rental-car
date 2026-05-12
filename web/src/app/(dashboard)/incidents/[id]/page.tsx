@@ -119,9 +119,9 @@ export default function IncidentDetailPage() {
           <InfoRow label="Incident #" value={incident.incident_number ?? incident.id} />
           <InfoRow label="Status" value={<StatusBadge status={incident.status} />} />
           <InfoRow label="Type" value={<span className="capitalize">{(incident.incident_type ?? '').replace(/_/g, ' ')}</span>} />
-          <InfoRow label="Vehicle" value={incident.vehicle?.plate_number ?? incident.plate_number ?? incident.vehicle_id} />
-          <InfoRow label="Customer" value={incident.customer?.full_name ?? incident.customer_id?.slice(0, 8) ?? '—'} />
-          <InfoRow label="Agreement" value={incident.agreement?.agreement_number ?? incident.agreement_id?.slice(0, 8) ?? '—'} />
+          <InfoRow label="Vehicle" value={incident.plate_number ? `${incident.make ?? ''} ${incident.model ?? ''} — ${incident.plate_number}`.trim() : '—'} />
+          <InfoRow label="Customer" value={incident.customer_name ?? '—'} />
+          <InfoRow label="Agreement" value={incident.agreement_number ?? '—'} />
           <InfoRow
             label="Incident Date"
             value={incident.incident_datetime ? new Date(incident.incident_datetime).toLocaleString() : '—'}
