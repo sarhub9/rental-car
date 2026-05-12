@@ -7,6 +7,13 @@ class RefundController {
       return res.status(201).json({ success: true, data: refund });
     } catch (error) {
       if (error.statusCode) return res.status(error.statusCode).json({ error: error.message });
+      // PostgreSQL invalid UUID format
+      if (error.code === '22P02') return res.status(400).json({ error: 'Invalid UUID format for one of the ID fields' });
+      // PostgreSQL foreign key violation
+      if (error.code === '23503') return res.status(400).json({ error: 'Referenced payment, customer or invoice does not exist' });
+      // PostgreSQL not null violation
+      if (error.code === '23502') return res.status(400).json({ error: `Missing required field: ${error.column}` });
+      console.error('Refund request error:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }

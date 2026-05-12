@@ -10,4 +10,9 @@ export async function createVehicleCategory(payload: any) {
   return response.data?.data ?? response.data;
 }
 
-export const vehicleCategoryService = { listVehicleCategories, createVehicleCategory };
+export async function updateVehicleCategory(id: string, payload: any) {
+  const response = await apiClient.put(`/v1/vehicle-categories/${id}`, payload);
+  return response.data?.data ?? response.data;
+}
+
+export const vehicleCategoryService = { listVehicleCategories, createVehicleCategory, updateVehicleCategory };

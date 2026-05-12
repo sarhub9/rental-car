@@ -42,6 +42,11 @@ export default function LoginPage() {
   const [showPw, setShowPw]             = useState(false);
   const [loggingIn, setLoggingIn]       = useState(false);
 
+  // 2FA
+  const [requires2FA, setRequires2FA]   = useState(false);
+  const [twoFAOtp, setTwoFAOtp]         = useState('');
+  const [verifying2FA, setVerifying2FA] = useState(false);
+
   // Customer / OTP
   const [phoneNumber, setPhoneNumber]   = useState('');
   const [otpSent, setOtpSent]           = useState(false);
@@ -106,6 +111,24 @@ export default function LoginPage() {
       toast.error(err?.response?.data?.message || 'Invalid credentials');
     } finally { setLoggingIn(false); }
   }, [email, password, staffLogin, router]);
+
+  const handle2FAVerify = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (twoFAOtp.length !== 6) { toast.error('Enter the 6-digit OTP'); return; }
+    setVerifying2FA(true);
+    try {
+      const { default: apiClient } = await import('@/lib/api-client');
+      const res = await apiClient.post('/v1/auth/staff/2fa/verify', { email, otp: twoFAOtp });
+      const data = res.data?.data || res.data;
+      localStorage.setItem('auth_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      toast.success('Welcome back!');
+      router.replace(data.user?.role === 'SUPER_ADMIN' ? '/superadmin' : '/dashboard');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Invalid OTP');
+    } finally { setVerifying2FA(false); }
+  }, [twoFAOtp, email, router]);
 
   const switchTab = (tab: LoginTab) => {
     setActiveTab(tab);
@@ -278,8 +301,31 @@ export default function LoginPage() {
               ))}
             </div>
 
+            {/* ── Staff 2FA OTP step ── */}
+            {activeTab === 'staff' && requires2FA && (
+              <form onSubmit={handle2FAVerify} className="space-y-4 tab-content">
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center">
+                  <HiOutlineShieldCheck className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-gray-900">Two-Factor Authentication</p>
+                  <p className="text-xs text-gray-500 mt-1">Enter the 6-digit OTP sent to <strong>{email}</strong></p>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1">OTP Code</label>
+                  <input type="text" inputMode="numeric" maxLength={6} value={twoFAOtp} onChange={e => setTwoFAOtp(e.target.value.replace(/\D/g,''))}
+                    placeholder="000000" className="w-full px-4 py-3 border border-[#E2E8F0] rounded-xl text-sm text-center text-2xl tracking-[0.5em] bg-[#F8FAFC] focus:bg-white focus:border-[#0E7490] outline-none" />
+                </div>
+                <button type="submit" disabled={verifying2FA || twoFAOtp.length !== 6}
+                  className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #0E7490, #0891B2)' }}>
+                  {verifying2FA ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Verifying...</> : <>Verify OTP <HiOutlineArrowRight className="w-4 h-4" /></>}
+                </button>
+                <button type="button" onClick={() => { setRequires2FA(false); setTwoFAOtp(''); }}
+                  className="w-full py-2 text-sm text-gray-500 hover:text-gray-700">← Back to login</button>
+              </form>
+            )}
+
             {/* ── Staff form ── */}
-            {activeTab === 'staff' && (
+            {activeTab === 'staff' && !requires2FA && (
               <form onSubmit={handleStaffLogin} className="space-y-4 tab-content">
                 <div className="space-y-1">
                   <label className="block text-xs font-semibold text-[#374151]">Email Address</label>

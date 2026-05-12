@@ -140,6 +140,10 @@ class WorkOrderModel {
     return `WO-${year}-${seq.toString().padStart(5, '0')}`;
   }
 
+  async getDueSoonSchedules(tenantId, withinDays = 14) {
+    return this.getUpcoming(tenantId, withinDays);
+  }
+
   async getUpcoming(tenantId, daysAhead = 30) {
     const query = `
       SELECT DISTINCT ON (wo.vehicle_id)

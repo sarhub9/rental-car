@@ -30,8 +30,8 @@ export interface KpiParams {
 }
 
 // Dashboard
-export async function getAdminDashboard() {
-  const response = await apiClient.get('/v1/admin/dashboard');
+export async function getAdminDashboard(params?: Record<string, any>) {
+  const response = await apiClient.get('/v1/admin/dashboard', { params });
   return response.data?.data || null;
 }
 

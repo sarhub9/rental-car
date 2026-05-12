@@ -4,353 +4,373 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
-  HiOutlineArrowLeft,
-  HiOutlinePlusCircle,
-  HiOutlineTrash,
+  HiCheck, HiChevronLeft, HiChevronRight,
+  HiOutlineTag, HiOutlineBanknotes, HiOutlineCog6Tooth,
+  HiClipboardDocumentCheck, HiOutlinePlusCircle, HiOutlineTrash,
 } from 'react-icons/hi2';
 import { ratePlanService } from '@/services/rate-plan.service';
 import type { CreateRatePlanPayload } from '@/services/rate-plan.service';
-import { PageHeader } from '@/components/PageHeader';
 import { cleanPayload } from '@/lib/clean-payload';
 import { extractApiError } from '@/lib/api-error';
 
+const STEPS = [
+  { label: 'Plan Info', icon: HiOutlineTag,          desc: 'Name and terms' },
+  { label: 'Rates',     icon: HiOutlineBanknotes,    desc: 'Daily, weekly & monthly rates' },
+  { label: 'Policies',  icon: HiOutlineCog6Tooth,    desc: 'Fuel & late return rules' },
+  { label: 'Review',    icon: HiClipboardDocumentCheck, desc: 'Confirm & create' },
+];
+
+const FUEL_TYPES = [
+  { value: 'full_to_full', label: 'Full to Full',   desc: 'Customer returns with full tank' },
+  { value: 'half_to_full', label: 'Half to Full',   desc: 'Customer fills from half' },
+  { value: 'unlimited',    label: 'Unlimited',       desc: 'No fuel charge applied' },
+];
+
+function FG({ title }: { title: string }) {
+  return <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">{title}</p>;
+}
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function NumInput({ value, onChange, placeholder, step }: { value: string; onChange: (v: string) => void; placeholder?: string; step?: string }) {
+  return (
+    <input type="number" value={value} onChange={e => onChange(e.target.value)}
+      step={step ?? '0.01'} placeholder={placeholder ?? '0.00'}
+      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all" />
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value?: string }) {
+  if (!value) return null;
+  return (
+    <div className="flex justify-between py-2.5 border-b border-gray-100 last:border-0 text-sm">
+      <span className="text-gray-500">{label}</span>
+      <span className="font-semibold text-gray-900 text-right max-w-[58%]">{value}</span>
+    </div>
+  );
+}
+
 export default function CreateRatePlanPage() {
   const router = useRouter();
+  const [step, setStep]           = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  const [form, setForm] = useState({
-    name: '',
-    daily_rate: '',
-    weekly_rate: '',
-    monthly_rate: '',
-    included_km_per_day: '',
-    extra_km_rate: '',
-    deposit_amount: '',
-    terms_text: '',
-  });
+  // Step 1
+  const [name, setName]           = useState('');
+  const [termsText, setTermsText] = useState('');
 
-  // Fuel policy friendly fields
-  const [fuelType, setFuelType] = useState('full_to_full');
+  // Step 2
+  const [dailyRate, setDailyRate]   = useState('');
+  const [weeklyRate, setWeeklyRate] = useState('');
+  const [monthlyRate, setMonthlyRate] = useState('');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [includedKm, setIncludedKm]   = useState('');
+  const [extraKmRate, setExtraKmRate] = useState('');
+
+  // Step 3 — Fuel
+  const [fuelType, setFuelType]           = useState('full_to_full');
   const [fuelChargePerUnit, setFuelChargePerUnit] = useState('100');
-
-  // Late return rules friendly fields
+  // Late return
   const [gracePeriodHours, setGracePeriodHours] = useState('2');
-  const [hourlyCharge, setHourlyCharge] = useState('50');
-  const [dailyCap, setDailyCap] = useState('150');
+  const [hourlyCharge, setHourlyCharge]         = useState('50');
+  const [dailyCap, setDailyCap]                 = useState('150');
 
+  // Add-ons
   const [addOns, setAddOns] = useState<{ name: string; price: string }[]>([]);
 
-  const handleChange = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+  const canNext = () => {
+    if (step === 0) return !!name.trim();
+    return true;
   };
 
-  const handleAddAddOn = () => {
-    setAddOns((prev) => [...prev, { name: '', price: '' }]);
-  };
-
-  const handleRemoveAddOn = (idx: number) => {
-    setAddOns((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const handleAddOnChange = (idx: number, field: 'name' | 'price', value: string) => {
-    setAddOns((prev) =>
-      prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item))
-    );
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim()) {
-      toast.error('Name is required');
-      return;
-    }
-
+  const handleSubmit = async () => {
+    setSubmitting(true);
     try {
-      setSubmitting(true);
-
-      const fuelPolicy = {
-        type: fuelType,
-        charge_per_unit: Number(fuelChargePerUnit) || 0,
-      };
-
-      const lateReturnRules = {
-        grace_period_hours: Number(gracePeriodHours) || 0,
-        hourly_charge: Number(hourlyCharge) || 0,
-        daily_cap: Number(dailyCap) || 0,
-      };
-
-      const rawPayload: Record<string, unknown> = {
-        name: form.name,
-        daily_rate: form.daily_rate ? Number(form.daily_rate) : undefined,
-        weekly_rate: form.weekly_rate ? Number(form.weekly_rate) : undefined,
-        monthly_rate: form.monthly_rate ? Number(form.monthly_rate) : undefined,
-        included_km_per_day: form.included_km_per_day ? Number(form.included_km_per_day) : undefined,
-        extra_km_rate: form.extra_km_rate ? Number(form.extra_km_rate) : undefined,
-        deposit_amount: form.deposit_amount ? Number(form.deposit_amount) : undefined,
-        fuel_policy: fuelPolicy,
-        late_return_rules: lateReturnRules,
-        terms_text: form.terms_text || undefined,
+      const raw: Record<string, unknown> = {
+        name: name.trim(),
+        daily_rate:          dailyRate    ? Number(dailyRate)    : undefined,
+        weekly_rate:         weeklyRate   ? Number(weeklyRate)   : undefined,
+        monthly_rate:        monthlyRate  ? Number(monthlyRate)  : undefined,
+        deposit_amount:      depositAmount ? Number(depositAmount) : undefined,
+        included_km_per_day: includedKm   ? Number(includedKm)  : undefined,
+        extra_km_rate:       extraKmRate  ? Number(extraKmRate)  : undefined,
+        fuel_policy: {
+          type:             fuelType,
+          charge_per_unit:  Number(fuelChargePerUnit) || 0,
+        },
+        late_return_rules: {
+          grace_period_hours: Number(gracePeriodHours) || 0,
+          hourly_charge:      Number(hourlyCharge) || 0,
+          daily_cap:          Number(dailyCap) || 0,
+        },
+        terms_text: termsText.trim() || undefined,
         add_ons: addOns
-          .filter((a) => a.name.trim())
-          .map((a) => ({ name: a.name, price: a.price ? Number(a.price) : 0 })),
+          .filter(a => a.name.trim())
+          .map(a => ({ name: a.name, price: a.price ? Number(a.price) : 0 })),
       };
-      const cleaned = cleanPayload(rawPayload) as Record<string, unknown>;
-      const payload = cleaned as unknown as CreateRatePlanPayload;
-
-      await ratePlanService.createRatePlan(payload);
+      const cleaned = cleanPayload(raw) as unknown as CreateRatePlanPayload;
+      await ratePlanService.createRatePlan(cleaned);
       toast.success('Rate plan created');
       router.push('/rate-plans');
     } catch (err: any) {
       toast.error(extractApiError(err, 'Failed to create rate plan'));
-    } finally {
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   };
 
+  const selectedFuel = FUEL_TYPES.find(f => f.value === fuelType);
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.push('/rate-plans')} className="text-gray-500 hover:text-gray-700">
-          <HiOutlineArrowLeft className="h-5 w-5" />
-        </button>
-        <PageHeader title="Create Rate Plan" />
+    <div className="min-h-screen bg-gray-50">
+      {/* Top bar */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
+        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+          <button onClick={() => router.push('/rate-plans')}
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+            <HiChevronLeft className="w-4 h-4" /> Back to Rate Plans
+          </button>
+          <span className="text-sm font-semibold text-gray-900">Create Rate Plan</span>
+          <span className="text-sm text-gray-400">Step {step + 1} of {STEPS.length}</span>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
-        {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="e.g. Economy Daily Plan"
-            required
-          />
-        </div>
-
-        {/* Rates */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Daily Rate (AED)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={form.daily_rate}
-              onChange={(e) => handleChange('daily_rate', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Weekly Rate (AED)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={form.weekly_rate}
-              onChange={(e) => handleChange('weekly_rate', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Rate (AED)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={form.monthly_rate}
-              onChange={(e) => handleChange('monthly_rate', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="0.00"
-            />
-          </div>
-        </div>
-
-        {/* KM and Deposit */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Included KM/Day</label>
-            <input
-              type="number"
-              value={form.included_km_per_day}
-              onChange={(e) => handleChange('included_km_per_day', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g. 250"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Extra KM Rate (AED)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={form.extra_km_rate}
-              onChange={(e) => handleChange('extra_km_rate', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Deposit Amount (AED)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={form.deposit_amount}
-              onChange={(e) => handleChange('deposit_amount', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="0.00"
-            />
-          </div>
-        </div>
-
-        {/* Fuel Policy */}
-        <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">Fuel Policy</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Policy Type</label>
-              <select
-                value={fuelType}
-                onChange={(e) => setFuelType(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="full_to_full">Full to Full</option>
-                <option value="half_to_full">Half to Full</option>
-                <option value="unlimited">Unlimited</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Charge per Unit (AED)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={fuelChargePerUnit}
-                onChange={(e) => setFuelChargePerUnit(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="100"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Late Return Rules */}
-        <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">Late Return Rules</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Grace Period (Hours)</label>
-              <input
-                type="number"
-                value={gracePeriodHours}
-                onChange={(e) => setGracePeriodHours(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="2"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Hourly Charge (AED)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={hourlyCharge}
-                onChange={(e) => setHourlyCharge(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="50"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Daily Cap (AED)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={dailyCap}
-                onChange={(e) => setDailyCap(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="150"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Terms Text */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Terms & Conditions</label>
-          <textarea
-            value={form.terms_text}
-            onChange={(e) => handleChange('terms_text', e.target.value)}
-            rows={4}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter terms and conditions..."
-          />
-        </div>
-
-        {/* Add-ons */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">Add-ons</label>
-            <button
-              type="button"
-              onClick={handleAddAddOn}
-              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-            >
-              <HiOutlinePlusCircle className="h-4 w-4" />
-              Add Item
-            </button>
-          </div>
-          {addOns.length === 0 ? (
-            <p className="text-sm text-gray-500">No add-ons added yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {addOns.map((addon, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={addon.name}
-                    onChange={(e) => handleAddOnChange(idx, 'name', e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Add-on name"
-                  />
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={addon.price}
-                    onChange={(e) => handleAddOnChange(idx, 'price', e.target.value)}
-                    className="w-32 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Price"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveAddOn(idx)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded"
-                  >
-                    <HiOutlineTrash className="h-4 w-4" />
-                  </button>
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        {/* Step indicator */}
+        <div className="flex items-start mb-8">
+          {STEPS.map((s, i) => {
+            const done = i < step, active = i === step;
+            return (
+              <div key={s.label} className="flex items-start flex-1">
+                <div className="flex flex-col items-center flex-1">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all ${
+                    done   ? 'bg-blue-600 border-blue-600 text-white' :
+                    active ? 'bg-white border-blue-600 text-blue-600' :
+                             'bg-white border-gray-200 text-gray-400'
+                  }`}>
+                    {done ? <HiCheck className="w-4 h-4" /> : i + 1}
+                  </div>
+                  <span className={`mt-2 text-xs font-medium text-center leading-tight px-1 ${
+                    active ? 'text-blue-600' : done ? 'text-gray-700' : 'text-gray-400'
+                  }`}>{s.label}</span>
                 </div>
-              ))}
-            </div>
-          )}
+                {i < STEPS.length - 1 && (
+                  <div className="flex-1 h-0.5 mt-[18px] mx-1 rounded-full"
+                    style={{ background: i < step ? '#2563EB' : '#E5E7EB' }} />
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Submit */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={() => router.push('/rate-plans')}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="px-6 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {submitting ? 'Creating...' : 'Create Rate Plan'}
-          </button>
+        {/* Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-8 pt-7 pb-5 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              {(() => { const Icon = STEPS[step].icon; return (
+                <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-violet-600" />
+                </div>
+              ); })()}
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">{STEPS[step].label}</h2>
+                <p className="text-sm text-gray-500">{STEPS[step].desc}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-8 py-7 space-y-6">
+
+            {/* Step 1 — Plan Info */}
+            {step === 0 && (
+              <div className="space-y-4">
+                <div>
+                  <FG title="Plan Details" />
+                  <div className="space-y-4">
+                    <Field label="Plan Name" required>
+                      <input type="text" value={name} onChange={e => setName(e.target.value)}
+                        placeholder="e.g. Economy Daily Plan"
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all" />
+                    </Field>
+                    <Field label="Terms & Conditions">
+                      <textarea value={termsText} onChange={e => setTermsText(e.target.value)} rows={4}
+                        placeholder="Enter any terms and conditions for this rate plan..."
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none resize-none transition-all" />
+                    </Field>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2 — Rates */}
+            {step === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <FG title="Rental Rates (AED)" />
+                  <div className="grid grid-cols-3 gap-4">
+                    <Field label="Daily Rate"><NumInput value={dailyRate} onChange={setDailyRate} /></Field>
+                    <Field label="Weekly Rate"><NumInput value={weeklyRate} onChange={setWeeklyRate} /></Field>
+                    <Field label="Monthly Rate"><NumInput value={monthlyRate} onChange={setMonthlyRate} /></Field>
+                  </div>
+                </div>
+                <div>
+                  <FG title="Kilometres & Deposit" />
+                  <div className="grid grid-cols-3 gap-4">
+                    <Field label="Included KM/Day"><NumInput value={includedKm} onChange={setIncludedKm} placeholder="e.g. 250" step="1" /></Field>
+                    <Field label="Extra KM Rate (AED)"><NumInput value={extraKmRate} onChange={setExtraKmRate} placeholder="0.00" /></Field>
+                    <Field label="Deposit (AED)"><NumInput value={depositAmount} onChange={setDepositAmount} placeholder="0.00" /></Field>
+                  </div>
+                </div>
+                <div>
+                  <FG title="Add-ons (optional)" />
+                  <div className="space-y-2">
+                    {addOns.map((a, idx) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <input type="text" value={a.name}
+                          onChange={e => setAddOns(prev => prev.map((x, i) => i === idx ? { ...x, name: e.target.value } : x))}
+                          placeholder="Add-on name"
+                          className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all" />
+                        <input type="number" step="0.01" value={a.price}
+                          onChange={e => setAddOns(prev => prev.map((x, i) => i === idx ? { ...x, price: e.target.value } : x))}
+                          placeholder="Price"
+                          className="w-28 px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all" />
+                        <button type="button" onClick={() => setAddOns(prev => prev.filter((_, i) => i !== idx))}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                          <HiOutlineTrash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => setAddOns(prev => [...prev, { name: '', price: '' }])}
+                      className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium mt-1">
+                      <HiOutlinePlusCircle className="w-4 h-4" /> Add Item
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3 — Policies */}
+            {step === 2 && (
+              <div className="space-y-6">
+                <div>
+                  <FG title="Fuel Policy" />
+                  <div className="space-y-3 mb-4">
+                    {FUEL_TYPES.map(f => (
+                      <button key={f.value} type="button" onClick={() => setFuelType(f.value)}
+                        className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
+                          fuelType === f.value
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}>
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          fuelType === f.value ? 'border-blue-500' : 'border-gray-300'
+                        }`}>
+                          {fuelType === f.value && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-gray-900">{f.label}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
+                        </div>
+                        {fuelType === f.value && <HiCheck className="w-4 h-4 text-blue-600 ml-auto" />}
+                      </button>
+                    ))}
+                  </div>
+                  <Field label="Charge per Litre (AED)">
+                    <NumInput value={fuelChargePerUnit} onChange={setFuelChargePerUnit} placeholder="100" />
+                  </Field>
+                </div>
+                <div>
+                  <FG title="Late Return Rules" />
+                  <div className="grid grid-cols-3 gap-4">
+                    <Field label="Grace Period (hrs)"><NumInput value={gracePeriodHours} onChange={setGracePeriodHours} placeholder="2" step="1" /></Field>
+                    <Field label="Hourly Charge (AED)"><NumInput value={hourlyCharge} onChange={setHourlyCharge} placeholder="50" /></Field>
+                    <Field label="Daily Cap (AED)"><NumInput value={dailyCap} onChange={setDailyCap} placeholder="150" /></Field>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4 — Review */}
+            {step === 3 && (
+              <>
+                <div className="flex items-center gap-4 p-4 rounded-xl border-2 border-violet-500 bg-violet-50">
+                  <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center">
+                    <HiOutlineTag className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{name}</p>
+                    <p className="text-xs text-violet-600">New Rate Plan</p>
+                  </div>
+                  {dailyRate && (
+                    <div className="ml-auto text-right">
+                      <p className="text-xs text-gray-400">Daily Rate</p>
+                      <p className="font-bold text-gray-900">AED {Number(dailyRate).toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Rates</p>
+                    <ReviewRow label="Daily"    value={dailyRate   ? `AED ${Number(dailyRate).toLocaleString()}`   : undefined} />
+                    <ReviewRow label="Weekly"   value={weeklyRate  ? `AED ${Number(weeklyRate).toLocaleString()}`  : undefined} />
+                    <ReviewRow label="Monthly"  value={monthlyRate ? `AED ${Number(monthlyRate).toLocaleString()}` : undefined} />
+                    <ReviewRow label="Deposit"  value={depositAmount ? `AED ${Number(depositAmount).toLocaleString()}` : undefined} />
+                    <ReviewRow label="KM/Day"   value={includedKm   ? `${includedKm} km` : undefined} />
+                    <ReviewRow label="Extra KM" value={extraKmRate  ? `AED ${Number(extraKmRate).toFixed(2)}` : undefined} />
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Policies</p>
+                    <ReviewRow label="Fuel Policy"   value={selectedFuel?.label} />
+                    <ReviewRow label="Fuel Charge"   value={`AED ${Number(fuelChargePerUnit).toLocaleString()}/L`} />
+                    <ReviewRow label="Grace Period"  value={`${gracePeriodHours} hrs`} />
+                    <ReviewRow label="Hourly Charge" value={`AED ${Number(hourlyCharge).toLocaleString()}`} />
+                    <ReviewRow label="Daily Cap"     value={`AED ${Number(dailyCap).toLocaleString()}`} />
+                  </div>
+                </div>
+
+                {addOns.filter(a => a.name.trim()).length > 0 && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Add-ons</p>
+                    {addOns.filter(a => a.name.trim()).map((a, i) => (
+                      <ReviewRow key={i} label={a.name} value={a.price ? `AED ${Number(a.price).toLocaleString()}` : 'Free'} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-8 py-5 border-t border-gray-100 bg-gray-50/60 flex items-center justify-between">
+            <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all">
+              <HiChevronLeft className="w-4 h-4" /> Back
+            </button>
+            <span className="text-xs text-gray-400 font-medium">{step + 1} / {STEPS.length}</span>
+            {step < STEPS.length - 1 ? (
+              <button onClick={() => setStep(s => s + 1)} disabled={!canNext()}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all">
+                Continue <HiChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button onClick={handleSubmit} disabled={submitting}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all">
+                {submitting
+                  ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating...</>
+                  : <><HiCheck className="w-4 h-4" />Create Rate Plan</>}
+              </button>
+            )}
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

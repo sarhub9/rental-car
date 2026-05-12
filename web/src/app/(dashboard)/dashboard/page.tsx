@@ -261,27 +261,41 @@ function SubscribeModal({ onClose, onSubscribed }: { onClose: () => void; onSubs
 // ============================================================================
 
 function AdminDashboard() {
+  const router = useRouter();
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [company, setCompany] = useState<CompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSubscribeModal, setShowSubscribeModal] = useState(false);
+  const [branches, setBranches]     = useState<any[]>([]);
+  const [branchFilter, setBranchFilter] = useState('');
+  const [dateFrom, setDateFrom]     = useState('');
+  const [dateTo, setDateTo]         = useState('');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [dashRes, companyRes] = await Promise.all([
-          getAdminDashboard(),
-          getMyCompany().catch(() => null),
-        ]);
-        setData(dashRes.data || dashRes);
-        if (companyRes) setCompany(companyRes);
-      } catch (err: any) {
-        toast.error(extractApiError(err, 'Failed to load dashboard data'));
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const loadDashboard = async (branchId?: string, from?: string, to?: string) => {
+    try {
+      setLoading(true);
+      const params: any = {};
+      if (branchId) params.branch_id = branchId;
+      if (from)     params.date_from = from;
+      if (to)       params.date_to   = to;
+      const [dashRes, companyRes, branchRes] = await Promise.all([
+        getAdminDashboard(params),
+        getMyCompany().catch(() => null),
+        import('@/services/branch.service').then(m => m.branchService.listBranches()).catch(() => []),
+      ]);
+      setData(dashRes.data || dashRes);
+      if (companyRes) setCompany(companyRes);
+      setBranches(Array.isArray(branchRes) ? branchRes : []);
+    } catch (err: any) {
+      toast.error(extractApiError(err, 'Failed to load dashboard data'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadDashboard(); }, []);
+
+  const applyFilters = () => loadDashboard(branchFilter || undefined, dateFrom || undefined, dateTo || undefined);
 
   // Trial warning
   const trialWarning =
@@ -313,10 +327,10 @@ function AdminDashboard() {
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
   const kpis = [
-    { label: 'Active Agreements', value: data.active_agreements ?? 0, icon: <HiOutlineDocumentText className="w-5 h-5" />, color: '#0E7490', bg: 'bg-[#0E7490]/10' },
-    { label: 'Total Revenue', value: `AED ${(data.total_revenue ?? 0).toLocaleString()}`, icon: <HiOutlineCurrencyDollar className="w-5 h-5" />, color: '#059669', bg: 'bg-emerald-100' },
-    { label: 'Fleet Utilization', value: `${data.fleet_utilization_percent ?? 0}%`, icon: <HiOutlineTruck className="w-5 h-5" />, color: '#7C3AED', bg: 'bg-violet-100' },
-    { label: 'Overdue Returns', value: data.overdue_returns ?? 0, icon: <HiOutlineExclamationTriangle className="w-5 h-5" />, color: '#DC2626', bg: 'bg-red-100' },
+    { label: 'Active Agreements', value: data.active_agreements ?? 0, icon: <HiOutlineDocumentText className="w-5 h-5" />, color: '#0E7490', bg: 'bg-[#0E7490]/10', href: '/agreements?status=ACTIVE' },
+    { label: 'Total Revenue', value: `AED ${(data.total_revenue ?? 0).toLocaleString()}`, icon: <HiOutlineCurrencyDollar className="w-5 h-5" />, color: '#059669', bg: 'bg-emerald-100', href: '/reports?tab=revenue' },
+    { label: 'Fleet Utilization', value: `${data.fleet_utilization_percent ?? 0}%`, icon: <HiOutlineTruck className="w-5 h-5" />, color: '#7C3AED', bg: 'bg-violet-100', href: '/reports?tab=fleet' },
+    { label: 'Overdue Returns', value: data.overdue_returns ?? 0, icon: <HiOutlineExclamationTriangle className="w-5 h-5" />, color: '#DC2626', bg: 'bg-red-100', href: '/alerts' },
   ];
 
   const quickActions = [
@@ -395,14 +409,48 @@ function AdminDashboard() {
         )}
       </div>
 
+      {/* Dashboard Filters */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-end gap-3">
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Branch</label>
+          <select value={branchFilter} onChange={e=>setBranchFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white min-w-[140px]">
+            <option value="">All Branches</option>
+            {branches.map((b:any)=><option key={b.id} value={b.id}>{b.branch_name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">From</label>
+          <input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"/>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">To</label>
+          <input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"/>
+        </div>
+        <button onClick={applyFilters}
+          className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+          Apply
+        </button>
+        {(branchFilter||dateFrom||dateTo) && (
+          <button onClick={()=>{setBranchFilter('');setDateFrom('');setDateTo('');loadDashboard();}}
+            className="px-4 py-1.5 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 text-gray-600">
+            Clear
+          </button>
+        )}
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map(k => (
-          <div key={k.label} className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-4 hover:shadow-md transition-shadow">
+          <div key={k.label} onClick={()=>router.push(k.href)}
+            className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer">
             <div className="flex items-center justify-between mb-3">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${k.bg}`} style={{ color: k.color }}>
                 {k.icon}
               </div>
+              <HiOutlineChartBarSquare className="w-4 h-4 text-gray-300" />
             </div>
             <p className="text-2xl font-bold text-[#0F172A]">{k.value}</p>
             <p className="text-xs text-[#64748B] mt-1">{k.label}</p>

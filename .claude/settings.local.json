@@ -8,7 +8,9 @@
       "Bash(curl -s -X POST http://localhost:3000/v1/customers -H \"Content-Type: application/json\" -d '{\"full_name_en\":\"Test\",\"phone_number\":\"123\",\"customer_type\":\"INDIVIDUAL\"}')",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "PowerShell(Split-Path *)",
+      "Bash(npm run *)"
     ]
   }
 }

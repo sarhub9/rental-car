@@ -7,7 +7,11 @@ class CorporateAccountController {
       return res.status(201).json({ success: true, data: account });
     } catch (error) {
       if (error.statusCode) return res.status(error.statusCode).json({ error: error.message });
-      return res.status(500).json({ error: 'Internal Server Error' });
+      if (error.code === '23505') return res.status(409).json({ error: 'A corporate account with this name or account number already exists' });
+      if (error.code === '23502') return res.status(400).json({ error: `Missing required field: ${error.column}` });
+      if (error.code === '42P01') return res.status(500).json({ error: 'Database table not found — please run migrations' });
+      console.error('Corporate account create error:', error);
+      return res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
   }
 
@@ -21,7 +25,9 @@ class CorporateAccountController {
       const accounts = await CorporateAccountService.list(req.tenantId, filters);
       return res.status(200).json({ success: true, data: accounts, pagination: { limit: filters.limit, offset: filters.offset } });
     } catch (error) {
-      return res.status(500).json({ error: 'Internal Server Error' });
+      if (error.code === '42P01') return res.status(500).json({ error: 'Database table not found — please run migrations' });
+      console.error('Corporate account list error:', error);
+      return res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
   }
 

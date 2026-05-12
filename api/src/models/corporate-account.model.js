@@ -30,22 +30,18 @@ class CorporateAccountModel {
   }
 
   async list(tenantId, filters = {}) {
-    let query = 'SELECT * FROM corporate_accounts WHERE tenant_id = $1';
-    const values = [tenantId];
-    let p = 2;
-
-    if (filters.is_active !== undefined) {
-      query += ` AND is_active = $${p}`;
-      values.push(filters.is_active);
-      p++;
+    console.log('[CorporateAccount.list] tenantId:', tenantId, 'filters:', filters);
+    try {
+      const result = await pool.query(
+        'SELECT * FROM corporate_accounts WHERE tenant_id = $1 ORDER BY company_name ASC',
+        [tenantId]
+      );
+      console.log('[CorporateAccount.list] rows returned:', result.rows.length);
+      return result.rows;
+    } catch (err) {
+      console.error('[CorporateAccount.list] DB error:', err.message, err.code);
+      throw err;
     }
-
-    if (filters.limit) { query += ` LIMIT $${p}`; values.push(filters.limit); p++; }
-    if (filters.offset) { query += ` OFFSET $${p}`; values.push(filters.offset); }
-
-    query += ' ORDER BY company_name ASC';
-    const result = await pool.query(query, values);
-    return result.rows;
   }
 
   async update(id, tenantId, data) {

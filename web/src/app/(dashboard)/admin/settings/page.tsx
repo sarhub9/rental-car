@@ -7,8 +7,10 @@ import {
   HiOutlineCurrencyDollar,
   HiOutlineShieldCheck,
   HiOutlineDocumentText,
+  HiOutlineBuildingOffice2,
 } from 'react-icons/hi2';
 import { adminSettingsService } from '@/services/admin-settings.service';
+import apiClient from '@/lib/api-client';
 import { PageHeader } from '@/components/PageHeader';
 import { Spinner } from '@/components/Spinner';
 import { extractApiError } from '@/lib/api-error';
@@ -62,15 +64,26 @@ function Field({
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Settings>({});
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [company, setCompany]   = useState<any>({});
+  const [loading, setLoading]   = useState(true);
+  const [saving, setSaving]     = useState(false);
+  const [activeTab, setActiveTab] = useState<'company' | 'charges'>('company');
 
   const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await adminSettingsService.getAdminSettings();
-      const data = res?.data ?? res;
-      setSettings(data ?? {});
+      const [settingsRes, profileRes] = await Promise.allSettled([
+        adminSettingsService.getAdminSettings(),
+        apiClient.get('/v1/company-profile'),
+      ]);
+      if (settingsRes.status === 'fulfilled') {
+        const data = settingsRes.value?.data ?? settingsRes.value;
+        setSettings(data ?? {});
+      }
+      if (profileRes.status === 'fulfilled') {
+        const d = profileRes.value.data?.data ?? profileRes.value.data;
+        setCompany(d?.company || {});
+      }
     } catch (err: any) {
       toast.error(extractApiError(err, 'Failed to load settings'));
     } finally {
@@ -87,20 +100,22 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      // Convert numeric strings to numbers
-      const numericKeys: (keyof Settings)[] = [
-        'extra_km_rate', 'fuel_rate', 'late_fee_per_day', 'late_return_grace_minutes',
-        'vat_rate', 'discount_threshold_percent', 'damage_charge_auto_approve_below',
-        'reminder_days_before_expiry',
-      ];
-      const payload: Record<string, any> = { ...settings };
-      numericKeys.forEach((k) => {
-        if (payload[k] !== undefined && payload[k] !== '') {
-          payload[k] = Number(payload[k]);
-        }
-      });
-      await adminSettingsService.updateAdminSettings(payload);
-      toast.success('Settings saved');
+      if (activeTab === 'company') {
+        await apiClient.patch('/v1/company-profile/company', company);
+        toast.success('Company profile saved');
+      } else {
+        const numericKeys: (keyof Settings)[] = [
+          'extra_km_rate', 'fuel_rate', 'late_fee_per_day', 'late_return_grace_minutes',
+          'vat_rate', 'discount_threshold_percent', 'damage_charge_auto_approve_below',
+          'reminder_days_before_expiry',
+        ];
+        const payload: Record<string, any> = { ...settings };
+        numericKeys.forEach((k) => {
+          if (payload[k] !== undefined && payload[k] !== '') payload[k] = Number(payload[k]);
+        });
+        await adminSettingsService.updateAdminSettings(payload);
+        toast.success('Settings saved');
+      }
     } catch (err: any) {
       toast.error(extractApiError(err, 'Failed to save settings'));
     } finally {
@@ -145,18 +160,52 @@ export default function AdminSettingsPage() {
           <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
             <HiOutlineCog6Tooth className="h-5 w-5 text-gray-600" />
           </div>
-          <PageHeader title="Admin Settings" />
+          <PageHeader title="Settings" />
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
-        >
+        <button onClick={handleSave} disabled={saving}
+          className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
           {saving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-          {saving ? 'Saving...' : 'Save Settings'}
+          {saving ? 'Saving...' : 'Save'}
         </button>
       </div>
 
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200">
+        {([['company','Company Profile',<HiOutlineBuildingOffice2 className="h-4 w-4" />],['charges','Charge Rules',<HiOutlineCurrencyDollar className="h-4 w-4" />]] as any[]).map(([key,label,icon]) => (
+          <button key={key} onClick={() => setActiveTab(key)}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab===key?'border-blue-600 text-blue-600':'border-transparent text-gray-500 hover:text-gray-700'}`}>
+            {icon}{label}
+          </button>
+        ))}
+      </div>
+
+      {/* Company Profile */}
+      {activeTab === 'company' && (
+        <>
+          <Section title="Company Profile" icon={<HiOutlineBuildingOffice2 className="h-5 w-5" />}>
+            <div className="grid grid-cols-2 gap-5">
+              <Field label="Company Name"><input type="text" value={company.name??''} onChange={e=>setCompany({...company,name:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
+              <Field label="TRN / VAT Number" hint="UAE Tax Registration Number"><input type="text" value={company.trn_number??''} onChange={e=>setCompany({...company,trn_number:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
+              <Field label="Trade License"><input type="text" value={company.trade_license_number??''} onChange={e=>setCompany({...company,trade_license_number:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
+              <Field label="Phone"><input type="text" value={company.phone_number??''} onChange={e=>setCompany({...company,phone_number:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
+              <Field label="Invoice Prefix" hint="e.g. INV, RNT"><input type="text" value={company.invoice_prefix??''} onChange={e=>setCompany({...company,invoice_prefix:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
+              <Field label="Currency"><input type="text" value={company.currency??'AED'} onChange={e=>setCompany({...company,currency:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
+            </div>
+            <div className="mt-4">
+              <Field label="Address"><textarea value={company.address??''} onChange={e=>setCompany({...company,address:e.target.value})} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" /></Field>
+            </div>
+            <div className="mt-4">
+              <Field label="Invoice Footer" hint="Appears at bottom of every invoice"><textarea value={company.invoice_footer??''} onChange={e=>setCompany({...company,invoice_footer:e.target.value})} rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" placeholder="e.g. Thank you for your business. All amounts in AED." /></Field>
+            </div>
+            <div className="mt-4">
+              <Field label="Agreement Terms & Conditions"><textarea value={company.agreement_terms??''} onChange={e=>setCompany({...company,agreement_terms:e.target.value})} rows={5} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" placeholder="Enter rental terms and conditions..." /></Field>
+            </div>
+          </Section>
+        </>
+      )}
+
+      {/* Charge Rules (original) */}
+      {activeTab === 'charges' && <>
       {/* Charge Rules */}
       <Section title="Charge Rules" icon={<HiOutlineCurrencyDollar className="h-5 w-5" />}>
         <div className="grid grid-cols-2 gap-5">
@@ -218,6 +267,7 @@ export default function AdminSettingsPage() {
           </Field>
         </div>
       </Section>
+      </>}
     </div>
   );
 }
