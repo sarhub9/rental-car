@@ -8,9 +8,18 @@ import {
   HiOutlinePlus,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
+  HiOutlineArrowRight,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
 import { extractApiError } from '@/lib/api-error';
+
+const STATUS_STYLES: Record<string, { badge: string; dot: string }> = {
+  open:        { badge: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-500' },
+  in_progress: { badge: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500' },
+  'in progress':{ badge: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500' },
+  resolved:    { badge: 'bg-green-100 text-green-700',  dot: 'bg-green-500' },
+  closed:      { badge: 'bg-gray-100 text-gray-600',    dot: 'bg-gray-400' },
+};
 
 export default function DisputesPage() {
   const router = useRouter();
@@ -27,12 +36,10 @@ export default function DisputesPage() {
     try {
       setLoading(true);
       const res = await customerPortalService.getCustomerDisputes();
-
-      // Handle response - API returns array directly after our service fix
       if (Array.isArray(res)) {
         setDisputes(res);
         setTotalPages(1);
-      } else if (res.data) {
+      } else if (res?.data) {
         setDisputes(Array.isArray(res.data) ? res.data : res.data.data || []);
         setTotalPages(res.data.totalPages || res.totalPages || 1);
       } else {
@@ -46,30 +53,15 @@ export default function DisputesPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'open':
-        return 'bg-blue-100 text-blue-800';
-      case 'in_progress':
-      case 'in progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'resolved':
-        return 'bg-green-100 text-green-800';
-      case 'closed':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-blue-100 text-blue-800';
-    }
-  };
+  const statusInfo = (status: string) =>
+    STATUS_STYLES[status?.toLowerCase()] || { badge: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500' };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Disputes</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Raise and track disputes related to your rentals.
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Raise and track disputes related to your rentals.</p>
         </div>
         <button
           onClick={() => router.push('/portal/disputes/create')}
@@ -85,48 +77,58 @@ export default function DisputesPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
         </div>
       ) : disputes.length === 0 ? (
-        <div className="text-center py-12">
-          <HiOutlineExclamationTriangle className="mx-auto h-12 w-12 text-gray-300" />
-          <p className="mt-2 text-sm text-gray-500">No disputes found.</p>
+        <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
+          <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center mx-auto">
+            <HiOutlineExclamationTriangle className="h-7 w-7 text-gray-400" />
+          </div>
+          <p className="mt-3 text-sm font-medium text-gray-600">No disputes found.</p>
+          <p className="mt-1 text-xs text-gray-400">Raise a dispute if you have an issue with a rental.</p>
+          <button
+            onClick={() => router.push('/portal/disputes/create')}
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 font-medium"
+          >
+            <HiOutlinePlus className="h-4 w-4" />
+            Raise your first dispute
+          </button>
         </div>
       ) : (
         <>
-          <div className="space-y-3">
-            {disputes.map((dispute) => (
-              <div
-                key={dispute.id}
-                onClick={() => router.push(`/portal/disputes/${dispute.id}`)}
-                className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <p className="font-semibold text-gray-900">
-                        {dispute.dispute_number || `#${dispute.id}`}
+          <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-50">
+            {disputes.map((dispute) => {
+              const si = statusInfo(dispute.status);
+              return (
+                <div
+                  key={dispute.id}
+                  onClick={() => router.push(`/portal/disputes/${dispute.id}`)}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer group"
+                >
+                  <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <HiOutlineExclamationTriangle className="h-5 w-5 text-orange-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {dispute.dispute_number || `#${dispute.id.slice(0, 8)}`}
                       </p>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                          dispute.status
-                        )}`}
-                      >
-                        {dispute.status?.replace('_', ' ')}
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${si.badge}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${si.dot}`} />
+                        {dispute.status?.replaceAll('_', ' ')}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700">{dispute.subject}</p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-sm text-gray-600 truncate mt-0.5">{dispute.subject}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
                       {new Date(dispute.created_at).toLocaleDateString()}
                     </p>
                   </div>
+                  <HiOutlineArrowRight className="h-4 w-4 text-gray-300 flex-shrink-0 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4">
-              <p className="text-sm text-gray-500">
-                Page {page} of {totalPages}
-              </p>
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm text-gray-500">Page {page} of {totalPages}</p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}

@@ -7,8 +7,9 @@ class MessageController {
    */
   async createThread(req, res, next) {
     try {
-      const { subject, message } = req.body;
-      if (!subject || !message) {
+      const { subject, message, message_text } = req.body;
+      const body = message || message_text;
+      if (!subject || !body) {
         return res.status(400).json({ error: 'subject and message are required' });
       }
 
@@ -16,8 +17,8 @@ class MessageController {
         req.user.customerId,
         req.user.tenantId,
         subject,
-        message,
-        req.user.userId,
+        body,
+        req.user.id,
       );
       res.status(201).json({ data: thread });
     } catch (error) {
@@ -81,8 +82,9 @@ class MessageController {
    */
   async addCustomerMessage(req, res, next) {
     try {
-      const { message, attachments } = req.body;
-      if (!message) {
+      const { message, message_text, attachments } = req.body;
+      const body = message || message_text;
+      if (!body) {
         return res.status(400).json({ error: 'message is required' });
       }
 
@@ -95,9 +97,9 @@ class MessageController {
       const newMessage = await MessageService.addMessage(
         req.params.id,
         req.user.tenantId,
-        req.user.userId,
+        req.user.id,
         'RENTAL_CUSTOMER',
-        message,
+        body,
         attachments,
       );
       res.status(201).json({ data: newMessage });
@@ -118,7 +120,7 @@ class MessageController {
         return res.status(403).json({ error: 'Access denied' });
       }
 
-      await MessageService.markAsRead(req.params.id, req.user.tenantId, req.user.userId);
+      await MessageService.markAsRead(req.params.id, req.user.tenantId, req.user.id);
       res.json({ message: 'Messages marked as read' });
     } catch (error) {
       next(error);
@@ -172,7 +174,7 @@ class MessageController {
       const newMessage = await MessageService.addMessage(
         req.params.id,
         req.user.tenantId,
-        req.user.userId,
+        req.user.id,
         req.user.role,
         message,
         attachments,

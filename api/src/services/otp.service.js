@@ -25,8 +25,10 @@ class OtpService {
     // Invalidate any existing unexpired OTPs for this phone+tenant+purpose
     await OtpModel.invalidateAll(phoneNumber, tenantId, purpose);
 
-    // Generate 6-digit OTP
-    const otpCode = crypto.randomInt(100000, 999999).toString();
+    // Generate 6-digit OTP (fixed in dev for testing)
+    const otpCode = process.env.NODE_ENV !== 'production'
+      ? (process.env.DEV_OTP || '123456')
+      : crypto.randomInt(100000, 999999).toString();
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
     const otp = await OtpModel.create({

@@ -13,7 +13,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  requestOtp: (phoneNumber: string, tenantId: string) => Promise<void>;
+  requestOtp: (phoneNumber: string, tenantId: string) => Promise<{ otp_code?: string } | undefined>;
   verifyOtp: (phoneNumber: string, tenantId: string, otpCode: string) => Promise<void>;
   staffLogin: (email: string, password: string, tenantId: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Validate the token by attempting a refresh
         try {
-          const response = await apiClient.post('/auth/refresh', {
+          const response = await apiClient.post('/v1/auth/refresh', {
             refresh_token: storedRefreshToken,
           });
 
@@ -114,15 +114,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [setAuthData, clearAuthData]);
 
   const requestOtp = useCallback(async (phoneNumber: string, tenantId: string) => {
-    await apiClient.post('/auth/customer/request-otp', {
+    const response = await apiClient.post('/v1/auth/customer/request-otp', {
       phone_number: phoneNumber,
       tenant_id: tenantId,
     });
+    return response.data?.data;
   }, []);
 
   const verifyOtp = useCallback(
     async (phoneNumber: string, tenantId: string, otpCode: string) => {
-      const response = await apiClient.post('/auth/customer/verify-otp', {
+      const response = await apiClient.post('/v1/auth/customer/verify-otp', {
         phone_number: phoneNumber,
         tenant_id: tenantId,
         otp_code: otpCode,
@@ -136,7 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const staffLogin = useCallback(
     async (email: string, password: string, tenantId: string) => {
-      const response = await apiClient.post('/auth/staff/login', {
+      const response = await apiClient.post('/v1/auth/staff/login', {
         email,
         password,
         tenant_id: tenantId,
@@ -152,7 +153,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const currentRefreshToken = localStorage.getItem('refresh_token');
       if (currentRefreshToken) {
-        await apiClient.post('/auth/logout', {
+        await apiClient.post('/v1/auth/logout', {
           refresh_token: currentRefreshToken,
         });
       }
@@ -171,7 +172,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
-      const response = await apiClient.post('/auth/refresh', {
+      const response = await apiClient.post('/v1/auth/refresh', {
         refresh_token: currentRefreshToken,
       });
 

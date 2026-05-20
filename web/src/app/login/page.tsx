@@ -75,12 +75,14 @@ export default function LoginPage() {
     setRequestingOtp(true);
     try {
       const phone = phoneNumber.startsWith('+') ? phoneNumber : `+971${phoneNumber}`;
-      await requestOtp(phone, '');
+      const data = await requestOtp(phone, '');
       setOtpSent(true);
       setOtpTimer(120);
       toast.success('OTP sent!');
+      if (data?.otp_code) setDevOtp(data.otp_code);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to send OTP');
+      const details = err?.response?.data?.details?.[0];
+      toast.error(details || err?.response?.data?.error || err?.response?.data?.message || 'Failed to send OTP');
       if (err?.response?.data?.data?.otp_code) setDevOtp(err.response.data.data.otp_code);
     } finally { setRequestingOtp(false); }
   }, [phoneNumber, requestOtp]);
@@ -94,7 +96,7 @@ export default function LoginPage() {
       toast.success('Welcome back!');
       router.replace('/dashboard');
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Invalid OTP');
+      toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Invalid OTP');
     } finally { setVerifyingOtp(false); }
   }, [otpCode, phoneNumber, verifyOtp, router]);
 
@@ -388,7 +390,7 @@ export default function LoginPage() {
                         <input
                           type="tel"
                           value={phoneNumber}
-                          onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                          onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
                           placeholder="5XXXXXXXX"
                           className="w-full pl-24 pr-4 py-3 border border-[#E2E8F0] rounded-xl text-sm bg-[#F8FAFC] focus:bg-white focus:border-[#0E7490] focus:ring-3 focus:ring-[#0E7490]/10 outline-none transition-all"
                         />

@@ -117,6 +117,7 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
         { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={18} /> },
         { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={18} /> },
         { label: 'Incidents', href: '/incidents', icon: <HiOutlineExclamationTriangle size={18} /> },
+        { label: 'Messages', href: '/messages', icon: <HiOutlineChatBubbleLeftRight size={18} /> },
       ],
     },
     {
@@ -164,6 +165,7 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
         { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={18} /> },
         { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={18} /> },
         { label: 'Incidents', href: '/incidents', icon: <HiOutlineExclamationTriangle size={18} /> },
+        { label: 'Messages', href: '/messages', icon: <HiOutlineChatBubbleLeftRight size={18} /> },
       ],
     },
     {

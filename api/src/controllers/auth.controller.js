@@ -15,19 +15,40 @@ class AuthController {
   async requestOtp(req, res) {
     try {
       const { phone_number, tenant_id } = req.validatedBody;
+      console.log('[OTP] Received phone_number:', phone_number, '| tenant_id:', tenant_id);
 
-      // If tenant_id not provided, try to find it from existing user/customer
-      let resolvedTenantId = tenant_id;
+      // If tenant_id not provided, resolve from existing user or customer record
+      let resolvedTenantId = tenant_id || null;
       if (!resolvedTenantId) {
         const user = await UserModel.findByPhoneGlobal(phone_number);
+        console.log('[OTP] User lookup result:', user ? `found tenant=${user.tenant_id}` : 'not found');
         if (user) resolvedTenantId = user.tenant_id;
+      }
+      if (!resolvedTenantId) {
+        const { default: pool } = await import('../config/database.js');
+        const res2 = await pool.query(
+          `SELECT tenant_id, phone_number FROM customers
+           WHERE RIGHT(REGEXP_REPLACE(phone_number, '[^0-9]', '', 'g'), 9) = RIGHT(REGEXP_REPLACE($1, '[^0-9]', '', 'g'), 9)
+           LIMIT 1`,
+          [phone_number]
+        );
+        console.log('[OTP] Customer lookup result:', res2.rows[0] ? `found phone=${res2.rows[0].phone_number} tenant=${res2.rows[0].tenant_id}` : 'not found');
+        if (res2.rows[0]) resolvedTenantId = res2.rows[0].tenant_id;
+      }
+
+      if (!resolvedTenantId) {
+        console.log('[OTP] No tenant found for phone:', phone_number);
+        return res.status(404).json({
+          success: false,
+          error: 'No account found for this phone number. Please contact the rental company.',
+        });
       }
 
       // Verify customer exists and create user if needed
-      await UserService.findOrCreateCustomerUser(phone_number, resolvedTenantId || null);
+      await UserService.findOrCreateCustomerUser(phone_number, resolvedTenantId);
 
       // Generate and send OTP
-      const { expiresAt } = await OtpService.generateOtp(phone_number, resolvedTenantId || null, 'LOGIN');
+      const { expiresAt } = await OtpService.generateOtp(phone_number, resolvedTenantId, 'LOGIN');
 
       const response = {
         success: true,
@@ -40,7 +61,7 @@ class AuthController {
       // In dev mode: include OTP for testing
       if (process.env.NODE_ENV !== 'production') {
         const { default: OtpModel } = await import('../models/otp.model.js');
-        const otp = await OtpModel.findLatestActive(phone_number, tenant_id, 'LOGIN');
+        const otp = await OtpModel.findLatestActive(phone_number, resolvedTenantId, 'LOGIN');
         if (otp) response.data.otp_code = otp.otp_code;
       }
 
@@ -70,15 +91,32 @@ class AuthController {
     try {
       const { phone_number, tenant_id, otp_code } = req.validatedBody;
 
-      // If tenant_id not provided, try to find it from existing user
-      let resolvedTenantId = tenant_id;
+      // Resolve tenant_id from user or customer record
+      let resolvedTenantId = tenant_id || null;
       if (!resolvedTenantId) {
-        const user = await UserModel.findByPhoneGlobal(phone_number);
-        if (user) resolvedTenantId = user.tenant_id;
+        const existingUser = await UserModel.findByPhoneGlobal(phone_number);
+        if (existingUser) resolvedTenantId = existingUser.tenant_id;
+      }
+      if (!resolvedTenantId) {
+        const { default: pool } = await import('../config/database.js');
+        const res2 = await pool.query(
+          `SELECT tenant_id FROM customers
+           WHERE RIGHT(REGEXP_REPLACE(phone_number, '[^0-9]', '', 'g'), 9) = RIGHT(REGEXP_REPLACE($1, '[^0-9]', '', 'g'), 9)
+           LIMIT 1`,
+          [phone_number]
+        );
+        if (res2.rows[0]) resolvedTenantId = res2.rows[0].tenant_id;
+      }
+
+      if (!resolvedTenantId) {
+        return res.status(404).json({
+          success: false,
+          error: 'No account found for this phone number.',
+        });
       }
 
       // Verify the OTP
-      const verification = await OtpService.verifyOtp(phone_number, resolvedTenantId || null, otp_code, 'LOGIN');
+      const verification = await OtpService.verifyOtp(phone_number, resolvedTenantId, otp_code, 'LOGIN');
 
       if (!verification.valid) {
         return res.status(401).json({
@@ -88,7 +126,7 @@ class AuthController {
       }
 
       // Get or create user
-      const { user } = await UserService.findOrCreateCustomerUser(phone_number, tenant_id);
+      const { user } = await UserService.findOrCreateCustomerUser(phone_number, resolvedTenantId);
 
       // Update last login
       await UserModel.updateLastLogin(user.id);

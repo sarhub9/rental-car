@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
-  HiOutlineUser,
   HiOutlinePencilSquare,
   HiOutlineXMark,
+  HiOutlineCheckCircle,
+  HiOutlineMapPin,
+  HiOutlinePhone,
+  HiOutlineEnvelope,
 } from 'react-icons/hi2';
 import { customerPortalService } from '@/services/customer-portal.service';
 import { extractApiError } from '@/lib/api-error';
@@ -23,16 +26,25 @@ interface ProfileData {
 }
 
 const initialProfile: ProfileData = {
-  email: '',
-  full_name: '',
-  phone: '',
-  address_line_1: '',
-  address_line_2: '',
-  city: '',
-  state: '',
-  postal_code: '',
-  country: '',
+  email: '', full_name: '', phone: '',
+  address_line_1: '', address_line_2: '',
+  city: '', state: '', postal_code: '', country: '',
 };
+
+const PERSONAL_FIELDS: { key: keyof ProfileData; label: string; type?: string; icon?: any }[] = [
+  { key: 'full_name', label: 'Full Name' },
+  { key: 'email', label: 'Email Address', type: 'email', icon: HiOutlineEnvelope },
+  { key: 'phone', label: 'Phone Number', icon: HiOutlinePhone },
+];
+
+const ADDRESS_FIELDS: { key: keyof ProfileData; label: string }[] = [
+  { key: 'address_line_1', label: 'Address Line 1' },
+  { key: 'address_line_2', label: 'Address Line 2' },
+  { key: 'city', label: 'City' },
+  { key: 'state', label: 'State / Province' },
+  { key: 'postal_code', label: 'Postal Code' },
+  { key: 'country', label: 'Country' },
+];
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData>(initialProfile);
@@ -49,7 +61,7 @@ export default function ProfilePage() {
     try {
       setLoading(true);
       const res = await customerPortalService.getCustomerProfile();
-      const data = res.data || {};
+      const data = res || {};
       const mapped: ProfileData = {
         email: data.email || '',
         full_name: data.full_name || data.name || '',
@@ -101,26 +113,17 @@ export default function ProfilePage() {
     );
   }
 
-  const fields: { key: keyof ProfileData; label: string; type?: string }[] = [
-    { key: 'full_name', label: 'Full Name' },
-    { key: 'email', label: 'Email', type: 'email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'address_line_1', label: 'Address Line 1' },
-    { key: 'address_line_2', label: 'Address Line 2' },
-    { key: 'city', label: 'City' },
-    { key: 'state', label: 'State' },
-    { key: 'postal_code', label: 'Postal Code' },
-    { key: 'country', label: 'Country' },
-  ];
+  const initials = profile.full_name
+    ? profile.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'C';
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            View and update your personal information.
-          </p>
+          <p className="mt-1 text-sm text-gray-500">View and update your personal information.</p>
         </div>
         {!editing ? (
           <button
@@ -141,59 +144,91 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        {/* Avatar Placeholder */}
-        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
-          <div className="flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full">
-            <HiOutlineUser className="h-8 w-8 text-primary-600" />
+      {/* Profile Card */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+        {/* Avatar + Name Header */}
+        <div className="flex items-center gap-5 px-6 py-5 border-b border-gray-100">
+          <div
+            className="w-16 h-16 rounded-xl flex items-center justify-center text-xl font-bold text-white flex-shrink-0"
+            style={{ backgroundColor: 'var(--sa-primary, #0E7490)' }}
+          >
+            {initials}
           </div>
           <div>
-            <p className="text-lg font-semibold text-gray-900">
-              {profile.full_name || 'Customer'}
-            </p>
-            <p className="text-sm text-gray-500">{profile.email}</p>
+            <p className="text-lg font-bold text-gray-900">{profile.full_name || 'Customer'}</p>
+            <p className="text-sm text-gray-500">{profile.email || '—'}</p>
           </div>
         </div>
 
-        {/* Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {fields.map((field) => (
-            <div key={field.key}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {field.label}
-              </label>
-              {editing ? (
-                <input
-                  name={field.key}
-                  type={field.type || 'text'}
-                  value={profile[field.key]}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              ) : (
-                <p className="text-sm text-gray-900 py-2">
-                  {profile[field.key] || (
-                    <span className="text-gray-400">Not provided</span>
-                  )}
-                </p>
-              )}
-            </div>
-          ))}
+        {/* Personal Information */}
+        <div className="px-6 py-5">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            Personal Information
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            {PERSONAL_FIELDS.map((field) => (
+              <div key={field.key}>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{field.label}</label>
+                {editing ? (
+                  <input
+                    name={field.key}
+                    type={field.type || 'text'}
+                    value={profile[field.key]}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-gray-900 py-2.5 border-b border-gray-100">
+                    {profile[field.key] || <span className="text-gray-400 font-normal">Not provided</span>}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Save */}
+        {/* Address Section */}
+        <div className="px-6 py-5 border-t border-gray-100">
+          <div className="flex items-center gap-2 mb-4">
+            <HiOutlineMapPin className="h-4 w-4 text-gray-400" />
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Address</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            {ADDRESS_FIELDS.map((field) => (
+              <div key={field.key}>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{field.label}</label>
+                {editing ? (
+                  <input
+                    name={field.key}
+                    type="text"
+                    value={profile[field.key]}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-gray-900 py-2.5 border-b border-gray-100">
+                    {profile[field.key] || <span className="text-gray-400 font-normal">Not provided</span>}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Save/Cancel Footer */}
         {editing && (
-          <div className="mt-6 pt-6 border-t border-gray-200 flex items-center gap-3">
+          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex items-center gap-3">
             <button
               onClick={handleSave}
               disabled={saving}
-              className="inline-flex items-center px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              <HiOutlineCheckCircle className="h-4 w-4" />
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               onClick={handleCancel}
-              className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>

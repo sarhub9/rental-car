@@ -32,11 +32,19 @@ class CustomerPortalController {
    */
   async getAgreements(req, res) {
     try {
+      const statusMap = {
+        active: 'ACTIVE',
+        past: ['CLOSED', 'CANCELLED', 'COMPLETED'],
+        pending: 'PENDING',
+      };
+      const rawStatus = req.query.status;
+      const mappedStatus = rawStatus ? (statusMap[rawStatus.toLowerCase()] || rawStatus.toUpperCase()) : null;
+
       const filters = {
-        status: req.query.status,
+        status: mappedStatus,
         search: req.query.search,
         limit: parseInt(req.query.limit) || 20,
-        offset: parseInt(req.query.offset) || 0,
+        offset: parseInt(req.query.offset) || ((parseInt(req.query.page) || 1) - 1) * (parseInt(req.query.limit) || 20),
       };
 
       const agreements = await CustomerPortalService.getMyAgreements(
@@ -55,10 +63,10 @@ class CustomerPortalController {
         },
       });
     } catch (error) {
-      console.error('Get agreements error:', error);
+      console.error('Get agreements error:', error.message, error.stack);
       return res.status(500).json({
         error: 'Internal Server Error',
-        message: 'Failed to load agreements',
+        message: error.message || 'Failed to load agreements',
       });
     }
   }

@@ -157,11 +157,19 @@ class UserService {
    */
   async _findCustomerByPhone(phoneNumber, tenantId) {
     const { default: pool } = await import('../config/database.js');
-    const query = `
-      SELECT * FROM customers
-      WHERE phone_number = $1 AND tenant_id = $2
-    `;
-    const result = await pool.query(query, [phoneNumber, tenantId]);
+    let query, values;
+    if (tenantId) {
+      query = `SELECT * FROM customers
+               WHERE RIGHT(REGEXP_REPLACE(phone_number, '[^0-9]', '', 'g'), 9) = RIGHT(REGEXP_REPLACE($1, '[^0-9]', '', 'g'), 9)
+               AND tenant_id = $2 LIMIT 1`;
+      values = [phoneNumber, tenantId];
+    } else {
+      query = `SELECT * FROM customers
+               WHERE RIGHT(REGEXP_REPLACE(phone_number, '[^0-9]', '', 'g'), 9) = RIGHT(REGEXP_REPLACE($1, '[^0-9]', '', 'g'), 9)
+               LIMIT 1`;
+      values = [phoneNumber];
+    }
+    const result = await pool.query(query, values);
     return result.rows[0];
   }
 }
