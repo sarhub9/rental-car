@@ -9,9 +9,11 @@ class UserService {
    * @returns {{ user: object, isNewUser: boolean }}
    */
   async findOrCreateCustomerUser(phoneNumber, tenantId) {
-    // 1. Check if a RENTAL_CUSTOMER user already exists for this phone
+    // 1. Check if a user already exists for this phone in this tenant
     let user = await UserModel.findByPhone(phoneNumber, tenantId);
-    if (user && user.role === 'RENTAL_CUSTOMER') {
+    console.log('[UserService] findByPhone result:', user ? `found id=${user.id} role=${user.role} status=${user.status}` : 'not found');
+
+    if (user) {
       if (user.status === 'LOCKED') {
         if (user.locked_until && new Date(user.locked_until) > new Date()) {
           const error = new Error('Account is temporarily locked. Please try again later.');
@@ -30,6 +32,7 @@ class UserService {
 
     // 2. No user yet — look up customer record by phone to create one
     const customer = await this._findCustomerByPhone(phoneNumber, tenantId);
+    console.log('[UserService] findCustomerByPhone result:', customer ? `found id=${customer.id}` : 'not found');
 
     if (!customer) {
       const error = new Error(`No customer account found for phone number '${phoneNumber}' in tenant '${tenantId}'. Please contact the rental company.`);
