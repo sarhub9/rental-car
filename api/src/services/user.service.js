@@ -1,5 +1,6 @@
 import UserModel from '../models/user.model.js';
 import CustomerModel from '../models/customer.model.js';
+import pool from '../config/database.js';
 
 class UserService {
   /**
@@ -8,54 +9,67 @@ class UserService {
    * @returns {{ user: object, isNewUser: boolean }}
    */
   async findOrCreateCustomerUser(phoneNumber, tenantId) {
-    // 1. Look up customer by phone
-    const customers = await CustomerModel.list(tenantId, {});
-    // Use a direct query instead for phone lookup
-    const customer = await this._findCustomerByPhone(phoneNumber, tenantId);
-
-    if (!customer) {
-      const error = new Error('No customer account found for this phone number. Please contact the rental company.');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    if (!customer.is_active) {
-      const error = new Error('Customer account is inactive. Please contact the rental company.');
-      error.statusCode = 403;
-      throw error;
-    }
-
-    if (customer.is_blacklisted) {
-      const error = new Error('Account has been suspended. Please contact the rental company.');
-      error.statusCode = 403;
-      throw error;
-    }
-
-    // 2. Check if user already exists for this customer
-    let user = await UserModel.findByCustomerId(customer.id);
-
-    if (user) {
-      // Check user status
+    // 1. Check if a RENTAL_CUSTOMER user already exists for this phone
+    let user = await UserModel.findByPhone(phoneNumber, tenantId);
+    if (user && user.role === 'RENTAL_CUSTOMER') {
       if (user.status === 'LOCKED') {
         if (user.locked_until && new Date(user.locked_until) > new Date()) {
           const error = new Error('Account is temporarily locked. Please try again later.');
           error.statusCode = 403;
           throw error;
         }
-        // Lock expired, reset
         user = await UserModel.updateLastLogin(user.id);
       }
-
       if (user.status === 'INACTIVE') {
         const error = new Error('Account is inactive. Please contact the rental company.');
         error.statusCode = 403;
         throw error;
       }
-
       return { user, isNewUser: false };
     }
 
-    // 3. Create new user linked to customer
+    // 2. No user yet — look up customer record by phone to create one
+    const customer = await this._findCustomerByPhone(phoneNumber, tenantId);
+
+    if (!customer) {
+      const error = new Error(`No customer account found for phone number '${phoneNumber}' in tenant '${tenantId}'. Please contact the rental company.`);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (!customer.is_active) {
+      const error = new Error(`Customer account is inactive for phone number '${phoneNumber}'. Please contact the rental company.`);
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (customer.is_blacklisted) {
+      const error = new Error(`Account has been suspended for phone number '${phoneNumber}'. Please contact the rental company.`);
+      error.statusCode = 403;
+      throw error;
+    }
+
+    // 3. Check if a user already exists linked to this customer
+    user = await UserModel.findByCustomerId(customer.id);
+
+    if (user) {
+      if (user.status === 'LOCKED') {
+        if (user.locked_until && new Date(user.locked_until) > new Date()) {
+          const error = new Error('Account is temporarily locked. Please try again later.');
+          error.statusCode = 403;
+          throw error;
+        }
+        user = await UserModel.updateLastLogin(user.id);
+      }
+      if (user.status === 'INACTIVE') {
+        const error = new Error('Account is inactive. Please contact the rental company.');
+        error.statusCode = 403;
+        throw error;
+      }
+      return { user, isNewUser: false };
+    }
+
+    // 4. Create new user linked to customer
     user = await UserModel.create({
       tenant_id: tenantId,
       phone_number: customer.phone_number,
@@ -156,7 +170,6 @@ class UserService {
    * Find customer by phone number (direct query)
    */
   async _findCustomerByPhone(phoneNumber, tenantId) {
-    const { default: pool } = await import('../config/database.js');
     let query, values;
     if (tenantId) {
       query = `SELECT * FROM customers
