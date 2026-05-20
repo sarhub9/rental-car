@@ -113,7 +113,12 @@ class UserModel {
   }
 
   async findByPhoneGlobal(phoneNumber) {
-    const query = 'SELECT * FROM users WHERE phone_number = $1 LIMIT 1';
+    // Prefer RENTAL_CUSTOMER users so OTP resolves to the customer's tenant
+    const query = `
+      SELECT * FROM users WHERE phone_number = $1
+      ORDER BY CASE WHEN role = 'RENTAL_CUSTOMER' THEN 0 ELSE 1 END
+      LIMIT 1
+    `;
     const result = await pool.query(query, [phoneNumber]);
     return result.rows[0];
   }

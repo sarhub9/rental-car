@@ -13,7 +13,7 @@ class UserService {
     let user = await UserModel.findByPhone(phoneNumber, tenantId);
     console.log('[UserService] findByPhone result:', user ? `found id=${user.id} role=${user.role} status=${user.status}` : 'not found');
 
-    if (user) {
+    if (user && (user.role === 'RENTAL_CUSTOMER' || user.customer_id)) {
       if (user.status === 'LOCKED') {
         if (user.locked_until && new Date(user.locked_until) > new Date()) {
           const error = new Error('Account is temporarily locked. Please try again later.');

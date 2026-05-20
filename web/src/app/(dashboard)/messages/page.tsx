@@ -120,7 +120,7 @@ export default function AdminMessagesPage() {
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 mt-0.5 truncate">
-                  {thread.customer_name || thread.customer_full_name || 'Customer'} &mdash; {thread.last_message || 'No messages yet'}
+                  {thread.customer_name || thread.customer_user_name || thread.customer_full_name || 'Customer'} &mdash; {thread.last_message || 'No messages yet'}
                 </p>
               </div>
               <div className="flex items-center gap-2 ml-4 flex-shrink-0">

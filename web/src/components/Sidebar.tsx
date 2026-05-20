@@ -224,7 +224,7 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
   RENTAL_CUSTOMER: [
     {
       items: [
-        { label: 'Dashboard', href: '/dashboard', icon: <HiOutlineHome size={18} /> },
+        { label: 'Dashboard', href: '/portal', icon: <HiOutlineHome size={18} /> },
       ],
     },
     {

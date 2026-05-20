@@ -22,10 +22,11 @@ export const apiRateLimiter = rateLimit({
  */
 /**
  * OTP rate limiter - 5 requests/15 minutes per phone number
+ * More lenient in development mode
  */
 export const otpRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: parseInt(process.env.OTP_RATE_LIMIT || '5', 10),
+  max: parseInt(process.env.OTP_RATE_LIMIT || (process.env.NODE_ENV === 'development' ? '20' : '5'), 10),
   keyGenerator: (req) => `otp:${req.body?.phone_number || req.ip}`,
   handler: (_req, res) => {
     res.status(429).json({

@@ -59,7 +59,12 @@ export default function LoginPage() {
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) router.replace('/dashboard');
+    if (!isLoading && isAuthenticated) {
+      const u = JSON.parse(localStorage.getItem('auth_user') || '{}');
+      if (u?.role === 'RENTAL_CUSTOMER') router.replace('/portal');
+      else if (u?.role === 'SUPER_ADMIN') router.replace('/superadmin');
+      else router.replace('/dashboard');
+    }
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
@@ -94,7 +99,8 @@ export default function LoginPage() {
       const phone = phoneNumber.startsWith('+') ? phoneNumber : `+971${phoneNumber}`;
       await verifyOtp(phone, '', otpCode);
       toast.success('Welcome back!');
-      router.replace('/dashboard');
+      const u = JSON.parse(localStorage.getItem('auth_user') || '{}');
+      router.replace(u?.role === 'RENTAL_CUSTOMER' ? '/portal' : '/dashboard');
     } catch (err: any) {
       toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Invalid OTP');
     } finally { setVerifyingOtp(false); }

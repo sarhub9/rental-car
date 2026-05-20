@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar } from '@/components/Sidebar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -9,14 +9,26 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading: loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+    if (!user) {
       router.replace('/login');
+      return;
     }
-  }, [loading, user, router]);
+    // Customers must stay inside /portal
+    if (user.role === 'RENTAL_CUSTOMER' && !pathname.startsWith('/portal')) {
+      router.replace('/portal');
+      return;
+    }
+    // Staff must not access /portal
+    if (user.role !== 'RENTAL_CUSTOMER' && pathname.startsWith('/portal')) {
+      router.replace('/dashboard');
+    }
+  }, [loading, user, pathname, router]);
 
-  // Apply superadmin theme settings
+  // Apply theme settings
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('superadmin_settings_local') || '{}');
@@ -33,9 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-[#F1F5F9]">

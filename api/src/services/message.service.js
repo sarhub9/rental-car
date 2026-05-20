@@ -8,7 +8,8 @@ class MessageService {
     // Create thread
     const thread = await MessageModel.createThread({
       tenant_id: tenantId,
-      customer_id: customerId,
+      customer_id: customerId || null,
+      created_by_user_id: userId,
       subject,
     });
 
@@ -95,8 +96,8 @@ class MessageService {
   /**
    * List customer threads
    */
-  async getCustomerThreads(customerId, tenantId, filters = {}) {
-    return MessageModel.listCustomerThreads(customerId, tenantId, filters);
+  async getCustomerThreads(customerId, tenantId, userId, filters = {}) {
+    return MessageModel.listCustomerThreads(customerId, tenantId, userId, filters);
   }
 
   /**

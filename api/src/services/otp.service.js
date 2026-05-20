@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import OtpModel from '../models/otp.model.js';
 
 const OTP_EXPIRY_MINUTES = parseInt(process.env.OTP_EXPIRY_MINUTES || '5', 10);
-const OTP_MAX_REQUESTS = parseInt(process.env.OTP_MAX_REQUESTS || '5', 10);
+const OTP_MAX_REQUESTS = parseInt(process.env.OTP_MAX_REQUESTS || (process.env.NODE_ENV === 'development' ? '20' : '5'), 10);
 const OTP_RATE_WINDOW_MINUTES = parseInt(process.env.OTP_RATE_WINDOW_MINUTES || '15', 10);
 
 class OtpService {

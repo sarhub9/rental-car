@@ -33,7 +33,7 @@ class MessageController {
   async getCustomerThreads(req, res, next) {
     try {
       const { status, limit, offset } = req.query;
-      const threads = await MessageService.getCustomerThreads(req.user.customerId, req.user.tenantId, {
+      const threads = await MessageService.getCustomerThreads(req.user.customerId, req.user.tenantId, req.user.id, {
         status,
         limit: limit ? parseInt(limit) : undefined,
         offset: offset ? parseInt(offset) : undefined,
@@ -65,8 +65,10 @@ class MessageController {
     try {
       const thread = await MessageService.getThread(req.params.id, req.user.tenantId);
 
-      // Ownership check
-      if (thread.customer_id !== req.user.customerId) {
+      // Ownership check — match by customer_id OR by created_by_user_id
+      const owns = (req.user.customerId && thread.customer_id === req.user.customerId)
+        || (thread.created_by_user_id === req.user.id);
+      if (!owns) {
         return res.status(403).json({ error: 'Access denied' });
       }
 
@@ -90,7 +92,9 @@ class MessageController {
 
       // Verify ownership
       const thread = await MessageService.getThread(req.params.id, req.user.tenantId);
-      if (thread.customer_id !== req.user.customerId) {
+      const owns = (req.user.customerId && thread.customer_id === req.user.customerId)
+        || (thread.created_by_user_id === req.user.id);
+      if (!owns) {
         return res.status(403).json({ error: 'Access denied' });
       }
 
