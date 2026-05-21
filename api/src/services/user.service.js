@@ -62,6 +62,18 @@ class UserService {
       return this._checkAndReturnUser({ ...existingUser, customer_id: customer.id });
     }
 
+    // 3d. Email conflict — check if customer's email belongs to an existing user
+    if (customer.email) {
+      const userByEmail = await UserModel.findByEmail(customer.email, tenantId);
+      if (userByEmail) {
+        if (userByEmail.role === 'RENTAL_CUSTOMER' || userByEmail.customer_id) {
+          return this._checkAndReturnUser(userByEmail);
+        }
+        // Staff user has same email as customer — inject customer_id in-memory
+        return this._checkAndReturnUser({ ...userByEmail, customer_id: customer.id });
+      }
+    }
+
     // 4. Create new RENTAL_CUSTOMER user linked to customer
     try {
       const newUser = await UserModel.create({
@@ -75,6 +87,8 @@ class UserService {
       return { user: newUser, isNewUser: true };
     } catch (dbErr) {
       if (dbErr.code === '23505') {
+        // Last-resort catch — log detail so we can debug further
+        console.error('[UserService] 23505 constraint violation:', dbErr.detail || dbErr.message);
         const error = new Error('An account already exists with this phone number or email. Please contact support.');
         error.statusCode = 409;
         throw error;
