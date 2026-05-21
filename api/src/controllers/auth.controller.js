@@ -131,12 +131,14 @@ class AuthController {
       // Update last login
       await UserModel.updateLastLogin(user.id);
 
-      // Generate access token — always issue RENTAL_CUSTOMER role in customer OTP flow
-      // (staff users who share a phone with a customer get customer-scoped access)
+      // In customer OTP flow, always use RENTAL_CUSTOMER role
+      // (staff users sharing phone/email with a customer get customer-scoped access)
+      const effectiveRole = user.customer_id ? 'RENTAL_CUSTOMER' : user.role;
+
       const accessToken = generateToken(
         user.id,
         user.tenant_id,
-        user.customer_id ? 'RENTAL_CUSTOMER' : user.role,
+        effectiveRole,
         user.email,
         user.customer_id
       );
@@ -162,7 +164,7 @@ class AuthController {
           user: {
             id: user.id,
             tenant_id: user.tenant_id,
-            role: user.role,
+            role: effectiveRole,
             customer_id: user.customer_id,
             full_name: user.full_name,
             phone_number: user.phone_number,
