@@ -131,11 +131,12 @@ class AuthController {
       // Update last login
       await UserModel.updateLastLogin(user.id);
 
-      // Generate access token
+      // Generate access token — always issue RENTAL_CUSTOMER role in customer OTP flow
+      // (staff users who share a phone with a customer get customer-scoped access)
       const accessToken = generateToken(
         user.id,
         user.tenant_id,
-        user.role,
+        user.customer_id ? 'RENTAL_CUSTOMER' : user.role,
         user.email,
         user.customer_id
       );

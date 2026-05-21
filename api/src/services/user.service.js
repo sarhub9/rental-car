@@ -10,18 +10,14 @@ class UserService {
    */
   async findOrCreateCustomerUser(phoneNumber, tenantId) {
     // 1. Check if a user already exists for this phone in this tenant (exact match)
-    let user = await UserModel.findByPhone(phoneNumber, tenantId);
-    console.log('[UserService] findByPhone result:', user ? `found id=${user.id} role=${user.role} status=${user.status}` : 'not found');
+    const existingUser = await UserModel.findByPhone(phoneNumber, tenantId);
+    console.log('[UserService] findByPhone result:', existingUser ? `found id=${existingUser.id} role=${existingUser.role} status=${existingUser.status}` : 'not found');
 
-    if (user) {
-      if (user.role === 'RENTAL_CUSTOMER' || user.customer_id) {
-        return this._checkAndReturnUser(user);
-      }
-      // Staff user found with same phone — fall through to customer lookup
-      // but we won't be able to create a new user with the same phone
+    if (existingUser && (existingUser.role === 'RENTAL_CUSTOMER' || existingUser.customer_id)) {
+      return this._checkAndReturnUser(existingUser);
     }
 
-    // 2. No RENTAL_CUSTOMER user yet — look up customer record by phone (fuzzy match)
+    // 2. Look up customer record by phone (fuzzy match on last 9 digits)
     const customer = await this._findCustomerByPhone(phoneNumber, tenantId);
     console.log('[UserService] findCustomerByPhone result:', customer ? `found id=${customer.id} phone=${customer.phone_number}` : 'not found');
 
@@ -44,28 +40,31 @@ class UserService {
     }
 
     // 3. Check if a user already exists linked to this customer
-    user = await UserModel.findByCustomerId(customer.id);
-    if (user) {
-      return this._checkAndReturnUser(user);
+    const userByCustomer = await UserModel.findByCustomerId(customer.id);
+    if (userByCustomer) {
+      return this._checkAndReturnUser(userByCustomer);
     }
 
-    // 3b. Phone format may differ — also check by customer's stored phone number
+    // 3b. Phone format may differ — check by customer's stored phone
     if (customer.phone_number !== phoneNumber) {
       const userByStoredPhone = await UserModel.findByPhone(customer.phone_number, tenantId);
       if (userByStoredPhone) {
         if (userByStoredPhone.role === 'RENTAL_CUSTOMER' || userByStoredPhone.customer_id) {
           return this._checkAndReturnUser(userByStoredPhone);
         }
-        // Staff user has the same phone as this customer — cannot create duplicate
-        const error = new Error('Phone number is already registered as a staff account. Please contact support.');
-        error.statusCode = 409;
-        throw error;
+        // Staff user has same stored phone — inject customer_id in-memory so JWT works
+        return this._checkAndReturnUser({ ...userByStoredPhone, customer_id: customer.id });
       }
     }
 
-    // 4. Create new user linked to customer
+    // 3c. Staff user with same INPUT phone — inject customer_id in-memory
+    if (existingUser) {
+      return this._checkAndReturnUser({ ...existingUser, customer_id: customer.id });
+    }
+
+    // 4. Create new RENTAL_CUSTOMER user linked to customer
     try {
-      user = await UserModel.create({
+      const newUser = await UserModel.create({
         tenant_id: tenantId,
         phone_number: customer.phone_number,
         email: customer.email,
@@ -73,17 +72,15 @@ class UserService {
         customer_id: customer.id,
         full_name: customer.full_name_en,
       });
+      return { user: newUser, isNewUser: true };
     } catch (dbErr) {
       if (dbErr.code === '23505') {
-        // Unique constraint violation — user already exists with same phone or email
         const error = new Error('An account already exists with this phone number or email. Please contact support.');
         error.statusCode = 409;
         throw error;
       }
       throw dbErr;
     }
-
-    return { user, isNewUser: true };
   }
 
   _checkAndReturnUser(user) {
