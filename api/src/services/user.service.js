@@ -9,30 +9,21 @@ class UserService {
    * @returns {{ user: object, isNewUser: boolean }}
    */
   async findOrCreateCustomerUser(phoneNumber, tenantId) {
-    // 1. Check if a user already exists for this phone in this tenant
+    // 1. Check if a user already exists for this phone in this tenant (exact match)
     let user = await UserModel.findByPhone(phoneNumber, tenantId);
     console.log('[UserService] findByPhone result:', user ? `found id=${user.id} role=${user.role} status=${user.status}` : 'not found');
 
-    if (user && (user.role === 'RENTAL_CUSTOMER' || user.customer_id)) {
-      if (user.status === 'LOCKED') {
-        if (user.locked_until && new Date(user.locked_until) > new Date()) {
-          const error = new Error('Account is temporarily locked. Please try again later.');
-          error.statusCode = 403;
-          throw error;
-        }
-        user = await UserModel.updateLastLogin(user.id);
+    if (user) {
+      if (user.role === 'RENTAL_CUSTOMER' || user.customer_id) {
+        return this._checkAndReturnUser(user);
       }
-      if (user.status === 'INACTIVE') {
-        const error = new Error('Account is inactive. Please contact the rental company.');
-        error.statusCode = 403;
-        throw error;
-      }
-      return { user, isNewUser: false };
+      // Staff user found with same phone — fall through to customer lookup
+      // but we won't be able to create a new user with the same phone
     }
 
-    // 2. No user yet — look up customer record by phone to create one
+    // 2. No RENTAL_CUSTOMER user yet — look up customer record by phone (fuzzy match)
     const customer = await this._findCustomerByPhone(phoneNumber, tenantId);
-    console.log('[UserService] findCustomerByPhone result:', customer ? `found id=${customer.id}` : 'not found');
+    console.log('[UserService] findCustomerByPhone result:', customer ? `found id=${customer.id} phone=${customer.phone_number}` : 'not found');
 
     if (!customer) {
       const error = new Error(`No customer account found for phone number '${phoneNumber}' in tenant '${tenantId}'. Please contact the rental company.`);
@@ -54,35 +45,61 @@ class UserService {
 
     // 3. Check if a user already exists linked to this customer
     user = await UserModel.findByCustomerId(customer.id);
-
     if (user) {
-      if (user.status === 'LOCKED') {
-        if (user.locked_until && new Date(user.locked_until) > new Date()) {
-          const error = new Error('Account is temporarily locked. Please try again later.');
-          error.statusCode = 403;
-          throw error;
+      return this._checkAndReturnUser(user);
+    }
+
+    // 3b. Phone format may differ — also check by customer's stored phone number
+    if (customer.phone_number !== phoneNumber) {
+      const userByStoredPhone = await UserModel.findByPhone(customer.phone_number, tenantId);
+      if (userByStoredPhone) {
+        if (userByStoredPhone.role === 'RENTAL_CUSTOMER' || userByStoredPhone.customer_id) {
+          return this._checkAndReturnUser(userByStoredPhone);
         }
-        user = await UserModel.updateLastLogin(user.id);
-      }
-      if (user.status === 'INACTIVE') {
-        const error = new Error('Account is inactive. Please contact the rental company.');
-        error.statusCode = 403;
+        // Staff user has the same phone as this customer — cannot create duplicate
+        const error = new Error('Phone number is already registered as a staff account. Please contact support.');
+        error.statusCode = 409;
         throw error;
       }
-      return { user, isNewUser: false };
     }
 
     // 4. Create new user linked to customer
-    user = await UserModel.create({
-      tenant_id: tenantId,
-      phone_number: customer.phone_number,
-      email: customer.email,
-      role: 'RENTAL_CUSTOMER',
-      customer_id: customer.id,
-      full_name: customer.full_name_en,
-    });
+    try {
+      user = await UserModel.create({
+        tenant_id: tenantId,
+        phone_number: customer.phone_number,
+        email: customer.email,
+        role: 'RENTAL_CUSTOMER',
+        customer_id: customer.id,
+        full_name: customer.full_name_en,
+      });
+    } catch (dbErr) {
+      if (dbErr.code === '23505') {
+        // Unique constraint violation — user already exists with same phone or email
+        const error = new Error('An account already exists with this phone number or email. Please contact support.');
+        error.statusCode = 409;
+        throw error;
+      }
+      throw dbErr;
+    }
 
     return { user, isNewUser: true };
+  }
+
+  _checkAndReturnUser(user) {
+    if (user.status === 'LOCKED') {
+      if (user.locked_until && new Date(user.locked_until) > new Date()) {
+        const error = new Error('Account is temporarily locked. Please try again later.');
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+    if (user.status === 'INACTIVE') {
+      const error = new Error('Account is inactive. Please contact the rental company.');
+      error.statusCode = 403;
+      throw error;
+    }
+    return { user, isNewUser: false };
   }
 
   /**
