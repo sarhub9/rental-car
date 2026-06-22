@@ -7,6 +7,9 @@ export interface CreateAgreementPayload {
   rental_end_datetime: string;
   daily_rate: number;
   weekly_rate: number;
+  monthly_rate?: number;
+  km_allowance_per_day?: number;
+  rate_per_extra_km?: number;
   estimated_amount: number;
 }
 
@@ -111,6 +114,28 @@ export async function getAgreementCharges(agreementId: string) {
   return response.data.data || response.data;
 }
 
+export async function getAgreementPayments(agreementId: string) {
+  const response = await apiClient.get(`/v1/agreements/${agreementId}/payments`);
+  return response.data.data || response.data;
+}
+
+export interface RecordPaymentPayload {
+  amount: number;
+  payment_method: string;
+  transaction_reference?: string;
+  notes?: string;
+}
+
+export async function recordAgreementPayment(agreementId: string, payload: RecordPaymentPayload) {
+  const response = await apiClient.post(`/v1/agreements/${agreementId}/payments`, payload);
+  return response.data.data || response.data;
+}
+
+export async function saveAgreementSignature(agreementId: string, customer_signature_url: string) {
+  const response = await apiClient.patch(`/v1/agreements/${agreementId}/signature`, { customer_signature_url });
+  return response.data.data || response.data;
+}
+
 export const agreementService = {
   createAgreement,
   getAgreements,
@@ -120,4 +145,7 @@ export const agreementService = {
   returnAgreement,
   getAgreementEvidence,
   getAgreementCharges,
+  getAgreementPayments,
+  recordAgreementPayment,
+  saveAgreementSignature,
 };

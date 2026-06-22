@@ -10,10 +10,12 @@ class DriverProfileModel {
         visa_number, visa_expiry, driving_license_number, license_expiry_date,
         license_country, idp_required, idp_number, idp_expiry,
         customer_id, company_id, corporate_account_id, user_id,
+        emirates_id_front_url, emirates_id_back_url, license_front_url, license_back_url,
+        passport_photo_url, visa_photo_url,
         created_by_user_id
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,
-        $19,$20,$21,$22,$23,$24,$25,$26,$27
+        $19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33
       ) RETURNING *
     `;
     const values = [
@@ -28,6 +30,9 @@ class DriverProfileModel {
       data.idp_required || false, data.idp_number || null, data.idp_expiry || null,
       data.customer_id || null, data.company_id || null,
       data.corporate_account_id || null, data.user_id || null,
+      data.emirates_id_front_url || null, data.emirates_id_back_url || null,
+      data.license_front_url || null, data.license_back_url || null,
+      data.passport_photo_url || null, data.visa_photo_url || null,
       data.created_by_user_id,
     ];
     const result = await pool.query(query, values);
@@ -96,6 +101,8 @@ class DriverProfileModel {
       'license_country', 'idp_required', 'idp_number', 'idp_expiry',
       'customer_id', 'company_id', 'corporate_account_id',
       'is_active', 'is_blacklisted', 'blacklist_reason',
+      'emirates_id_front_url', 'emirates_id_back_url', 'license_front_url', 'license_back_url',
+      'passport_photo_url', 'visa_photo_url',
     ];
 
     const fields = [];

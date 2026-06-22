@@ -7,8 +7,10 @@ class VehicleModel {
         tenant_id, vehicle_number, category_id, make, model, year,
         color, plate_number, plate_emirate, chassis_number,
         transmission_type, fuel_type, status, daily_rate, weekly_rate,
-        current_odometer, registration_expiry, insurance_expiry
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        current_odometer, registration_expiry, insurance_expiry,
+        monthly_rate, km_allowance_per_day, rate_per_extra_km,
+        photo_front_url, photo_rear_url, photo_side_url, photo_interior_url
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
       RETURNING *
     `;
     const values = [
@@ -18,6 +20,9 @@ class VehicleModel {
       data.transmission_type || 'AUTOMATIC', data.fuel_type || 'PETROL',
       data.status || 'AVAILABLE', data.daily_rate, data.weekly_rate,
       data.current_odometer || 0, data.registration_expiry, data.insurance_expiry,
+      data.monthly_rate || null, data.km_allowance_per_day || null, data.rate_per_extra_km || null,
+      data.photo_front_url || null, data.photo_rear_url || null,
+      data.photo_side_url || null, data.photo_interior_url || null,
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
@@ -82,6 +87,8 @@ class VehicleModel {
       'transmission_type', 'fuel_type', 'status',
       'daily_rate', 'weekly_rate', 'current_odometer',
       'registration_expiry', 'insurance_expiry',
+      'monthly_rate', 'km_allowance_per_day', 'rate_per_extra_km',
+      'photo_front_url', 'photo_rear_url', 'photo_side_url', 'photo_interior_url',
     ];
 
     for (const key of allowedFields) {

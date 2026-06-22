@@ -6,6 +6,8 @@ import { customerService } from '@/services/customer.service';
 import toast from 'react-hot-toast';
 import { cleanPayload } from '@/lib/clean-payload';
 import { extractApiError } from '@/lib/api-error';
+import { COUNTRIES } from '@/lib/countries';
+import { DocumentUpload } from '@/components/DocumentUpload';
 import {
   HiCheck, HiChevronLeft, HiChevronRight, HiChevronDown,
   HiUser, HiPhone, HiDocumentText, HiClipboardDocumentCheck,
@@ -45,6 +47,24 @@ function F({ label, name, value, onChange, type = 'text', required = false, plac
       </label>
       <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder} required={required} dir={dir}
         className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 focus:outline-none transition-all" />
+    </div>
+  );
+}
+
+function S({ label, name, value, onChange, options, required = false, placeholder = 'Select' }: any) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      <div className="relative">
+        <select name={name} value={value} onChange={onChange} required={required}
+          className="w-full px-3.5 py-2.5 pr-9 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 focus:outline-none transition-all appearance-none">
+          <option value="">{placeholder}</option>
+          {options.map((o: string) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <HiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      </div>
     </div>
   );
 }
@@ -89,10 +109,17 @@ export default function CreateCustomerPage() {
     company_name: '', trade_license_number: '', trade_license_expiry: '',
     trn_number: '', authorized_person_name: '', authorized_person_mobile: '',
     payment_terms: 'CASH', credit_limit: '',
+    // Document photos
+    emirates_id_front_url: '', emirates_id_back_url: '',
+    license_front_url: '', license_back_url: '',
+    passport_photo_url: '', visa_photo_url: '',
   });
 
   const set = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  const setPhoto = (key: string) => (url: string) =>
+    setForm(p => ({ ...p, [key]: url }));
 
   const isCompany = form.customer_type === 'COMPANY' || form.customer_type === 'CORPORATE';
   const typeInfo = CUSTOMER_TYPES.find(t => t.value === form.customer_type)!;
@@ -211,7 +238,7 @@ export default function CreateCustomerPage() {
                       <div className="col-span-2">
                         <F label="Full Name (Arabic)" name="full_name_ar" value={form.full_name_ar} onChange={set} placeholder="الاسم بالعربي" dir="rtl" />
                       </div>
-                      <F label="Nationality" name="nationality" value={form.nationality} onChange={set} placeholder="UAE / India..." />
+                      <S label="Nationality" name="nationality" value={form.nationality} onChange={set} options={COUNTRIES} placeholder="Select nationality" />
                       <D label="Date of Birth" name="date_of_birth" value={form.date_of_birth} onChange={set} isExpiry={false} />
                     </>}
                   </div>
@@ -246,6 +273,15 @@ export default function CreateCustomerPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <F label="License Number" name="driving_license_number" value={form.driving_license_number} onChange={set} required />
                         <D label="License Expiry" name="license_expiry_date" value={form.license_expiry_date} onChange={set} required />
+                      </div>
+                    </div>
+                    <div>
+                      <FG title="Document Photos" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <DocumentUpload label="Emirates ID — Front" category="customer-docs" docKey="EMIRATES_ID_FRONT" value={form.emirates_id_front_url} onChange={setPhoto('emirates_id_front_url')} />
+                        <DocumentUpload label="Emirates ID — Back" category="customer-docs" docKey="EMIRATES_ID_BACK" value={form.emirates_id_back_url} onChange={setPhoto('emirates_id_back_url')} />
+                        <DocumentUpload label="Driving License — Front" category="customer-docs" docKey="LICENSE_FRONT" value={form.license_front_url} onChange={setPhoto('license_front_url')} />
+                        <DocumentUpload label="Driving License — Back" category="customer-docs" docKey="LICENSE_BACK" value={form.license_back_url} onChange={setPhoto('license_back_url')} />
                       </div>
                     </div>
                     <div>
@@ -285,6 +321,15 @@ export default function CreateCustomerPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <F label="License Number" name="driving_license_number" value={form.driving_license_number} onChange={set} required />
                         <D label="License Expiry" name="license_expiry_date" value={form.license_expiry_date} onChange={set} required />
+                      </div>
+                    </div>
+                    <div>
+                      <FG title="Document Photos" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <DocumentUpload label="Passport Photo" category="customer-docs" docKey="PASSPORT" value={form.passport_photo_url} onChange={setPhoto('passport_photo_url')} />
+                        <DocumentUpload label="Tourist Visa" category="customer-docs" docKey="VISA" value={form.visa_photo_url} onChange={setPhoto('visa_photo_url')} />
+                        <DocumentUpload label="Driving License — Front" category="customer-docs" docKey="LICENSE_FRONT" value={form.license_front_url} onChange={setPhoto('license_front_url')} />
+                        <DocumentUpload label="Driving License — Back" category="customer-docs" docKey="LICENSE_BACK" value={form.license_back_url} onChange={setPhoto('license_back_url')} />
                       </div>
                     </div>
                     <div>

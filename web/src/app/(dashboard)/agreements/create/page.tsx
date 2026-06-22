@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
   HiCheck,
@@ -34,15 +34,24 @@ const STEPS = [
   { label: 'Review', icon: HiClipboardDocumentCheck },
 ];
 
+interface Pricing {
+  days: number;
+  months: number;
+  weeks: number;
+  remainder: number;
+  amount: number;
+  tier: 'daily' | 'weekly' | 'monthly' | 'none';
+}
+
 function calculateAmount(
   startDate: string,
   endDate: string,
   dailyRate: number,
-  weeklyRate: number
-): { days: number; weeks: number; remainder: number; amount: number } {
-  if (!startDate || !endDate || dailyRate <= 0) {
-    return { days: 0, weeks: 0, remainder: 0, amount: 0 };
-  }
+  weeklyRate: number,
+  monthlyRate: number
+): Pricing {
+  const empty: Pricing = { days: 0, months: 0, weeks: 0, remainder: 0, amount: 0, tier: 'none' };
+  if (!startDate || !endDate) return empty;
   // datetime-local produces YYYY-MM-DDTHH:mm — ensure full ISO by appending :00
   const ensureSeconds = (s: string) => {
     if (!s) return '';
@@ -52,30 +61,41 @@ function calculateAmount(
   };
   const start = new Date(ensureSeconds(startDate)).getTime();
   const end = new Date(ensureSeconds(endDate)).getTime();
-  if (isNaN(start) || isNaN(end) || end <= start) {
-    return { days: 0, weeks: 0, remainder: 0, amount: 0 };
-  }
+  if (isNaN(start) || isNaN(end) || end <= start) return empty;
 
   const msPerDay = 1000 * 60 * 60 * 24;
-  const rawDays = (end - start) / msPerDay;
-  const days = Math.max(1, Math.ceil(rawDays));
-  let weeks = 0;
-  let remainder = days;
-  let amount = 0;
+  const days = Math.max(1, Math.ceil((end - start) / msPerDay));
 
-  if (days >= 7 && weeklyRate > 0) {
-    weeks = Math.floor(days / 7);
-    remainder = days % 7;
-    amount = weeks * weeklyRate + remainder * dailyRate;
-  } else {
-    amount = days * dailyRate;
+  let amount = 0;
+  let remaining = days;
+  let months = 0;
+  let weeks = 0;
+  let tier: Pricing['tier'] = 'daily';
+
+  // Tiered pricing: monthly (>=30d) → weekly (>=7d) → daily for the leftover.
+  if (monthlyRate > 0 && remaining >= 30) {
+    months = Math.floor(remaining / 30);
+    amount += months * monthlyRate;
+    remaining %= 30;
+    tier = 'monthly';
+  }
+  if (weeklyRate > 0 && remaining >= 7) {
+    weeks = Math.floor(remaining / 7);
+    amount += weeks * weeklyRate;
+    remaining %= 7;
+    if (tier !== 'monthly') tier = 'weekly';
+  }
+  if (remaining > 0) {
+    const perDay = dailyRate || (weeklyRate ? weeklyRate / 7 : monthlyRate / 30);
+    amount += remaining * perDay;
   }
 
-  return { days, weeks, remainder, amount };
+  return { days, months, weeks, remainder: remaining, amount, tier };
 }
 
 export default function CreateAgreementPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
@@ -98,11 +118,39 @@ export default function CreateAgreementPage() {
   // Step 4: Rates
   const [dailyRate, setDailyRate] = useState(0);
   const [weeklyRate, setWeeklyRate] = useState(0);
+  const [monthlyRate, setMonthlyRate] = useState(0);
+  const [kmPerDay, setKmPerDay] = useState(0);
+  const [extraKmRate, setExtraKmRate] = useState(0);
 
   const pricing = useMemo(
-    () => calculateAmount(rentalStartDatetime, rentalEndDatetime, dailyRate, weeklyRate),
-    [rentalStartDatetime, rentalEndDatetime, dailyRate, weeklyRate]
+    () => calculateAmount(rentalStartDatetime, rentalEndDatetime, dailyRate, weeklyRate, monthlyRate),
+    [rentalStartDatetime, rentalEndDatetime, dailyRate, weeklyRate, monthlyRate]
   );
+
+  // Prefill from a reservation (Convert to Agreement) via query params
+  useEffect(() => {
+    const customerId = searchParams.get('customer_id');
+    const vehicleId = searchParams.get('vehicle_id');
+    const start = searchParams.get('start');
+    const end = searchParams.get('end');
+    if (start) setRentalStartDatetime(start);
+    if (end) setRentalEndDatetime(end);
+    (async () => {
+      try {
+        if (customerId) {
+          const c = await customerService.getCustomerById(customerId);
+          if (c?.id) setSelectedCustomer(c);
+        }
+        if (vehicleId) {
+          const v = await vehicleService.getVehicleById(vehicleId);
+          if (v?.id) setSelectedVehicle(v);
+        }
+      } catch {
+        /* prefill is best-effort */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Search customers
   useEffect(() => {
@@ -148,8 +196,12 @@ export default function CreateAgreementPage() {
   // Auto-fill rates when vehicle selected
   useEffect(() => {
     if (selectedVehicle) {
-      setDailyRate(Number(selectedVehicle.daily_rate) || 0);
-      setWeeklyRate(Number(selectedVehicle.weekly_rate) || 0);
+      const v = selectedVehicle as any;
+      setDailyRate(Number(v.daily_rate) || 0);
+      setWeeklyRate(Number(v.weekly_rate) || 0);
+      setMonthlyRate(Number(v.monthly_rate) || 0);
+      setKmPerDay(Number(v.km_allowance_per_day) || 0);
+      setExtraKmRate(Number(v.rate_per_extra_km) || 0);
     }
   }, [selectedVehicle]);
 
@@ -162,7 +214,7 @@ export default function CreateAgreementPage() {
       case 2:
         return !!rentalStartDatetime && !!rentalEndDatetime && new Date(rentalEndDatetime) > new Date(rentalStartDatetime);
       case 3:
-        return dailyRate > 0 && pricing.amount > 0;
+        return (dailyRate > 0 || weeklyRate > 0 || monthlyRate > 0) && pricing.amount > 0;
       case 4:
         return true;
       default:
@@ -181,6 +233,9 @@ export default function CreateAgreementPage() {
         rental_end_datetime: rentalEndDatetime,
         daily_rate: dailyRate,
         weekly_rate: weeklyRate,
+        monthly_rate: monthlyRate || undefined,
+        km_allowance_per_day: kmPerDay || undefined,
+        rate_per_extra_km: extraKmRate || undefined,
         estimated_amount: pricing.amount,
       };
       const cleaned = cleanPayload(rawPayload) as Record<string, unknown>;
@@ -472,30 +527,48 @@ export default function CreateAgreementPage() {
             <h2 className="text-lg font-semibold text-gray-900">Rate Calculation</h2>
             <p className="text-sm text-gray-500">Review and adjust pricing for this rental</p>
 
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
+              {([
+                ['Daily Rate (AED)', dailyRate, setDailyRate],
+                ['Weekly Rate (AED)', weeklyRate, setWeeklyRate],
+                ['Monthly Rate (AED)', monthlyRate, setMonthlyRate],
+              ] as [string, number, (n: number) => void][]).map(([label, val, setter]) => (
+                <div key={label}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+                  <input
+                    type="number"
+                    value={val}
+                    onChange={(e) => setter(Number(e.target.value))}
+                    min={0}
+                    step={0.01}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Mileage policy */}
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Daily Rate ($)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Allowed KM / Day</label>
                 <input
                   type="number"
-                  value={dailyRate}
-                  onChange={(e) => setDailyRate(Number(e.target.value))}
+                  value={kmPerDay}
+                  onChange={(e) => setKmPerDay(Number(e.target.value))}
                   min={0}
-                  step={0.01}
+                  placeholder="e.g. 250"
                   className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Weekly Rate ($)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Extra KM Rate (AED)</label>
                 <input
                   type="number"
-                  value={weeklyRate}
-                  onChange={(e) => setWeeklyRate(Number(e.target.value))}
+                  value={extraKmRate}
+                  onChange={(e) => setExtraKmRate(Number(e.target.value))}
                   min={0}
                   step={0.01}
+                  placeholder="e.g. 0.50"
                   className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
@@ -503,48 +576,55 @@ export default function CreateAgreementPage() {
 
             {/* Pricing Breakdown */}
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 space-y-4">
-              <h3 className="font-semibold text-gray-900">Price Breakdown</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900">Price Breakdown</h3>
+                {pricing.tier !== 'none' && (
+                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 capitalize">
+                    {pricing.tier} rate applied
+                  </span>
+                )}
+              </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Rental Duration</span>
                   <span className="font-medium">{pricing.days} day{pricing.days !== 1 ? 's' : ''}</span>
                 </div>
-                {pricing.weeks > 0 && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">
-                        {pricing.weeks} week{pricing.weeks !== 1 ? 's' : ''} x ${weeklyRate.toFixed(2)}
-                      </span>
-                      <span className="font-medium">
-                        ${(pricing.weeks * weeklyRate).toFixed(2)}
-                      </span>
-                    </div>
-                    {pricing.remainder > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">
-                          {pricing.remainder} day{pricing.remainder !== 1 ? 's' : ''} x ${dailyRate.toFixed(2)}
-                        </span>
-                        <span className="font-medium">
-                          ${(pricing.remainder * dailyRate).toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
-                {pricing.weeks === 0 && (
+                {pricing.months > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">
-                      {pricing.days} day{pricing.days !== 1 ? 's' : ''} x ${dailyRate.toFixed(2)}
+                      {pricing.months} month{pricing.months !== 1 ? 's' : ''} x AED {monthlyRate.toFixed(2)}
+                    </span>
+                    <span className="font-medium">AED {(pricing.months * monthlyRate).toFixed(2)}</span>
+                  </div>
+                )}
+                {pricing.weeks > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">
+                      {pricing.weeks} week{pricing.weeks !== 1 ? 's' : ''} x AED {weeklyRate.toFixed(2)}
+                    </span>
+                    <span className="font-medium">AED {(pricing.weeks * weeklyRate).toFixed(2)}</span>
+                  </div>
+                )}
+                {pricing.remainder > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">
+                      {pricing.remainder} day{pricing.remainder !== 1 ? 's' : ''} x AED {(dailyRate || (weeklyRate ? weeklyRate / 7 : monthlyRate / 30)).toFixed(2)}
                     </span>
                     <span className="font-medium">
-                      ${(pricing.days * dailyRate).toFixed(2)}
+                      AED {(pricing.remainder * (dailyRate || (weeklyRate ? weeklyRate / 7 : monthlyRate / 30))).toFixed(2)}
                     </span>
+                  </div>
+                )}
+                {kmPerDay > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Allowed Mileage</span>
+                    <span className="font-medium">{kmPerDay} km/day ({kmPerDay * pricing.days} km total)</span>
                   </div>
                 )}
                 <div className="border-t border-gray-300 pt-2 flex justify-between">
                   <span className="font-semibold text-gray-900">Estimated Total</span>
                   <span className="text-lg font-bold text-blue-600">
-                    ${pricing.amount.toFixed(2)}
+                    AED {pricing.amount.toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -599,19 +679,39 @@ export default function CreateAgreementPage() {
               <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
                 <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Pricing</h3>
                 <div className="text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Daily Rate</span>
-                    <span>${dailyRate.toFixed(2)}</span>
-                  </div>
+                  {dailyRate > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Daily Rate</span>
+                      <span>AED {dailyRate.toFixed(2)}</span>
+                    </div>
+                  )}
                   {weeklyRate > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Weekly Rate</span>
-                      <span>${weeklyRate.toFixed(2)}</span>
+                      <span>AED {weeklyRate.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {monthlyRate > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Monthly Rate</span>
+                      <span>AED {monthlyRate.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {kmPerDay > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Allowed KM / Day</span>
+                      <span>{kmPerDay} km</span>
+                    </div>
+                  )}
+                  {pricing.tier !== 'none' && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Rate Applied</span>
+                      <span className="capitalize">{pricing.tier}</span>
                     </div>
                   )}
                   <div className="flex justify-between border-t border-blue-200 pt-2 mt-2">
                     <span className="font-semibold text-gray-900">Estimated Total</span>
-                    <span className="text-xl font-bold text-blue-600">${pricing.amount.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-blue-600">AED {pricing.amount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

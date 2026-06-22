@@ -7,6 +7,7 @@ import type { CreateVehiclePayload } from '@/services/vehicle.service';
 import toast from 'react-hot-toast';
 import { cleanPayload, sanitizeUuidFields } from '@/lib/clean-payload';
 import { extractApiError } from '@/lib/api-error';
+import { DocumentUpload } from '@/components/DocumentUpload';
 import {
   HiCheck, HiChevronLeft, HiChevronRight, HiChevronDown,
   HiTruck, HiIdentification, HiDocumentText,
@@ -115,10 +116,15 @@ export default function CreateVehiclePage() {
     plate_number: '', plate_emirate: '', chassis_number: '',
     registration_expiry: '', insurance_company: '', insurance_policy: '', insurance_expiry: '',
     daily_rate: '', weekly_rate: '', monthly_rate: '', current_odometer: '', category_id: '',
+    km_allowance_per_day: '', rate_per_extra_km: '',
+    photo_front_url: '', photo_rear_url: '', photo_side_url: '', photo_interior_url: '',
   });
 
   const set = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  const setPhoto = (key: string) => (url: string) =>
+    setForm(p => ({ ...p, [key]: url }));
 
   const canNext = () => {
     if (step === 0) return !!form.make.trim() && !!form.model.trim() && !!form.year;
@@ -145,8 +151,14 @@ export default function CreateVehiclePage() {
         daily_rate: form.daily_rate ? Number(form.daily_rate) : undefined,
         weekly_rate: form.weekly_rate ? Number(form.weekly_rate) : undefined,
         monthly_rate: form.monthly_rate ? Number(form.monthly_rate) : undefined,
+        km_allowance_per_day: form.km_allowance_per_day ? Number(form.km_allowance_per_day) : undefined,
+        rate_per_extra_km: form.rate_per_extra_km ? Number(form.rate_per_extra_km) : undefined,
         current_odometer: form.current_odometer ? Number(form.current_odometer) : undefined,
         category_id: form.category_id || undefined,
+        photo_front_url: form.photo_front_url || undefined,
+        photo_rear_url: form.photo_rear_url || undefined,
+        photo_side_url: form.photo_side_url || undefined,
+        photo_interior_url: form.photo_interior_url || undefined,
       };
       const cleaned = cleanPayload(raw) as Record<string, unknown>;
       sanitizeUuidFields(cleaned, ['category_id']);
@@ -317,6 +329,15 @@ export default function CreateVehiclePage() {
                     </div>
                   </div>
                 </div>
+                <div>
+                  <FieldGroup title="Vehicle Photos" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <DocumentUpload label="Front" category="vehicle-photos" docKey="FRONT" value={form.photo_front_url} onChange={setPhoto('photo_front_url')} />
+                    <DocumentUpload label="Rear" category="vehicle-photos" docKey="REAR" value={form.photo_rear_url} onChange={setPhoto('photo_rear_url')} />
+                    <DocumentUpload label="Side" category="vehicle-photos" docKey="SIDE" value={form.photo_side_url} onChange={setPhoto('photo_side_url')} />
+                    <DocumentUpload label="Interior" category="vehicle-photos" docKey="INTERIOR" value={form.photo_interior_url} onChange={setPhoto('photo_interior_url')} />
+                  </div>
+                </div>
               </>
             )}
 
@@ -349,6 +370,13 @@ export default function CreateVehiclePage() {
                       )}
                     </div>
                   )}
+                </div>
+                <div>
+                  <FieldGroup title="Mileage Policy" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <F label="Allowed KM / Day" name="km_allowance_per_day" value={form.km_allowance_per_day} onChange={set} type="number" placeholder="250" />
+                    <F label="Extra KM Rate (AED)" name="rate_per_extra_km" value={form.rate_per_extra_km} onChange={set} type="number" placeholder="0.50" />
+                  </div>
                 </div>
                 <div>
                   <FieldGroup title="Fleet Setup" />

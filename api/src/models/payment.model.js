@@ -4,20 +4,31 @@ class PaymentModel {
   async create(data) {
     const query = `
       INSERT INTO payments (
-        tenant_id, payment_number, invoice_id, customer_id,
+        tenant_id, payment_number, invoice_id, agreement_id, customer_id,
         amount, payment_method, payment_status,
         transaction_reference, payment_date, notes, received_by_user_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `;
     const values = [
-      data.tenant_id, data.payment_number, data.invoice_id, data.customer_id,
+      data.tenant_id, data.payment_number, data.invoice_id || null,
+      data.agreement_id || null, data.customer_id,
       data.amount, data.payment_method, data.payment_status || 'COMPLETED',
       data.transaction_reference || null, data.payment_date || new Date(),
       data.notes || null, data.received_by_user_id || null,
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
+  }
+
+  async listByAgreement(agreementId, tenantId) {
+    const query = `
+      SELECT * FROM payments
+      WHERE agreement_id = $1 AND tenant_id = $2
+      ORDER BY payment_date DESC
+    `;
+    const result = await pool.query(query, [agreementId, tenantId]);
+    return result.rows;
   }
 
   async findById(id, tenantId) {

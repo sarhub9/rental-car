@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { driverService } from '@/services/driver.service';
 import { extractApiError } from '@/lib/api-error';
+import { COUNTRIES } from '@/lib/countries';
+import { DocumentUpload } from '@/components/DocumentUpload';
 import toast from 'react-hot-toast';
 import {
   HiCheck, HiChevronLeft, HiChevronRight, HiChevronDown,
@@ -51,6 +53,24 @@ function F({ label, name, value, onChange, type = 'text', required = false, plac
   );
 }
 
+function S({ label, name, value, onChange, options, required = false, placeholder = 'Select' }: any) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      <div className="relative">
+        <select name={name} value={value} onChange={onChange} required={required}
+          className="w-full px-3.5 py-2.5 pr-9 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 focus:outline-none transition-all appearance-none">
+          <option value="">{placeholder}</option>
+          {options.map((o: string) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <HiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      </div>
+    </div>
+  );
+}
+
 function D({ label, name, value, onChange, required = false, isExpiry = true }: any) {
   const exp = isExpiry && isExp(value);
   return (
@@ -91,10 +111,17 @@ export default function CreateDriverPage() {
     passport_number: '', passport_expiry: '',
     visa_number: '', visa_expiry: '',
     customer_id: '',
+    // Document photos
+    emirates_id_front_url: '', emirates_id_back_url: '',
+    license_front_url: '', license_back_url: '',
+    passport_photo_url: '', visa_photo_url: '',
   });
 
   const set = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  const setPhoto = (key: string) => (url: string) =>
+    setForm(p => ({ ...p, [key]: url }));
 
   const canNext = () => {
     if (step === 0) return !!form.driver_type;
@@ -209,7 +236,7 @@ export default function CreateDriverPage() {
                   <FG title="Personal" />
                   <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2"><F label="Full Name" name="full_name" value={form.full_name} onChange={set} required placeholder="John Smith" /></div>
-                    <F label="Nationality" name="nationality" value={form.nationality} onChange={set} placeholder="UAE / India..." />
+                    <S label="Nationality" name="nationality" value={form.nationality} onChange={set} options={COUNTRIES} placeholder="Select nationality" />
                     <D label="Date of Birth" name="date_of_birth" value={form.date_of_birth} onChange={set} isExpiry={false} />
                     <div className="col-span-2"><F label="Address" name="address" value={form.address} onChange={set} placeholder="Dubai, UAE" /></div>
                   </div>
@@ -299,6 +326,17 @@ export default function CreateDriverPage() {
                     <D label="Passport Expiry" name="passport_expiry" value={form.passport_expiry} onChange={set} />
                     <F label="Visa Number" name="visa_number" value={form.visa_number} onChange={set} />
                     <D label="Visa Expiry" name="visa_expiry" value={form.visa_expiry} onChange={set} />
+                  </div>
+                </div>
+                <div>
+                  <FG title="Document Photos" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <DocumentUpload label="Emirates ID — Front" category="driver-docs" docKey="EMIRATES_ID_FRONT" value={form.emirates_id_front_url} onChange={setPhoto('emirates_id_front_url')} />
+                    <DocumentUpload label="Emirates ID — Back" category="driver-docs" docKey="EMIRATES_ID_BACK" value={form.emirates_id_back_url} onChange={setPhoto('emirates_id_back_url')} />
+                    <DocumentUpload label="Driving License — Front" category="driver-docs" docKey="LICENSE_FRONT" value={form.license_front_url} onChange={setPhoto('license_front_url')} />
+                    <DocumentUpload label="Driving License — Back" category="driver-docs" docKey="LICENSE_BACK" value={form.license_back_url} onChange={setPhoto('license_back_url')} />
+                    <DocumentUpload label="Passport Photo" category="driver-docs" docKey="PASSPORT" value={form.passport_photo_url} onChange={setPhoto('passport_photo_url')} />
+                    <DocumentUpload label="Visa Photo" category="driver-docs" docKey="VISA" value={form.visa_photo_url} onChange={setPhoto('visa_photo_url')} />
                   </div>
                 </div>
               </>

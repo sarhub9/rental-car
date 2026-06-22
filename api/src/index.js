@@ -42,6 +42,7 @@ import incidentRoutes from './routes/incident.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import vehicleDocumentRoutes from './routes/vehicle-document.routes.js';
 import vehicleCategoryRoutes from './routes/vehicle-category.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 import { requestLogger } from './middleware/logger.middleware.js';
 import { apiRateLimiter } from './middleware/rate-limit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.middleware.js';
@@ -109,6 +110,7 @@ app.use('/v1/incidents', incidentRoutes);
 app.use('/v1/messages', messageRoutes);
 app.use('/v1/vehicles/:vehicleId/documents', vehicleDocumentRoutes);
 app.use('/v1/vehicle-categories', vehicleCategoryRoutes);
+app.use('/v1/uploads', uploadRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

@@ -33,7 +33,8 @@ class AgreementService {
       data.rental_start_datetime,
       data.rental_end_datetime,
       data.daily_rate,
-      data.weekly_rate
+      data.weekly_rate,
+      data.monthly_rate
     );
 
     const agreementNumber = await RentalAgreementModel.generateAgreementNumber(tenantId);
@@ -49,6 +50,9 @@ class AgreementService {
       rental_end_datetime: data.rental_end_datetime,
       daily_rate: data.daily_rate || null,
       weekly_rate: data.weekly_rate || null,
+      monthly_rate: data.monthly_rate || null,
+      km_allowance_per_day: data.km_allowance_per_day || null,
+      rate_per_extra_km: data.rate_per_extra_km || null,
       estimated_amount: estimatedAmount,
       created_by_user_id: userId,
       ...snapshotFields,
@@ -154,11 +158,12 @@ class AgreementService {
     }
 
     // Recalculate estimated amount if rates or dates changed
-    if (data.daily_rate || data.weekly_rate || data.rental_start_datetime || data.rental_end_datetime) {
+    if (data.daily_rate || data.weekly_rate || data.monthly_rate || data.rental_start_datetime || data.rental_end_datetime) {
       const dailyRate = data.daily_rate !== undefined ? data.daily_rate : existing.daily_rate;
       const weeklyRate = data.weekly_rate !== undefined ? data.weekly_rate : existing.weekly_rate;
+      const monthlyRate = data.monthly_rate !== undefined ? data.monthly_rate : existing.monthly_rate;
 
-      data.estimated_amount = this.calculateEstimatedAmount(startDate, endDate, dailyRate, weeklyRate);
+      data.estimated_amount = this.calculateEstimatedAmount(startDate, endDate, dailyRate, weeklyRate, monthlyRate);
     }
 
     // Update agreement
@@ -225,24 +230,40 @@ class AgreementService {
   /**
    * Calculate estimated rental amount
    */
-  calculateEstimatedAmount(startDate, endDate, dailyRate, weeklyRate) {
+  calculateEstimatedAmount(startDate, endDate, dailyRate, weeklyRate, monthlyRate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
-    let amount = 0;
+    const daily = Number(dailyRate) || 0;
+    const weekly = Number(weeklyRate) || 0;
+    const monthly = Number(monthlyRate) || 0;
 
-    if (weeklyRate && diffDays >= 7) {
-      const weeks = Math.floor(diffDays / 7);
-      const remainingDays = diffDays % 7;
-      amount = weeks * weeklyRate + remainingDays * (dailyRate || 0);
-    } else if (dailyRate) {
-      amount = diffDays * dailyRate;
-    } else {
-      const error = new Error('Either daily_rate or weekly_rate must be provided');
+    if (!daily && !weekly && !monthly) {
+      const error = new Error('Either daily_rate, weekly_rate or monthly_rate must be provided');
       error.statusCode = 400;
       throw error;
+    }
+
+    // Tiered pricing: monthly (>=30d) then weekly (>=7d) then daily for the remainder.
+    let amount = 0;
+    let remaining = diffDays;
+
+    if (monthly > 0 && remaining >= 30) {
+      const months = Math.floor(remaining / 30);
+      amount += months * monthly;
+      remaining %= 30;
+    }
+    if (weekly > 0 && remaining >= 7) {
+      const weeks = Math.floor(remaining / 7);
+      amount += weeks * weekly;
+      remaining %= 7;
+    }
+    if (remaining > 0) {
+      // Fall back to weekly/monthly per-day equivalent if no daily rate is set.
+      const perDay = daily || (weekly ? weekly / 7 : monthly / 30);
+      amount += remaining * perDay;
     }
 
     return parseFloat(amount.toFixed(2));

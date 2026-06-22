@@ -13,7 +13,11 @@ export const createAgreementSchema = Joi.object({
   rental_end_datetime: Joi.date().iso().greater(Joi.ref('rental_start_datetime')).required(),
   daily_rate: Joi.number().positive().allow(null),
   weekly_rate: Joi.number().positive().allow(null),
-}).or('daily_rate', 'weekly_rate');
+  monthly_rate: Joi.number().positive().allow(null),
+  km_allowance_per_day: Joi.number().integer().min(0).allow(null),
+  rate_per_extra_km: Joi.number().min(0).allow(null),
+  estimated_amount: Joi.number().min(0).allow(null),
+}).or('daily_rate', 'weekly_rate', 'monthly_rate');
 
 // Agreement update schema
 export const updateAgreementSchema = Joi.object({
@@ -21,6 +25,9 @@ export const updateAgreementSchema = Joi.object({
   rental_end_datetime: Joi.date().iso(),
   daily_rate: Joi.number().positive().allow(null),
   weekly_rate: Joi.number().positive().allow(null),
+  monthly_rate: Joi.number().positive().allow(null),
+  km_allowance_per_day: Joi.number().integer().min(0).allow(null),
+  rate_per_extra_km: Joi.number().min(0).allow(null),
 }).min(1);
 
 // Checkout evidence schema
@@ -90,6 +97,13 @@ export const createCustomerSchema = Joi.object({
   address_line_2: Joi.string().max(300).allow(null, ''),
   city: Joi.string().max(100).allow(null, ''),
   emirate: Joi.string().max(50).allow(null, ''),
+  // Document photos
+  emirates_id_front_url: Joi.string().uri().allow(null, ''),
+  emirates_id_back_url: Joi.string().uri().allow(null, ''),
+  license_front_url: Joi.string().uri().allow(null, ''),
+  license_back_url: Joi.string().uri().allow(null, ''),
+  passport_photo_url: Joi.string().uri().allow(null, ''),
+  visa_photo_url: Joi.string().uri().allow(null, ''),
 });
 
 // Customer update schema
@@ -130,6 +144,12 @@ export const updateCustomerSchema = Joi.object({
   is_blacklisted: Joi.boolean(),
   blacklist_reason: Joi.string().allow(null, ''),
   verification_status: Joi.string().valid('PENDING', 'VERIFIED', 'BLOCKED'),
+  emirates_id_front_url: Joi.string().uri().allow(null, ''),
+  emirates_id_back_url: Joi.string().uri().allow(null, ''),
+  license_front_url: Joi.string().uri().allow(null, ''),
+  license_back_url: Joi.string().uri().allow(null, ''),
+  passport_photo_url: Joi.string().uri().allow(null, ''),
+  visa_photo_url: Joi.string().uri().allow(null, ''),
 }).min(1);
 
 // Vehicle creation schema
@@ -146,9 +166,16 @@ export const createVehicleSchema = Joi.object({
   fuel_type: Joi.string().valid('PETROL', 'DIESEL', 'HYBRID', 'ELECTRIC').default('PETROL'),
   daily_rate: Joi.number().positive().allow(null),
   weekly_rate: Joi.number().positive().allow(null),
+  monthly_rate: Joi.number().positive().allow(null),
+  km_allowance_per_day: Joi.number().integer().min(0).allow(null),
+  rate_per_extra_km: Joi.number().min(0).allow(null),
   current_odometer: Joi.number().integer().min(0).default(0),
   registration_expiry: Joi.date().iso().allow(null),
   insurance_expiry: Joi.date().iso().allow(null),
+  photo_front_url: Joi.string().uri().allow(null, ''),
+  photo_rear_url: Joi.string().uri().allow(null, ''),
+  photo_side_url: Joi.string().uri().allow(null, ''),
+  photo_interior_url: Joi.string().uri().allow(null, ''),
 });
 
 // Vehicle update schema
@@ -166,9 +193,16 @@ export const updateVehicleSchema = Joi.object({
   status: Joi.string().valid('AVAILABLE', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE'),
   daily_rate: Joi.number().positive().allow(null),
   weekly_rate: Joi.number().positive().allow(null),
+  monthly_rate: Joi.number().positive().allow(null),
+  km_allowance_per_day: Joi.number().integer().min(0).allow(null),
+  rate_per_extra_km: Joi.number().min(0).allow(null),
   current_odometer: Joi.number().integer().min(0),
   registration_expiry: Joi.date().iso().allow(null),
   insurance_expiry: Joi.date().iso().allow(null),
+  photo_front_url: Joi.string().uri().allow(null, ''),
+  photo_rear_url: Joi.string().uri().allow(null, ''),
+  photo_side_url: Joi.string().uri().allow(null, ''),
+  photo_interior_url: Joi.string().uri().allow(null, ''),
 }).min(1);
 
 // Photo metadata schema

@@ -19,8 +19,9 @@ class RentalAgreementModel {
           snapshot_included_km, snapshot_extra_km_rate, snapshot_deposit_amount,
           snapshot_fuel_policy, snapshot_late_return_rules,
           snapshot_add_ons, snapshot_terms_text,
+          monthly_rate, km_allowance_per_day, rate_per_extra_km,
           status
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,'DRAFT')
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'DRAFT')
         RETURNING *
       `;
 
@@ -35,6 +36,7 @@ class RentalAgreementModel {
         data.snapshot_late_return_rules ? (typeof data.snapshot_late_return_rules === 'string' ? data.snapshot_late_return_rules : JSON.stringify(data.snapshot_late_return_rules)) : null,
         data.snapshot_add_ons ? (typeof data.snapshot_add_ons === 'string' ? data.snapshot_add_ons : JSON.stringify(data.snapshot_add_ons)) : null,
         data.snapshot_terms_text || null,
+        data.monthly_rate || null, data.km_allowance_per_day || null, data.rate_per_extra_km || null,
       ];
 
       const result = await pool.query(query, values);
@@ -60,6 +62,20 @@ class RentalAgreementModel {
       }
       throw err;
     }
+  }
+
+  /**
+   * Save the customer signature URL (allowed at any status).
+   */
+  async setSignature(id, tenantId, signatureUrl) {
+    const query = `
+      UPDATE rental_agreements
+      SET customer_signature_url = $1
+      WHERE id = $2 AND tenant_id = $3
+      RETURNING *
+    `;
+    const result = await pool.query(query, [signatureUrl, id, tenantId]);
+    return result.rows[0];
   }
 
   /**

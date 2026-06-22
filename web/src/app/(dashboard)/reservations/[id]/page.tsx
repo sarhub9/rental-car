@@ -10,6 +10,7 @@ import {
   HiOutlineTruck,
   HiOutlineXCircle,
   HiOutlineUserMinus,
+  HiOutlineDocumentPlus,
 } from 'react-icons/hi2';
 import { reservationService } from '@/services/reservation.service';
 import { PageHeader } from '@/components/PageHeader';
@@ -120,6 +121,17 @@ export default function ReservationDetailPage() {
   const status = reservation.status ?? '';
   const isTerminal = ['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(status);
 
+  const handleConvertToAgreement = () => {
+    const params = new URLSearchParams();
+    if (reservation.customer_id) params.set('customer_id', reservation.customer_id);
+    if (reservation.vehicle_id) params.set('vehicle_id', reservation.vehicle_id);
+    const toLocal = (s?: string) => (s ? new Date(s).toISOString().slice(0, 16) : '');
+    if (reservation.pickup_datetime) params.set('start', toLocal(reservation.pickup_datetime));
+    if (reservation.return_datetime) params.set('end', toLocal(reservation.return_datetime));
+    params.set('reservation_id', reservation.id);
+    router.push(`/agreements/create?${params.toString()}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -162,6 +174,15 @@ export default function ReservationDetailPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-sm font-semibold text-gray-700 mb-4">Actions</h2>
           <div className="flex flex-wrap gap-3">
+            {['CONFIRMED', 'VEHICLE_ASSIGNED'].includes(status) && (
+              <button
+                onClick={handleConvertToAgreement}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700"
+              >
+                <HiOutlineDocumentPlus className="h-5 w-5" />
+                Convert to Agreement
+              </button>
+            )}
             {status === 'PENDING' && (
               <button
                 onClick={handleConfirm}

@@ -12,10 +12,12 @@ class CustomerModel {
         company_name, trade_license_number, trade_license_expiry, trn_number,
         authorized_person_name, authorized_person_mobile, payment_terms, credit_limit,
         customer_type, address_line_1, address_line_2, city, emirate,
+        emirates_id_front_url, emirates_id_back_url, license_front_url, license_back_url,
+        passport_photo_url, visa_photo_url,
         created_by_user_id
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-        $21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35
+        $21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41
       ) RETURNING *
     `;
     const values = [
@@ -35,6 +37,9 @@ class CustomerModel {
       data.customer_type || 'UAE_RESIDENT',
       data.address_line_1 || null, data.address_line_2 || null,
       data.city || null, data.emirate || null,
+      data.emirates_id_front_url || null, data.emirates_id_back_url || null,
+      data.license_front_url || null, data.license_back_url || null,
+      data.passport_photo_url || null, data.visa_photo_url || null,
       data.created_by_user_id,
     ];
     const result = await pool.query(query, values);
@@ -95,6 +100,8 @@ class CustomerModel {
       'authorized_person_name', 'authorized_person_mobile', 'payment_terms', 'credit_limit',
       'customer_type', 'address_line_1', 'address_line_2', 'city',
       'emirate', 'is_active', 'is_blacklisted', 'blacklist_reason', 'verification_status',
+      'emirates_id_front_url', 'emirates_id_back_url', 'license_front_url', 'license_back_url',
+      'passport_photo_url', 'visa_photo_url',
     ];
 
     for (const key of allowedFields) {

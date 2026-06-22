@@ -108,4 +108,86 @@ router.get('/:agreementId/charges', async (req, res) => {
   }
 });
 
+/**
+ * @route   GET /v1/agreements/:id/payments
+ * @desc    List payments recorded against an agreement
+ */
+router.get('/:id/payments', async (req, res) => {
+  try {
+    const PaymentModel = (await import('../models/payment.model.js')).default;
+    const payments = await PaymentModel.listByAgreement(req.params.id, req.tenantId);
+    return res.status(200).json({ success: true, data: payments });
+  } catch (error) {
+    console.error('List agreement payments error:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+/**
+ * @route   POST /v1/agreements/:id/payments
+ * @desc    Record a payment against an agreement
+ * @access  Front Desk, Admin, Accounts
+ */
+router.post('/:id/payments', requireRole('FRONT_DESK', 'OWNER_ADMIN', 'ACCOUNTS'), async (req, res) => {
+  try {
+    const PaymentModel = (await import('../models/payment.model.js')).default;
+    const RentalAgreementModel = (await import('../models/rental-agreement.model.js')).default;
+
+    const agreement = await RentalAgreementModel.findById(req.params.id, req.tenantId);
+    if (!agreement) return res.status(404).json({ error: 'Agreement not found' });
+
+    const amount = Number(req.body.amount);
+    if (!amount || amount <= 0) return res.status(400).json({ error: 'A positive amount is required' });
+
+    const validMethods = ['CASH', 'CARD', 'BANK_TRANSFER', 'CHEQUE', 'ONLINE'];
+    const method = String(req.body.payment_method || 'CASH').toUpperCase();
+    if (!validMethods.includes(method)) {
+      return res.status(400).json({ error: `payment_method must be one of ${validMethods.join(', ')}` });
+    }
+
+    const payment_number = await PaymentModel.generatePaymentNumber(req.tenantId);
+    const payment = await PaymentModel.create({
+      tenant_id: req.tenantId,
+      payment_number,
+      agreement_id: agreement.id,
+      customer_id: agreement.customer_id,
+      amount,
+      payment_method: method,
+      payment_status: 'COMPLETED',
+      transaction_reference: req.body.transaction_reference,
+      notes: req.body.notes,
+      received_by_user_id: req.user.id,
+    });
+
+    return res.status(201).json({ success: true, data: payment });
+  } catch (error) {
+    console.error('Record agreement payment error:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+/**
+ * @route   PATCH /v1/agreements/:id/signature
+ * @desc    Save the customer signature URL on an agreement
+ * @access  Front Desk, Admin
+ */
+router.patch('/:id/signature', requireRole('FRONT_DESK', 'OWNER_ADMIN'), async (req, res) => {
+  try {
+    const RentalAgreementModel = (await import('../models/rental-agreement.model.js')).default;
+    if (!req.body.customer_signature_url) {
+      return res.status(400).json({ error: 'customer_signature_url is required' });
+    }
+    const updated = await RentalAgreementModel.setSignature(
+      req.params.id,
+      req.tenantId,
+      req.body.customer_signature_url
+    );
+    if (!updated) return res.status(404).json({ error: 'Agreement not found' });
+    return res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    console.error('Save agreement signature error:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 export default router;
