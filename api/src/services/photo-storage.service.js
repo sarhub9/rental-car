@@ -3,6 +3,9 @@ import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs/promises';
 import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+// The Cloudinary SDK auto-configures from the CLOUDINARY_URL env var.
 
 /**
  * Photo Storage Service
@@ -30,13 +33,61 @@ class PhotoStorageService {
     );
   }
 
+  isCloudinaryConfigured() {
+    return Boolean(process.env.CLOUDINARY_URL);
+  }
+
+  // ESM import hoisting means the SDK loads before dotenv runs, so its
+  // auto-config from CLOUDINARY_URL is missed. Configure it explicitly (once).
+  ensureCloudinaryConfig() {
+    if (this._cloudinaryReady) return;
+    const url = process.env.CLOUDINARY_URL || '';
+    const m = url.match(/^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/);
+    if (m) {
+      cloudinary.config({ api_key: m[1], api_secret: m[2], cloud_name: m[3], secure: true });
+      this._cloudinaryReady = true;
+    }
+  }
+
   getStorageMode() {
-    if (this.s3DisabledForSession) return 'local';
     const mode = (process.env.PHOTO_STORAGE_MODE || 'auto').toLowerCase();
+    if (mode === 'cloudinary') return 'cloudinary';
     if (mode === 'local') return 'local';
     if (mode === 's3') return 's3';
+    // auto: prefer Cloudinary (persistent CDN) when configured.
+    if (this.isCloudinaryConfigured()) return 'cloudinary';
+    if (this.s3DisabledForSession) return 'local';
     if (this.isLocalS3Endpoint() && !this.isStrictS3Mode()) return 'local';
     return this.isS3Configured() ? 's3' : 'local';
+  }
+
+  /**
+   * Upload a photo (+ derive a thumbnail transformation URL) to Cloudinary.
+   * Returns permanent secure CDN URLs that survive server restarts/redeploys.
+   */
+  async uploadPhotoCloudinary(compressedPhoto, metadata, photoId) {
+    this.ensureCloudinaryConfig();
+    const { tenantId, agreementId, evidenceType } = metadata;
+    const folder = `carrental/${tenantId}/${agreementId}/${evidenceType}`;
+
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder, public_id: photoId, resource_type: 'image', overwrite: true },
+        (err, res) => (err ? reject(err) : resolve(res))
+      );
+      stream.end(compressedPhoto);
+    });
+
+    // Thumbnail is a Cloudinary transformation of the same asset (no extra upload).
+    const thumbnailUrl = cloudinary.url(result.public_id, {
+      secure: true, width: 320, height: 240, crop: 'fill', fetch_format: 'auto', quality: 'auto',
+    });
+
+    return {
+      photoUrl: result.secure_url,
+      thumbnailUrl,
+      fileSize: result.bytes || compressedPhoto.length,
+    };
   }
 
   getLocalUploadsRoot() {
@@ -92,6 +143,9 @@ class PhotoStorageService {
         .toBuffer();
 
       const storageMode = this.getStorageMode();
+      if (storageMode === 'cloudinary') {
+        return await this.uploadPhotoCloudinary(compressedPhoto, metadata, photoId);
+      }
       if (storageMode === 'local') {
         return await this.uploadPhotoLocal(compressedPhoto, thumbnail, metadata, photoId);
       }
