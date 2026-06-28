@@ -186,6 +186,9 @@ router.patch('/:id/signature', requireRole('FRONT_DESK', 'OWNER_ADMIN'), async (
     return res.status(200).json({ success: true, data: updated });
   } catch (error) {
     console.error('Save agreement signature error:', error);
+    if (String(error.message || '').toLowerCase().includes('immutable')) {
+      return res.status(409).json({ error: 'Signatures cannot be changed once the agreement is active.' });
+    }
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -208,6 +211,9 @@ router.patch('/:id/officer-signature', requireRole('FRONT_DESK', 'OWNER_ADMIN'),
     return res.status(200).json({ success: true, data: updated });
   } catch (error) {
     console.error('Save officer signature error:', error);
+    if (String(error.message || '').toLowerCase().includes('immutable')) {
+      return res.status(409).json({ error: 'Signatures cannot be changed once the agreement is active.' });
+    }
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 });

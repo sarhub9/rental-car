@@ -24,13 +24,15 @@ interface SignaturePadProps {
   /** short document label, e.g. "SIGNATURE" (upload mode) */
   docKey?: string;
   required?: boolean;
+  /** view-only: show the signature (or placeholder) without drawing/re-sign */
+  readOnly?: boolean;
 }
 
 /**
  * SignaturePad — capture a hand-drawn signature in a popup (mouse / finger /
  * stylus), then upload it as a PNG. Drop-in replacement for DocumentUpload.
  */
-export function SignaturePad({ label, value, onChange, onCapture, category, docKey, required }: SignaturePadProps) {
+export function SignaturePad({ label, value, onChange, onCapture, category, docKey, required, readOnly }: SignaturePadProps) {
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -145,7 +147,21 @@ export function SignaturePad({ label, value, onChange, onCapture, category, docK
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
 
-      {(localPreview || value) ? (
+      {readOnly ? (
+        (localPreview || value) ? (
+          <div className="relative rounded-lg border border-gray-300 overflow-hidden bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={localPreview || resolveUpload(value)} alt={label} className="w-full h-36 object-contain bg-white" />
+            <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-600 text-white text-xs font-medium">
+              <HiCheckCircle className="w-3.5 h-3.5" /> Signed
+            </div>
+          </div>
+        ) : (
+          <div className="w-full h-36 flex items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-xs text-gray-400">
+            Not signed
+          </div>
+        )
+      ) : (localPreview || value) ? (
         <div className="relative group rounded-lg border border-gray-300 overflow-hidden bg-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={localPreview || resolveUpload(value)} alt={label} className="w-full h-36 object-contain bg-white" />

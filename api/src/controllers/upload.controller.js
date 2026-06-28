@@ -39,7 +39,7 @@ class UploadController {
       });
     } catch (error) {
       console.error('Document upload error:', error);
-      return res.status(500).json({ error: 'Failed to upload file' });
+      return res.status(500).json({ error: 'Failed to upload file', message: error?.message || String(error) });
     }
   }
 }
