@@ -17,9 +17,11 @@ interface DocumentUploadProps {
   /** short document label, e.g. "EMIRATES_ID_FRONT" */
   docKey: string;
   required?: boolean;
+  /** view-only: show the image (or placeholder) without upload/replace/remove */
+  readOnly?: boolean;
 }
 
-export function DocumentUpload({ label, value, onChange, category, docKey, required }: DocumentUploadProps) {
+export function DocumentUpload({ label, value, onChange, category, docKey, required, readOnly }: DocumentUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -59,7 +61,18 @@ export function DocumentUpload({ label, value, onChange, category, docKey, requi
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
 
-      {value ? (
+      {readOnly ? (
+        value ? (
+          <div className="rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={value} alt={label} className="w-full h-36 object-cover" />
+          </div>
+        ) : (
+          <div className="w-full h-36 flex items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-xs text-gray-400">
+            Not uploaded
+          </div>
+        )
+      ) : value ? (
         <div className="relative group rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value} alt={label} className="w-full h-36 object-cover" />

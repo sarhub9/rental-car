@@ -59,7 +59,6 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
       title: 'Operations',
       items: [
         { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={18} /> },
-        { label: 'Reservations', href: '/reservations', icon: <HiOutlineCalendarDays size={18} /> },
         { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={18} /> },
         { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={18} /> },
         { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={18} /> },
@@ -112,7 +111,6 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
       title: 'Operations',
       items: [
         { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={18} /> },
-        { label: 'Reservations', href: '/reservations', icon: <HiOutlineCalendarDays size={18} /> },
         { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={18} /> },
         { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={18} /> },
         { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={18} /> },
@@ -160,7 +158,6 @@ const NAV_GROUPS_BY_ROLE: Record<string, NavGroup[]> = {
       title: 'Operations',
       items: [
         { label: 'Agreements', href: '/agreements', icon: <HiOutlineDocumentText size={18} /> },
-        { label: 'Reservations', href: '/reservations', icon: <HiOutlineCalendarDays size={18} /> },
         { label: 'Customers', href: '/customers', icon: <HiOutlineUsers size={18} /> },
         { label: 'Drivers', href: '/drivers', icon: <HiOutlineIdentification size={18} /> },
         { label: 'Vehicles', href: '/vehicles', icon: <HiOutlineTruck size={18} /> },

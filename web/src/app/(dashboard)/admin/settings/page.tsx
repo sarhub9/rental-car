@@ -8,6 +8,7 @@ import {
   HiOutlineShieldCheck,
   HiOutlineDocumentText,
   HiOutlineBuildingOffice2,
+  HiOutlinePhone,
 } from 'react-icons/hi2';
 import { adminSettingsService } from '@/services/admin-settings.service';
 import apiClient from '@/lib/api-client';
@@ -149,23 +150,37 @@ export default function AdminSettingsPage() {
     </button>
   );
 
+  const cInput = (key: string, opts: { placeholder?: string; dir?: 'rtl' } = {}) => (
+    <input
+      type="text"
+      value={company[key] ?? ''}
+      onChange={(e) => setCompany({ ...company, [key]: e.target.value })}
+      dir={opts.dir}
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      placeholder={opts.placeholder}
+    />
+  );
+
   if (loading) {
     return <div className="flex justify-center py-20"><Spinner /></div>;
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
             <HiOutlineCog6Tooth className="h-5 w-5 text-gray-600" />
           </div>
-          <PageHeader title="Settings" />
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Settings</h1>
+            <p className="text-sm text-gray-500">Company profile, contract terms &amp; charge rules</p>
+          </div>
         </div>
         <button onClick={handleSave} disabled={saving}
-          className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
+          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-60 shadow-sm">
           {saving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-          {saving ? 'Saving...' : 'Save'}
+          {saving ? 'Saving...' : activeTab === 'company' ? 'Save Company Profile' : 'Save Charge Rules'}
         </button>
       </div>
 
@@ -182,32 +197,57 @@ export default function AdminSettingsPage() {
       {/* Company Profile */}
       {activeTab === 'company' && (
         <>
-          <Section title="Company Profile" icon={<HiOutlineBuildingOffice2 className="h-5 w-5" />}>
+          <p className="text-xs text-gray-500 -mt-2">This information appears on the printed rental contract and invoices.</p>
+
+          <Section title="Company Identity" icon={<HiOutlineBuildingOffice2 className="h-5 w-5" />}>
             <div className="grid grid-cols-2 gap-5">
-              <Field label="Company Name"><input type="text" value={company.name??''} onChange={e=>setCompany({...company,name:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
-              <Field label="TRN / VAT Number" hint="UAE Tax Registration Number"><input type="text" value={company.trn_number??''} onChange={e=>setCompany({...company,trn_number:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
-              <Field label="Trade License"><input type="text" value={company.trade_license_number??''} onChange={e=>setCompany({...company,trade_license_number:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
-              <Field label="Phone"><input type="text" value={company.phone_number??''} onChange={e=>setCompany({...company,phone_number:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
-              <Field label="Invoice Prefix" hint="e.g. INV, RNT"><input type="text" value={company.invoice_prefix??''} onChange={e=>setCompany({...company,invoice_prefix:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
-              <Field label="Currency"><input type="text" value={company.currency??'AED'} onChange={e=>setCompany({...company,currency:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></Field>
+              <Field label="Company Name (English)">{cInput('name', { placeholder: 'Secrets World Cars Rental' })}</Field>
+              <Field label="Company Name (Arabic)">{cInput('name_ar', { dir: 'rtl' })}</Field>
+              <Field label="Trade License No.">{cInput('trade_license_number')}</Field>
+              <Field label="TRN / VAT Number" hint="UAE Tax Registration Number">{cInput('trn_number')}</Field>
             </div>
-            <div className="mt-4">
-              <Field label="Address"><textarea value={company.address??''} onChange={e=>setCompany({...company,address:e.target.value})} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" /></Field>
+            <div className="mt-5">
+              <Field label="Logo URL" hint="Shown on the contract header. Paste a public image URL.">{cInput('logo_url', { placeholder: 'https://...' })}</Field>
             </div>
-            <div className="mt-4">
-              <Field label="Invoice Footer" hint="Appears at bottom of every invoice"><textarea value={company.invoice_footer??''} onChange={e=>setCompany({...company,invoice_footer:e.target.value})} rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" placeholder="e.g. Thank you for your business. All amounts in AED." /></Field>
+          </Section>
+
+          <Section title="Contact & Address" icon={<HiOutlinePhone className="h-5 w-5" />}>
+            <div className="grid grid-cols-2 gap-5">
+              <Field label="Phone">{cInput('phone_number', { placeholder: '+971 …' })}</Field>
+              <Field label="Website">{cInput('website', { placeholder: 'www.example.com' })}</Field>
+              <Field label="City">{cInput('city')}</Field>
+              <Field label="Country">{cInput('country', { placeholder: 'UAE' })}</Field>
             </div>
-            <div className="mt-4">
-              <Field label="Agreement Terms & Conditions"><textarea value={company.agreement_terms??''} onChange={e=>setCompany({...company,agreement_terms:e.target.value})} rows={5} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" placeholder="Enter rental terms and conditions..." /></Field>
+            <div className="mt-5">
+              <Field label="Address"><textarea value={company.address??''} onChange={e=>setCompany({...company,address:e.target.value})} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" /></Field>
             </div>
+          </Section>
+
+          <Section title="Invoicing & Tax" icon={<HiOutlineCurrencyDollar className="h-5 w-5" />}>
+            <div className="grid grid-cols-3 gap-5">
+              <Field label="Invoice Prefix" hint="e.g. INV, RNT">{cInput('invoice_prefix', { placeholder: 'INV' })}</Field>
+              <Field label="Currency">{cInput('currency', { placeholder: 'AED' })}</Field>
+              <Field label="VAT Rate (%)" hint="UAE standard is 5%">
+                <input type="number" value={company.vat_rate??''} onChange={e=>setCompany({...company,vat_rate:e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="5" />
+              </Field>
+            </div>
+            <div className="mt-5">
+              <Field label="Invoice Footer" hint="Appears at the bottom of every invoice"><textarea value={company.invoice_footer??''} onChange={e=>setCompany({...company,invoice_footer:e.target.value})} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Thank you for your business. All amounts in AED." /></Field>
+            </div>
+          </Section>
+
+          <Section title="Contract Terms & Conditions" icon={<HiOutlineDocumentText className="h-5 w-5" />}>
+            <Field label="Agreement Terms" hint="Shown on the rental contract. Each line becomes a numbered clause. Leave empty to use the built-in default terms.">
+              <textarea value={company.agreement_terms??''} onChange={e=>setCompany({...company,agreement_terms:e.target.value})} rows={10} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-y focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder={"One clause per line, e.g.\nInsurance excess of AED 2,000 applies per at-fault accident.\nReturn the vehicle with the same fuel level as at pickup.\nSmoking is prohibited; a cleaning fee of AED 250 applies."} />
+            </Field>
           </Section>
         </>
       )}
 
       {/* Charge Rules (original) */}
       {activeTab === 'charges' && <>
-      {/* Charge Rules */}
-      <Section title="Charge Rules" icon={<HiOutlineCurrencyDollar className="h-5 w-5" />}>
+      <p className="text-xs text-gray-500 -mt-2">Default rates and rules applied when generating charges and invoices.</p>
+      <Section title="Rental Charges" icon={<HiOutlineCurrencyDollar className="h-5 w-5" />}>
         <div className="grid grid-cols-2 gap-5">
           <Field label="Extra KM Rate (AED/km)" hint="Charged per km over the allowed limit">
             {numInput('extra_km_rate', '0.00')}

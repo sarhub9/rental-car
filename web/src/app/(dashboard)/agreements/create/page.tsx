@@ -98,6 +98,7 @@ export default function CreateAgreementPage() {
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [reservationId, setReservationId] = useState<string | null>(null);
 
   // Step 1: Customer
   const [customerSearch, setCustomerSearch] = useState('');
@@ -122,9 +123,51 @@ export default function CreateAgreementPage() {
   const [kmPerDay, setKmPerDay] = useState(0);
   const [extraKmRate, setExtraKmRate] = useState(0);
 
+  // Step 4b: Contract charges & deposit
+  const [charges, setCharges] = useState({
+    deposit_amount: 0,
+    cdw_amount: 0,
+    excess_insurance_amount: 0,
+    delivery_charges: 0,
+    pickup_charges: 0,
+    salik_charges: 0,
+    fines_charges: 0,
+    damages_charges: 0,
+    fuel_charges: 0,
+    extra_hour_charges: 0,
+    other_charges: 0,
+    deposit_waiver_amount: 0,
+  });
+  const setCharge = (key: keyof typeof charges, val: number) =>
+    setCharges((c) => ({ ...c, [key]: val }));
+  const [additionalRemarks, setAdditionalRemarks] = useState('');
+
+  // Step 4c: Additional driver (optional)
+  const [addDriver, setAddDriver] = useState({
+    additional_driver_name: '',
+    additional_driver_license: '',
+    additional_driver_license_expiry: '',
+    additional_driver_eid: '',
+    additional_driver_dob: '',
+  });
+  const setAddDriverField = (key: keyof typeof addDriver, val: string) =>
+    setAddDriver((d) => ({ ...d, [key]: val }));
+
   const pricing = useMemo(
     () => calculateAmount(rentalStartDatetime, rentalEndDatetime, dailyRate, weeklyRate, monthlyRate),
     [rentalStartDatetime, rentalEndDatetime, dailyRate, weeklyRate, monthlyRate]
+  );
+
+  // Sum of all positive contract charges (everything except deposit waiver).
+  const chargesTotal = useMemo(() => {
+    const { deposit_waiver_amount, ...rest } = charges;
+    return Object.values(rest).reduce((s, v) => s + (Number(v) || 0), 0);
+  }, [charges]);
+
+  // Grand total as shown on the printed contract: rent + charges + deposit − waiver.
+  const contractTotal = useMemo(
+    () => pricing.amount + chargesTotal - (Number(charges.deposit_waiver_amount) || 0),
+    [pricing.amount, chargesTotal, charges.deposit_waiver_amount]
   );
 
   // Prefill from a reservation (Convert to Agreement) via query params
@@ -133,6 +176,8 @@ export default function CreateAgreementPage() {
     const vehicleId = searchParams.get('vehicle_id');
     const start = searchParams.get('start');
     const end = searchParams.get('end');
+    const resId = searchParams.get('reservation_id');
+    if (resId) setReservationId(resId);
     if (start) setRentalStartDatetime(start);
     if (end) setRentalEndDatetime(end);
     (async () => {
@@ -229,6 +274,7 @@ export default function CreateAgreementPage() {
       const rawPayload = {
         customer_id: selectedCustomer!.id,
         vehicle_id: selectedVehicle!.id,
+        reservation_id: reservationId || undefined,
         rental_start_datetime: rentalStartDatetime,
         rental_end_datetime: rentalEndDatetime,
         daily_rate: dailyRate,
@@ -237,9 +283,29 @@ export default function CreateAgreementPage() {
         km_allowance_per_day: kmPerDay || undefined,
         rate_per_extra_km: extraKmRate || undefined,
         estimated_amount: pricing.amount,
+        // Contract charges & deposit
+        deposit_amount: charges.deposit_amount || undefined,
+        cdw_amount: charges.cdw_amount || undefined,
+        excess_insurance_amount: charges.excess_insurance_amount || undefined,
+        delivery_charges: charges.delivery_charges || undefined,
+        pickup_charges: charges.pickup_charges || undefined,
+        salik_charges: charges.salik_charges || undefined,
+        fines_charges: charges.fines_charges || undefined,
+        damages_charges: charges.damages_charges || undefined,
+        fuel_charges: charges.fuel_charges || undefined,
+        extra_hour_charges: charges.extra_hour_charges || undefined,
+        other_charges: charges.other_charges || undefined,
+        deposit_waiver_amount: charges.deposit_waiver_amount || undefined,
+        additional_remarks: additionalRemarks.trim() || undefined,
+        // Additional driver (optional)
+        additional_driver_name: addDriver.additional_driver_name.trim() || undefined,
+        additional_driver_license: addDriver.additional_driver_license.trim() || undefined,
+        additional_driver_license_expiry: addDriver.additional_driver_license_expiry || undefined,
+        additional_driver_eid: addDriver.additional_driver_eid.trim() || undefined,
+        additional_driver_dob: addDriver.additional_driver_dob || undefined,
       };
       const cleaned = cleanPayload(rawPayload) as Record<string, unknown>;
-      sanitizeUuidFields(cleaned, ['customer_id', 'vehicle_id']);
+      sanitizeUuidFields(cleaned, ['customer_id', 'vehicle_id', 'reservation_id']);
       const payload = cleaned as unknown as CreateAgreementPayload;
       const result = await agreementService.createAgreement(payload);
       toast.success('Agreement created successfully');
@@ -574,6 +640,109 @@ export default function CreateAgreementPage() {
               </div>
             </div>
 
+            {/* Additional Charges & Deposit */}
+            <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">Additional Charges &amp; Deposit</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Optional contract line-items (AED). Leave 0 if not applicable.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {([
+                  ['deposit_amount', 'Deposit'],
+                  ['cdw_amount', 'CDW'],
+                  ['excess_insurance_amount', 'Excess Insurance'],
+                  ['delivery_charges', 'Delivery Charges'],
+                  ['pickup_charges', 'Pickup Charges'],
+                  ['extra_hour_charges', 'Extra Hour Charges'],
+                  ['salik_charges', 'Salik / Toll'],
+                  ['fines_charges', 'Fines'],
+                  ['damages_charges', 'Damages'],
+                  ['fuel_charges', 'Fuel Charges'],
+                  ['other_charges', 'Other Charges'],
+                  ['deposit_waiver_amount', 'Deposit Waiver (−)'],
+                ] as [keyof typeof charges, string][]).map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+                    <input
+                      type="number"
+                      value={charges[key]}
+                      onChange={(e) => setCharge(key, Number(e.target.value))}
+                      min={0}
+                      step={0.01}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Additional Remarks</label>
+                <textarea
+                  value={additionalRemarks}
+                  onChange={(e) => setAdditionalRemarks(e.target.value)}
+                  rows={2}
+                  placeholder="e.g. Used extra kilometer charges 0.30"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Additional Driver (optional) */}
+            <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">Additional Driver</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Optional. Appears on the contract if filled.</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Name</label>
+                  <input
+                    type="text"
+                    value={addDriver.additional_driver_name}
+                    onChange={(e) => setAddDriverField('additional_driver_name', e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Driving License No.</label>
+                  <input
+                    type="text"
+                    value={addDriver.additional_driver_license}
+                    onChange={(e) => setAddDriverField('additional_driver_license', e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">License Expiry</label>
+                  <input
+                    type="date"
+                    value={addDriver.additional_driver_license_expiry}
+                    onChange={(e) => setAddDriverField('additional_driver_license_expiry', e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Emirates ID</label>
+                  <input
+                    type="text"
+                    value={addDriver.additional_driver_eid}
+                    onChange={(e) => setAddDriverField('additional_driver_eid', e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={addDriver.additional_driver_dob}
+                    onChange={(e) => setAddDriverField('additional_driver_dob', e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Pricing Breakdown */}
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 space-y-4">
               <div className="flex items-center justify-between">
@@ -622,9 +791,25 @@ export default function CreateAgreementPage() {
                   </div>
                 )}
                 <div className="border-t border-gray-300 pt-2 flex justify-between">
-                  <span className="font-semibold text-gray-900">Estimated Total</span>
+                  <span className="font-medium text-gray-700">Rental Subtotal</span>
+                  <span className="font-semibold text-gray-900">AED {pricing.amount.toFixed(2)}</span>
+                </div>
+                {chargesTotal > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Additional Charges &amp; Deposit</span>
+                    <span className="font-medium">AED {chargesTotal.toFixed(2)}</span>
+                  </div>
+                )}
+                {charges.deposit_waiver_amount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Deposit Waiver</span>
+                    <span className="font-medium text-red-600">− AED {charges.deposit_waiver_amount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="border-t border-gray-300 pt-2 flex justify-between">
+                  <span className="font-semibold text-gray-900">Contract Total</span>
                   <span className="text-lg font-bold text-blue-600">
-                    AED {pricing.amount.toFixed(2)}
+                    AED {contractTotal.toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -710,8 +895,24 @@ export default function CreateAgreementPage() {
                     </div>
                   )}
                   <div className="flex justify-between border-t border-blue-200 pt-2 mt-2">
-                    <span className="font-semibold text-gray-900">Estimated Total</span>
-                    <span className="text-xl font-bold text-blue-600">AED {pricing.amount.toFixed(2)}</span>
+                    <span className="text-gray-600">Rental Subtotal</span>
+                    <span className="font-medium">AED {pricing.amount.toFixed(2)}</span>
+                  </div>
+                  {chargesTotal > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Additional Charges &amp; Deposit</span>
+                      <span className="font-medium">AED {chargesTotal.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {charges.deposit_waiver_amount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Deposit Waiver</span>
+                      <span className="font-medium text-red-600">− AED {charges.deposit_waiver_amount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-blue-200 pt-2 mt-1">
+                    <span className="font-semibold text-gray-900">Contract Total</span>
+                    <span className="text-xl font-bold text-blue-600">AED {contractTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

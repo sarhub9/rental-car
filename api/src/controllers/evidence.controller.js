@@ -45,7 +45,10 @@ class EvidenceController {
       const photos = [];
       if (req.files && req.files.length > 0) {
         for (const [index, file] of req.files.entries()) {
-          const angle = req.body[`photo_${index}_angle`] || `PHOTO_${index + 1}`;
+          const anglesList = Array.isArray(req.body.photo_angles)
+            ? req.body.photo_angles
+            : (req.body.photo_angles ? [req.body.photo_angles] : []);
+          const angle = anglesList[index] || req.body[`photo_${index}_angle`] || 'FRONT';
           // Upload photo to storage
           const uploadResult = await EvidenceService.uploadPhoto(file.buffer, {
             tenantId: req.tenantId,
@@ -60,10 +63,10 @@ class EvidenceController {
             photo_thumbnail_url: uploadResult.thumbnailUrl,
             file_size_bytes: uploadResult.fileSize,
             mime_type: file.mimetype,
-            captured_timestamp: req.body[`photo_${index}_timestamp`],
-            gps_latitude: parseFloat(req.body[`photo_${index}_latitude`]),
-            gps_longitude: parseFloat(req.body[`photo_${index}_longitude`]),
-            gps_accuracy_meters: parseFloat(req.body[`photo_${index}_accuracy`]),
+            captured_timestamp: req.body[`photo_${index}_timestamp`] || new Date().toISOString(),
+            gps_latitude: Number.isFinite(parseFloat(req.body[`photo_${index}_latitude`])) ? parseFloat(req.body[`photo_${index}_latitude`]) : null,
+            gps_longitude: Number.isFinite(parseFloat(req.body[`photo_${index}_longitude`])) ? parseFloat(req.body[`photo_${index}_longitude`]) : null,
+            gps_accuracy_meters: Number.isFinite(parseFloat(req.body[`photo_${index}_accuracy`])) ? parseFloat(req.body[`photo_${index}_accuracy`]) : null,
             device_info: req.body.device_info ? JSON.parse(req.body.device_info) : null,
           });
         }
@@ -150,7 +153,10 @@ class EvidenceController {
       const photos = [];
       if (req.files && req.files.length > 0) {
         for (const [index, file] of req.files.entries()) {
-          const angle = req.body[`photo_${index}_angle`] || `PHOTO_${index + 1}`;
+          const anglesList = Array.isArray(req.body.photo_angles)
+            ? req.body.photo_angles
+            : (req.body.photo_angles ? [req.body.photo_angles] : []);
+          const angle = anglesList[index] || req.body[`photo_${index}_angle`] || 'FRONT';
           const uploadResult = await EvidenceService.uploadPhoto(file.buffer, {
             tenantId: req.tenantId,
             agreementId,
@@ -164,10 +170,10 @@ class EvidenceController {
             photo_thumbnail_url: uploadResult.thumbnailUrl,
             file_size_bytes: uploadResult.fileSize,
             mime_type: file.mimetype,
-            captured_timestamp: req.body[`photo_${index}_timestamp`],
-            gps_latitude: parseFloat(req.body[`photo_${index}_latitude`]),
-            gps_longitude: parseFloat(req.body[`photo_${index}_longitude`]),
-            gps_accuracy_meters: parseFloat(req.body[`photo_${index}_accuracy`]),
+            captured_timestamp: req.body[`photo_${index}_timestamp`] || new Date().toISOString(),
+            gps_latitude: Number.isFinite(parseFloat(req.body[`photo_${index}_latitude`])) ? parseFloat(req.body[`photo_${index}_latitude`]) : null,
+            gps_longitude: Number.isFinite(parseFloat(req.body[`photo_${index}_longitude`])) ? parseFloat(req.body[`photo_${index}_longitude`]) : null,
+            gps_accuracy_meters: Number.isFinite(parseFloat(req.body[`photo_${index}_accuracy`])) ? parseFloat(req.body[`photo_${index}_accuracy`]) : null,
             device_info: req.body.device_info ? JSON.parse(req.body.device_info) : null,
           });
         }

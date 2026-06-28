@@ -54,6 +54,17 @@ class CheckoutEvidenceModel {
   }
 
   /**
+   * Delete checkout evidence for an agreement (used to make checkout retries
+   * idempotent after a partial failure).
+   */
+  async deleteByAgreementId(agreementId, tenantId) {
+    await pool.query(
+      `DELETE FROM checkout_evidence WHERE agreement_id = $1 AND tenant_id = $2`,
+      [agreementId, tenantId]
+    );
+  }
+
+  /**
    * Check if checkout evidence exists
    */
   async exists(agreementId, tenantId) {

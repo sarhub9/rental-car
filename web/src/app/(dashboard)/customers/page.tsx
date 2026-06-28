@@ -6,6 +6,7 @@ import { customerService } from '@/services/customer.service';
 import toast from 'react-hot-toast';
 import { cleanPayload } from '@/lib/clean-payload';
 import { extractApiError } from '@/lib/api-error';
+import { DocumentUpload } from '@/components/DocumentUpload';
 import {
   HiPlus, HiMagnifyingGlass, HiPencilSquare, HiXMark,
   HiExclamationTriangle, HiShieldExclamation, HiChevronRight,
@@ -46,6 +47,10 @@ const emptyForm = {
   company_name: '', trade_license_number: '', trade_license_expiry: '',
   trn_number: '', authorized_person_name: '', authorized_person_mobile: '',
   payment_terms: 'CASH', credit_limit: '',
+  // Document photos
+  emirates_id_front_url: '', emirates_id_back_url: '',
+  license_front_url: '', license_back_url: '',
+  passport_photo_url: '', visa_photo_url: '',
 };
 
 // ── Field Helpers ────────────────────────────────────────────────────────────
@@ -128,6 +133,12 @@ function CustomerDrawer({ open, onClose, customer, onSaved }: {
           authorized_person_mobile: customer.authorized_person_mobile || '',
           payment_terms: customer.payment_terms || 'CASH',
           credit_limit: customer.credit_limit || '',
+          emirates_id_front_url: customer.emirates_id_front_url || '',
+          emirates_id_back_url: customer.emirates_id_back_url || '',
+          license_front_url: customer.license_front_url || '',
+          license_back_url: customer.license_back_url || '',
+          passport_photo_url: customer.passport_photo_url || '',
+          visa_photo_url: customer.visa_photo_url || '',
         });
       } else {
         setForm(emptyForm);
@@ -139,6 +150,9 @@ function CustomerDrawer({ open, onClose, customer, onSaved }: {
     const { name, value } = e.target;
     setForm(p => ({ ...p, [name]: value }));
   };
+
+  const setPhoto = (field: string) => (url: string) =>
+    setForm(p => ({ ...p, [field]: url }));
 
   const setType = (t: CustomerType) => {
     if (!readOnly) setForm(p => ({ ...p, customer_type: t }));
@@ -294,6 +308,15 @@ function CustomerDrawer({ open, onClose, customer, onSaved }: {
                 </div>
               </div>
               <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-100 pb-2">Documents</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <DocumentUpload label="Emirates ID — Front" category="customer-docs" docKey="EMIRATES_ID_FRONT" value={form.emirates_id_front_url} onChange={setPhoto('emirates_id_front_url')} readOnly={ro} />
+                  <DocumentUpload label="Emirates ID — Back" category="customer-docs" docKey="EMIRATES_ID_BACK" value={form.emirates_id_back_url} onChange={setPhoto('emirates_id_back_url')} readOnly={ro} />
+                  <DocumentUpload label="Driving License — Front" category="customer-docs" docKey="LICENSE_FRONT" value={form.license_front_url} onChange={setPhoto('license_front_url')} readOnly={ro} />
+                  <DocumentUpload label="Driving License — Back" category="customer-docs" docKey="LICENSE_BACK" value={form.license_back_url} onChange={setPhoto('license_back_url')} readOnly={ro} />
+                </div>
+              </div>
+              <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-100 pb-2">UAE Address</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
@@ -337,6 +360,15 @@ function CustomerDrawer({ open, onClose, customer, onSaved }: {
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="License Number" name="driving_license_number" value={form.driving_license_number} onChange={hi} disabled={ro} required />
                   <DateField label="License Expiry" name="license_expiry_date" value={form.license_expiry_date} onChange={hi} disabled={ro} required />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-100 pb-2">Documents</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <DocumentUpload label="Passport Photo" category="customer-docs" docKey="PASSPORT" value={form.passport_photo_url} onChange={setPhoto('passport_photo_url')} readOnly={ro} />
+                  <DocumentUpload label="Tourist Visa" category="customer-docs" docKey="VISA" value={form.visa_photo_url} onChange={setPhoto('visa_photo_url')} readOnly={ro} />
+                  <DocumentUpload label="Driving License — Front" category="customer-docs" docKey="LICENSE_FRONT" value={form.license_front_url} onChange={setPhoto('license_front_url')} readOnly={ro} />
+                  <DocumentUpload label="Driving License — Back" category="customer-docs" docKey="LICENSE_BACK" value={form.license_back_url} onChange={setPhoto('license_back_url')} readOnly={ro} />
                 </div>
               </div>
               <div>

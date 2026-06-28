@@ -3,6 +3,7 @@ import apiClient from '@/lib/api-client';
 export interface CreateAgreementPayload {
   customer_id: string;
   vehicle_id: string;
+  reservation_id?: string;
   rental_start_datetime: string;
   rental_end_datetime: string;
   daily_rate: number;
@@ -11,6 +12,27 @@ export interface CreateAgreementPayload {
   km_allowance_per_day?: number;
   rate_per_extra_km?: number;
   estimated_amount: number;
+  // Contract charge line-items
+  salik_charges?: number;
+  fines_charges?: number;
+  damages_charges?: number;
+  fuel_charges?: number;
+  extra_km_charges?: number;
+  delivery_charges?: number;
+  pickup_charges?: number;
+  extra_hour_charges?: number;
+  other_charges?: number;
+  deposit_amount?: number;
+  cdw_amount?: number;
+  excess_insurance_amount?: number;
+  deposit_waiver_amount?: number;
+  additional_remarks?: string;
+  // Additional driver
+  additional_driver_name?: string;
+  additional_driver_license?: string;
+  additional_driver_license_expiry?: string;
+  additional_driver_eid?: string;
+  additional_driver_dob?: string;
 }
 
 export interface AgreementListParams {
@@ -136,6 +158,16 @@ export async function saveAgreementSignature(agreementId: string, customer_signa
   return response.data.data || response.data;
 }
 
+export async function saveAgreementOfficerSignature(agreementId: string, officer_signature_url: string) {
+  const response = await apiClient.patch(`/v1/agreements/${agreementId}/officer-signature`, { officer_signature_url });
+  return response.data.data || response.data;
+}
+
+export async function saveAgreementInspection(agreementId: string, inspection: any) {
+  const response = await apiClient.patch(`/v1/agreements/${agreementId}/inspection`, { inspection });
+  return response.data.data || response.data;
+}
+
 export const agreementService = {
   createAgreement,
   getAgreements,
@@ -148,4 +180,6 @@ export const agreementService = {
   getAgreementPayments,
   recordAgreementPayment,
   saveAgreementSignature,
+  saveAgreementOfficerSignature,
+  saveAgreementInspection,
 };

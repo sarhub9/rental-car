@@ -20,8 +20,15 @@ class RentalAgreementModel {
           snapshot_fuel_policy, snapshot_late_return_rules,
           snapshot_add_ons, snapshot_terms_text,
           monthly_rate, km_allowance_per_day, rate_per_extra_km,
+          salik_charges, fines_charges, damages_charges, fuel_charges, extra_km_charges,
+          delivery_charges, pickup_charges, extra_hour_charges, other_charges,
+          deposit_amount, cdw_amount, excess_insurance_amount, deposit_waiver_amount,
+          additional_remarks,
+          additional_driver_name, additional_driver_license, additional_driver_license_expiry,
+          additional_driver_eid, additional_driver_dob,
           status
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'DRAFT')
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,
+          $23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,'DRAFT')
         RETURNING *
       `;
 
@@ -37,6 +44,16 @@ class RentalAgreementModel {
         data.snapshot_add_ons ? (typeof data.snapshot_add_ons === 'string' ? data.snapshot_add_ons : JSON.stringify(data.snapshot_add_ons)) : null,
         data.snapshot_terms_text || null,
         data.monthly_rate || null, data.km_allowance_per_day || null, data.rate_per_extra_km || null,
+        data.salik_charges || 0, data.fines_charges || 0, data.damages_charges || 0,
+        data.fuel_charges || 0, data.extra_km_charges || 0,
+        data.delivery_charges || 0, data.pickup_charges || 0, data.extra_hour_charges || 0,
+        data.other_charges || 0,
+        data.deposit_amount || 0, data.cdw_amount || 0, data.excess_insurance_amount || 0,
+        data.deposit_waiver_amount || 0,
+        data.additional_remarks || null,
+        data.additional_driver_name || null, data.additional_driver_license || null,
+        data.additional_driver_license_expiry || null,
+        data.additional_driver_eid || null, data.additional_driver_dob || null,
       ];
 
       const result = await pool.query(query, values);
@@ -75,6 +92,35 @@ class RentalAgreementModel {
       RETURNING *
     `;
     const result = await pool.query(query, [signatureUrl, id, tenantId]);
+    return result.rows[0];
+  }
+
+  /**
+   * Save the officer/company-representative signature URL (any status).
+   */
+  async setOfficerSignature(id, tenantId, signatureUrl) {
+    const query = `
+      UPDATE rental_agreements
+      SET officer_signature_url = $1
+      WHERE id = $2 AND tenant_id = $3
+      RETURNING *
+    `;
+    const result = await pool.query(query, [signatureUrl, id, tenantId]);
+    return result.rows[0];
+  }
+
+  /**
+   * Save the vehicle inspection JSON (checklist + photos + notes, any status).
+   */
+  async saveInspection(id, tenantId, inspection) {
+    const query = `
+      UPDATE rental_agreements
+      SET inspection = $1
+      WHERE id = $2 AND tenant_id = $3
+      RETURNING *
+    `;
+    const payload = typeof inspection === 'string' ? inspection : JSON.stringify(inspection);
+    const result = await pool.query(query, [payload, id, tenantId]);
     return result.rows[0];
   }
 
@@ -119,10 +165,12 @@ class RentalAgreementModel {
       SELECT
         ra.*,
         row_to_json(c.*) as customer,
-        row_to_json(v.*) as vehicle
+        row_to_json(v.*) as vehicle,
+        row_to_json(co.*) as company
       FROM rental_agreements ra
       LEFT JOIN customers c ON ra.customer_id = c.id AND c.tenant_id = ra.tenant_id
       LEFT JOIN vehicles v ON ra.vehicle_id = v.id AND v.tenant_id = ra.tenant_id
+      LEFT JOIN companies co ON co.id = ra.tenant_id
       WHERE ra.id = $1 AND ra.tenant_id = $2
     `;
 

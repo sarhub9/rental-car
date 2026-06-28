@@ -138,6 +138,18 @@ class ReservationModel {
     return result.rows[0];
   }
 
+  // Save the customer signature URL (allowed at any non-terminal status)
+  async setSignature(id, tenantId, signatureUrl) {
+    const query = `
+      UPDATE reservations
+      SET customer_signature_url = $1
+      WHERE id = $2 AND tenant_id = $3
+      RETURNING *
+    `;
+    const result = await pool.query(query, [signatureUrl, id, tenantId]);
+    return result.rows[0];
+  }
+
   // Create availability lock for CONFIRMED reservation
   async createLock(tenantId, vehicleId, reservationId, lockedFrom, lockedTo) {
     const result = await pool.query(

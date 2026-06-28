@@ -42,6 +42,13 @@ export interface CustomerPayload {
   is_blacklisted?: boolean;
   blacklist_reason?: string;
   verification_status?: string;
+  // Document photos
+  emirates_id_front_url?: string;
+  emirates_id_back_url?: string;
+  license_front_url?: string;
+  license_back_url?: string;
+  passport_photo_url?: string;
+  visa_photo_url?: string;
 }
 
 export const customerService = {

@@ -22,16 +22,18 @@ class EvidenceService {
 
     // Validate GPS metadata for each photo
     for (const photo of photos) {
-      const gpsValidation = validateGpsMetadata(
-        photo.gps_latitude,
-        photo.gps_longitude,
-        photo.gps_accuracy_meters
-      );
-
-      if (!gpsValidation.valid) {
-        const error = new Error(`GPS validation failed: ${gpsValidation.errors.join(', ')}`);
-        error.statusCode = 400;
-        throw error;
+      // GPS is optional (web checkout/return has no GPS). Validate only when provided.
+      if (photo.gps_latitude != null && photo.gps_longitude != null) {
+        const gpsValidation = validateGpsMetadata(
+          photo.gps_latitude,
+          photo.gps_longitude,
+          photo.gps_accuracy_meters
+        );
+        if (!gpsValidation.valid) {
+          const error = new Error(`GPS validation failed: ${gpsValidation.errors.join(', ')}`);
+          error.statusCode = 400;
+          throw error;
+        }
       }
 
       const timestampValidation = validatePhotoTimestamp(photo.captured_timestamp);
@@ -41,6 +43,22 @@ class EvidenceService {
         throw error;
       }
     }
+
+    // Signature is captured on the agreement before activation (not during
+    // checkout) — fall back to the agreement's signature so the evidence
+    // satisfies the "signature or OTP" requirement.
+    if (!evidenceData.customer_signature_url && !evidenceData.customer_otp_verified) {
+      const RentalAgreementModel = (await import('../models/rental-agreement.model.js')).default;
+      const agreement = await RentalAgreementModel.findById(agreementId, tenantId);
+      if (agreement?.customer_signature_url) {
+        evidenceData.customer_signature_url = agreement.customer_signature_url;
+      }
+    }
+
+    // Make checkout idempotent: a previous partial attempt may have left an
+    // orphan checkout_evidence row (unique per agreement). Clear it first.
+    await PhotoEvidenceModel.deleteByAgreementAndType(agreementId, tenantId, 'CHECKOUT');
+    await CheckoutEvidenceModel.deleteByAgreementId(agreementId, tenantId);
 
     // Create checkout evidence record
     const checkoutEvidence = await CheckoutEvidenceModel.create({
@@ -152,16 +170,18 @@ class EvidenceService {
 
     // Validate GPS metadata for each photo
     for (const photo of photos) {
-      const gpsValidation = validateGpsMetadata(
-        photo.gps_latitude,
-        photo.gps_longitude,
-        photo.gps_accuracy_meters
-      );
-
-      if (!gpsValidation.valid) {
-        const error = new Error(`GPS validation failed: ${gpsValidation.errors.join(', ')}`);
-        error.statusCode = 400;
-        throw error;
+      // GPS is optional (web checkout/return has no GPS). Validate only when provided.
+      if (photo.gps_latitude != null && photo.gps_longitude != null) {
+        const gpsValidation = validateGpsMetadata(
+          photo.gps_latitude,
+          photo.gps_longitude,
+          photo.gps_accuracy_meters
+        );
+        if (!gpsValidation.valid) {
+          const error = new Error(`GPS validation failed: ${gpsValidation.errors.join(', ')}`);
+          error.statusCode = 400;
+          throw error;
+        }
       }
 
       const timestampValidation = validatePhotoTimestamp(photo.captured_timestamp);

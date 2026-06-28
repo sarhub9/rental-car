@@ -55,10 +55,52 @@ class AgreementService {
       rate_per_extra_km: data.rate_per_extra_km || null,
       estimated_amount: estimatedAmount,
       created_by_user_id: userId,
+      // Contract charge line-items (default 0)
+      salik_charges: data.salik_charges,
+      fines_charges: data.fines_charges,
+      damages_charges: data.damages_charges,
+      fuel_charges: data.fuel_charges,
+      extra_km_charges: data.extra_km_charges,
+      delivery_charges: data.delivery_charges,
+      pickup_charges: data.pickup_charges,
+      extra_hour_charges: data.extra_hour_charges,
+      other_charges: data.other_charges,
+      deposit_amount: data.deposit_amount,
+      cdw_amount: data.cdw_amount,
+      excess_insurance_amount: data.excess_insurance_amount,
+      deposit_waiver_amount: data.deposit_waiver_amount,
+      additional_remarks: data.additional_remarks,
+      // Additional driver
+      additional_driver_name: data.additional_driver_name,
+      additional_driver_license: data.additional_driver_license,
+      additional_driver_license_expiry: data.additional_driver_license_expiry,
+      additional_driver_eid: data.additional_driver_eid,
+      additional_driver_dob: data.additional_driver_dob,
       ...snapshotFields,
     });
 
     await AuditLogService.logCreation(tenantId, agreement.id, userId, ipAddress, userAgent);
+
+    // Link the originating reservation: carry its signature into the agreement
+    // and mark the reservation as checked-out + linked.
+    if (data.reservation_id) {
+      try {
+        const ReservationService = (await import('./reservation.service.js')).default;
+        const reservation = await ReservationService.getById(data.reservation_id, tenantId);
+
+        await RentalAgreementModel.update(agreement.id, tenantId, { reservation_id: data.reservation_id });
+        agreement.reservation_id = data.reservation_id;
+
+        if (reservation?.customer_signature_url) {
+          await RentalAgreementModel.setSignature(agreement.id, tenantId, reservation.customer_signature_url);
+          agreement.customer_signature_url = reservation.customer_signature_url;
+        }
+
+        await ReservationService.markCheckedOut(data.reservation_id, tenantId, agreement.id);
+      } catch (e) {
+        console.warn('Reservation linkage failed (non-blocking):', e.message);
+      }
+    }
 
     return agreement;
   }

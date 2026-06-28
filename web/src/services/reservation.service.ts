@@ -40,6 +40,11 @@ export async function markNoShow(id: string) {
   return response.data.data || response.data;
 }
 
+export async function saveReservationSignature(id: string, customer_signature_url: string) {
+  const response = await apiClient.patch(`/v1/reservations/${id}/signature`, { customer_signature_url });
+  return response.data.data || response.data;
+}
+
 export const reservationService = {
   listReservations,
   getReservationById,
@@ -49,4 +54,5 @@ export const reservationService = {
   assignVehicle,
   cancelReservation,
   markNoShow,
+  saveReservationSignature,
 };

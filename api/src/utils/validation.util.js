@@ -9,6 +9,7 @@ import Joi from 'joi';
 export const createAgreementSchema = Joi.object({
   customer_id: Joi.string().uuid().required(),
   vehicle_id: Joi.string().uuid().required(),
+  reservation_id: Joi.string().uuid().allow(null),
   rental_start_datetime: Joi.date().iso().required(),
   rental_end_datetime: Joi.date().iso().greater(Joi.ref('rental_start_datetime')).required(),
   daily_rate: Joi.number().positive().allow(null),
@@ -17,6 +18,27 @@ export const createAgreementSchema = Joi.object({
   km_allowance_per_day: Joi.number().integer().min(0).allow(null),
   rate_per_extra_km: Joi.number().min(0).allow(null),
   estimated_amount: Joi.number().min(0).allow(null),
+  // Contract charge line-items
+  salik_charges: Joi.number().min(0).allow(null),
+  fines_charges: Joi.number().min(0).allow(null),
+  damages_charges: Joi.number().min(0).allow(null),
+  fuel_charges: Joi.number().min(0).allow(null),
+  extra_km_charges: Joi.number().min(0).allow(null),
+  delivery_charges: Joi.number().min(0).allow(null),
+  pickup_charges: Joi.number().min(0).allow(null),
+  extra_hour_charges: Joi.number().min(0).allow(null),
+  other_charges: Joi.number().min(0).allow(null),
+  deposit_amount: Joi.number().min(0).allow(null),
+  cdw_amount: Joi.number().min(0).allow(null),
+  excess_insurance_amount: Joi.number().min(0).allow(null),
+  deposit_waiver_amount: Joi.number().min(0).allow(null),
+  additional_remarks: Joi.string().max(2000).allow(null, ''),
+  // Additional driver
+  additional_driver_name: Joi.string().max(200).allow(null, ''),
+  additional_driver_license: Joi.string().max(50).allow(null, ''),
+  additional_driver_license_expiry: Joi.date().iso().allow(null),
+  additional_driver_eid: Joi.string().max(50).allow(null, ''),
+  additional_driver_dob: Joi.date().iso().allow(null),
 }).or('daily_rate', 'weekly_rate', 'monthly_rate');
 
 // Agreement update schema
@@ -28,6 +50,27 @@ export const updateAgreementSchema = Joi.object({
   monthly_rate: Joi.number().positive().allow(null),
   km_allowance_per_day: Joi.number().integer().min(0).allow(null),
   rate_per_extra_km: Joi.number().min(0).allow(null),
+  // Contract charge line-items
+  salik_charges: Joi.number().min(0).allow(null),
+  fines_charges: Joi.number().min(0).allow(null),
+  damages_charges: Joi.number().min(0).allow(null),
+  fuel_charges: Joi.number().min(0).allow(null),
+  extra_km_charges: Joi.number().min(0).allow(null),
+  delivery_charges: Joi.number().min(0).allow(null),
+  pickup_charges: Joi.number().min(0).allow(null),
+  extra_hour_charges: Joi.number().min(0).allow(null),
+  other_charges: Joi.number().min(0).allow(null),
+  deposit_amount: Joi.number().min(0).allow(null),
+  cdw_amount: Joi.number().min(0).allow(null),
+  excess_insurance_amount: Joi.number().min(0).allow(null),
+  deposit_waiver_amount: Joi.number().min(0).allow(null),
+  additional_remarks: Joi.string().max(2000).allow(null, ''),
+  // Additional driver
+  additional_driver_name: Joi.string().max(200).allow(null, ''),
+  additional_driver_license: Joi.string().max(50).allow(null, ''),
+  additional_driver_license_expiry: Joi.date().iso().allow(null),
+  additional_driver_eid: Joi.string().max(50).allow(null, ''),
+  additional_driver_dob: Joi.date().iso().allow(null),
 }).min(1);
 
 // Checkout evidence schema

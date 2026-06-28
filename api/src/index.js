@@ -59,7 +59,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 app.use(apiRateLimiter);
-app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
+// Serve uploaded images. Allow cross-origin embedding (the web app runs on a
+// different origin) — helmet's default CORP header otherwise blocks <img> loads.
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(path.resolve(process.cwd(), 'uploads'))
+);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -140,6 +140,16 @@ class ReservationService {
     return await ReservationModel.updateStatus(id, tenantId, 'CHECKED_OUT', { agreement_id: agreementId });
   }
 
+  async saveSignature(id, tenantId, signatureUrl) {
+    const reservation = await this.getById(id, tenantId);
+    if (['CHECKED_OUT', 'CANCELLED', 'NO_SHOW'].includes(reservation.status)) {
+      const err = new Error(`Cannot sign a ${reservation.status} reservation`);
+      err.statusCode = 409;
+      throw err;
+    }
+    return await ReservationModel.setSignature(id, tenantId, signatureUrl);
+  }
+
   async markNoShow(id, tenantId) {
     const reservation = await this.getById(id, tenantId);
     if (reservation.status !== 'CONFIRMED') {

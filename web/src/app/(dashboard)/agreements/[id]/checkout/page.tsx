@@ -10,7 +10,6 @@ import {
   HiCamera,
   HiCog6Tooth,
   HiClipboardDocumentList,
-  HiPencilSquare,
   HiClipboardDocumentCheck,
   HiXMark,
   HiPlus,
@@ -23,7 +22,6 @@ const STEPS = [
   { label: 'Photos', icon: HiCamera },
   { label: 'Odometer & Fuel', icon: HiCog6Tooth },
   { label: 'Accessories', icon: HiClipboardDocumentList },
-  { label: 'Signature', icon: HiPencilSquare },
   { label: 'Review', icon: HiClipboardDocumentCheck },
 ];
 
@@ -71,9 +69,7 @@ export default function CheckoutPage() {
   const [accessories, setAccessories] = useState<string[]>([]);
   const [accessoryInput, setAccessoryInput] = useState('');
 
-  // Step 4: Signature
-  const [signatureFile, setSignatureFile] = useState<File | null>(null);
-  const [signaturePreview, setSignaturePreview] = useState('');
+  // (Signature is captured on the agreement before activation — not in checkout.)
 
   const handlePhotoChange = (angle: string, file: File | null) => {
     setPhotos((prev) => ({ ...prev, [angle]: file }));
@@ -102,16 +98,6 @@ export default function CheckoutPage() {
     setAccessories((prev) => prev.filter((a) => a !== item));
   };
 
-  const handleSignatureChange = (file: File | null) => {
-    setSignatureFile(file);
-    if (file) {
-      setSignaturePreview(URL.createObjectURL(file));
-    } else {
-      if (signaturePreview) URL.revokeObjectURL(signaturePreview);
-      setSignaturePreview('');
-    }
-  };
-
   const canProceed = (): boolean => {
     switch (currentStep) {
       case 0:
@@ -121,8 +107,6 @@ export default function CheckoutPage() {
       case 2:
         return true;
       case 3:
-        return signatureFile !== null;
-      case 4:
         return true;
       default:
         return false;
@@ -144,10 +128,6 @@ export default function CheckoutPage() {
       formData.append('odometer_reading', odometerReading);
       formData.append('fuel_level', fuelLevel);
       formData.append('accessories', JSON.stringify(accessories));
-
-      if (signatureFile) {
-        formData.append('signature', signatureFile);
-      }
 
       await agreementService.checkoutAgreement(id, formData);
       toast.success('Checkout completed successfully');
@@ -392,46 +372,8 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        {/* Step 4: Signature */}
+        {/* Step 4: Review */}
         {currentStep === 3 && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Customer Signature</h2>
-            <p className="text-sm text-gray-500">Upload the customer signature image</p>
-
-            {signaturePreview ? (
-              <div className="relative max-w-md">
-                <div className="rounded-lg border-2 border-blue-200 bg-white p-4">
-                  <img
-                    src={signaturePreview}
-                    alt="Customer signature"
-                    className="max-h-40 mx-auto"
-                  />
-                </div>
-                <button
-                  onClick={() => handleSignatureChange(null)}
-                  className="absolute top-2 right-2 rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600"
-                >
-                  <HiXMark className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center py-16 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all max-w-md">
-                <HiPencilSquare className="h-12 w-12 text-gray-400 mb-3" />
-                <span className="text-sm font-medium text-gray-700">Click to upload signature</span>
-                <span className="text-xs text-gray-500 mt-1">PNG, JPG or SVG</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleSignatureChange(e.target.files?.[0] || null)}
-                />
-              </label>
-            )}
-          </div>
-        )}
-
-        {/* Step 5: Review */}
-        {currentStep === 4 && (
           <div className="space-y-6">
             <h2 className="text-lg font-semibold text-gray-900">Review Checkout Details</h2>
             <p className="text-sm text-gray-500">Confirm all information is correct before completing checkout</p>
@@ -504,21 +446,6 @@ export default function CheckoutPage() {
                 )}
               </div>
 
-              {/* Signature */}
-              <div className="rounded-lg border border-gray-200 p-4">
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Customer Signature
-                </h3>
-                {signaturePreview ? (
-                  <img
-                    src={signaturePreview}
-                    alt="Signature"
-                    className="max-h-24 rounded border border-gray-200 bg-white p-2"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-500">No signature uploaded</p>
-                )}
-              </div>
             </div>
           </div>
         )}

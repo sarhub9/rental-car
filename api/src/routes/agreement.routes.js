@@ -190,4 +190,48 @@ router.patch('/:id/signature', requireRole('FRONT_DESK', 'OWNER_ADMIN'), async (
   }
 });
 
+/**
+ * @route   PATCH /v1/agreements/:id/officer-signature
+ * @desc    Save the officer / company-representative signature URL
+ * @access  Front Desk, Admin
+ */
+router.patch('/:id/officer-signature', requireRole('FRONT_DESK', 'OWNER_ADMIN'), async (req, res) => {
+  try {
+    const RentalAgreementModel = (await import('../models/rental-agreement.model.js')).default;
+    if (!req.body.officer_signature_url) {
+      return res.status(400).json({ error: 'officer_signature_url is required' });
+    }
+    const updated = await RentalAgreementModel.setOfficerSignature(
+      req.params.id, req.tenantId, req.body.officer_signature_url
+    );
+    if (!updated) return res.status(404).json({ error: 'Agreement not found' });
+    return res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    console.error('Save officer signature error:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+/**
+ * @route   PATCH /v1/agreements/:id/inspection
+ * @desc    Save the vehicle inspection (before/after checklist + photos + notes)
+ * @access  Front Desk, Admin
+ */
+router.patch('/:id/inspection', requireRole('FRONT_DESK', 'OWNER_ADMIN'), async (req, res) => {
+  try {
+    const RentalAgreementModel = (await import('../models/rental-agreement.model.js')).default;
+    if (!req.body.inspection || typeof req.body.inspection !== 'object') {
+      return res.status(400).json({ error: 'inspection object is required' });
+    }
+    const updated = await RentalAgreementModel.saveInspection(
+      req.params.id, req.tenantId, req.body.inspection
+    );
+    if (!updated) return res.status(404).json({ error: 'Agreement not found' });
+    return res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    console.error('Save inspection error:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 export default router;

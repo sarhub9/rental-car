@@ -22,6 +22,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Spinner } from '@/components/Spinner';
 import { Modal } from '@/components/Modal';
+import { SignaturePad } from '@/components/SignaturePad';
 
 export default function TaskDetailPage() {
   const { id } = useParams();
@@ -37,6 +38,25 @@ export default function TaskDetailPage() {
     condition_notes: '',
     customer_confirmation_type: 'signature',
   });
+  const [signaturePreview, setSignaturePreview] = useState('');
+  const [signatureUploaded, setSignatureUploaded] = useState(false);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
+
+  const handleSignatureCapture = async (file: File, dataUrl: string) => {
+    try {
+      setUploadingSignature(true);
+      const fd = new FormData();
+      fd.append('signature', file);
+      await driverTaskService.uploadTaskSignature(id as string, fd);
+      setSignaturePreview(dataUrl);
+      setSignatureUploaded(true);
+      toast.success('Signature captured');
+    } catch (err: any) {
+      toast.error(extractApiError(err, 'Failed to upload signature'));
+    } finally {
+      setUploadingSignature(false);
+    }
+  };
 
   // Cancel modal state
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -83,16 +103,22 @@ export default function TaskDetailPage() {
   };
 
   const handleCompleteTask = async () => {
+    if (completeForm.customer_confirmation_type === 'signature' && !signatureUploaded) {
+      toast.error('Please capture the customer signature first');
+      return;
+    }
     try {
       setSubmitting(true);
       await driverTaskService.completeTask(id as string, {
         odometer_reading: Number(completeForm.odometer_reading),
         fuel_level: completeForm.fuel_level,
         condition_notes: completeForm.condition_notes,
-        customer_confirmation_type: completeForm.customer_confirmation_type,
+        customer_confirmation_type: completeForm.customer_confirmation_type.toUpperCase(),
       });
       toast.success('Task completed');
       setShowCompleteModal(false);
+      setSignaturePreview('');
+      setSignatureUploaded(false);
       fetchTask();
     } catch (err: any) {
       toast.error(extractApiError(err, 'Failed to complete task'));
@@ -484,10 +510,18 @@ export default function TaskDetailPage() {
             >
               <option value="signature">Signature</option>
               <option value="otp">OTP</option>
-              <option value="photo_id">Photo ID</option>
-              <option value="none">None</option>
             </select>
           </div>
+          {completeForm.customer_confirmation_type === 'signature' && (
+            <div>
+              <SignaturePad
+                label={uploadingSignature ? 'Uploading signature...' : 'Customer Signature'}
+                value={signaturePreview}
+                onCapture={handleSignatureCapture}
+                onChange={(url) => { if (!url) { setSignaturePreview(''); setSignatureUploaded(false); } }}
+              />
+            </div>
+          )}
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={() => setShowCompleteModal(false)}

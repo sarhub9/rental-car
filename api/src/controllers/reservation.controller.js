@@ -87,6 +87,21 @@ class ReservationController {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+
+  async saveSignature(req, res) {
+    try {
+      if (!req.body.customer_signature_url) {
+        return res.status(400).json({ error: 'customer_signature_url is required' });
+      }
+      const reservation = await ReservationService.saveSignature(
+        req.params.id, req.tenantId, req.body.customer_signature_url
+      );
+      return res.status(200).json({ success: true, data: reservation });
+    } catch (error) {
+      if (error.statusCode) return res.status(error.statusCode).json({ error: error.message });
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
 }
 
 export default new ReservationController();
