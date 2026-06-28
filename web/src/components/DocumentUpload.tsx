@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { HiArrowUpTray, HiXMark, HiCheckCircle } from 'react-icons/hi2';
 import { uploadService } from '@/services/upload.service';
 import { extractApiError } from '@/lib/api-error';
+import { resolveUpload } from '@/lib/asset-url';
 
 interface DocumentUploadProps {
   label: string;
@@ -65,7 +66,7 @@ export function DocumentUpload({ label, value, onChange, category, docKey, requi
         value ? (
           <div className="rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt={label} className="w-full h-36 object-cover" />
+            <img src={resolveUpload(value)} alt={label} className="w-full h-36 object-cover" />
           </div>
         ) : (
           <div className="w-full h-36 flex items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-xs text-gray-400">

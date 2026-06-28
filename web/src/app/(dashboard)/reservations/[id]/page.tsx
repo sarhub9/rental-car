@@ -19,6 +19,7 @@ import { Modal } from '@/components/Modal';
 import { Spinner } from '@/components/Spinner';
 import { SignaturePad } from '@/components/SignaturePad';
 import { extractApiError } from '@/lib/api-error';
+import { resolveUpload } from '@/lib/asset-url';
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -198,7 +199,7 @@ export default function ReservationDetailPage() {
           </div>
         ) : reservation.customer_signature_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={reservation.customer_signature_url} alt="Customer signature" className="max-h-40 border border-gray-100 rounded-lg bg-white" />
+          <img src={resolveUpload(reservation.customer_signature_url)} alt="Customer signature" className="max-h-40 border border-gray-100 rounded-lg bg-white" />
         ) : (
           <p className="text-sm text-gray-400 italic">No signature captured</p>
         )}

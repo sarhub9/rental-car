@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { HiXMark, HiCheckCircle, HiPencilSquare, HiTrash } from 'react-icons/hi2';
 import { uploadService } from '@/services/upload.service';
 import { extractApiError } from '@/lib/api-error';
+import { resolveUpload } from '@/lib/asset-url';
 
 interface SignaturePadProps {
   label: string;
@@ -147,7 +148,7 @@ export function SignaturePad({ label, value, onChange, onCapture, category, docK
       {(localPreview || value) ? (
         <div className="relative group rounded-lg border border-gray-300 overflow-hidden bg-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={localPreview || value} alt={label} className="w-full h-36 object-contain bg-white" />
+          <img src={localPreview || resolveUpload(value)} alt={label} className="w-full h-36 object-contain bg-white" />
           <div className="absolute top-2 right-2 flex gap-1.5">
             <button type="button" onClick={() => setOpen(true)}
               className="px-2 py-1 rounded-md bg-white/90 text-xs font-medium text-gray-700 shadow hover:bg-white">

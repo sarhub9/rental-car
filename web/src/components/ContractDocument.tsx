@@ -11,6 +11,7 @@
  */
 
 import { VEHICLE_PARTS, conditionMeta } from '@/lib/vehicle-parts';
+import { resolveUpload } from '@/lib/asset-url';
 
 type Row = [string, any];
 
@@ -129,7 +130,7 @@ function ChecklistBlock({ title, fuelLevel, mileage, date, notes, parts, photos 
               const src = typeof p === 'string' ? p : (p.photo_url || p.url || '');
               return (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={src} alt="" className="w-full h-12 object-cover rounded border border-gray-200" />
+                <img key={i} src={resolveUpload(src)} alt="" className="w-full h-12 object-cover rounded border border-gray-200" />
               );
             })}
           </div>
@@ -146,7 +147,7 @@ function SignatureSlot({ label, name, imageUrl }: { label: string; name?: string
       <div className="h-16 flex items-end">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={label} className="max-h-16 object-contain" />
+          <img src={resolveUpload(imageUrl)} alt={label} className="max-h-16 object-contain" />
         ) : null}
       </div>
       <div className="border-t border-gray-400 pt-1">
@@ -270,7 +271,7 @@ export default function ContractDocument({ agreement, evidence }: { agreement: a
           <div className="flex items-center gap-3">
             {co.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={co.logo_url} alt="logo" className="h-14 w-14 object-contain" />
+              <img src={resolveUpload(co.logo_url)} alt="logo" className="h-14 w-14 object-contain" />
             ) : (
               <div className="h-14 w-14 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-lg">
                 {(co.name || 'CR').slice(0, 2).toUpperCase()}

@@ -23,6 +23,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Spinner } from '@/components/Spinner';
 import { Modal } from '@/components/Modal';
 import { SignaturePad } from '@/components/SignaturePad';
+import { resolveUpload } from '@/lib/asset-url';
 
 export default function TaskDetailPage() {
   const { id } = useParams();
@@ -312,7 +313,7 @@ export default function TaskDetailPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {task.evidence_photos.map((photo: string, idx: number) => (
               <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
-                <img src={photo} alt={`Evidence ${idx + 1}`} className="w-full h-full object-cover" />
+                <img src={resolveUpload(photo)} alt={`Evidence ${idx + 1}`} className="w-full h-full object-cover" />
               </div>
             ))}
           </div>

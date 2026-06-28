@@ -17,6 +17,13 @@ const nextConfig: NextConfig = {
         source: "/auth/:path*",
         destination: `${API_BASE}/v1/auth/:path*`,
       },
+      {
+        // Proxy uploaded files (signatures, document photos) through this origin
+        // so the browser loads them same-origin — avoids cross-origin/CORP and
+        // localhost base-URL issues in production (Vercel → API).
+        source: "/uploads/:path*",
+        destination: `${API_BASE}/uploads/:path*`,
+      },
     ];
   },
 };

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { HiArrowUpTray, HiXMark, HiCheck } from 'react-icons/hi2';
 import { uploadService } from '@/services/upload.service';
 import { extractApiError } from '@/lib/api-error';
+import { resolveUpload } from '@/lib/asset-url';
 import {
   VEHICLE_PARTS, PART_CONDITIONS, conditionMeta, emptyInspection,
   type Inspection, type InspectionSide, type PartCondition,
@@ -40,7 +41,7 @@ function PhotoUploader({ photos, onChange, label }: { photos: string[]; onChange
         {photos.map((url, i) => (
           <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt="" className="w-full h-full object-cover" />
+            <img src={resolveUpload(url)} alt="" className="w-full h-full object-cover" />
             <button
               type="button"
               onClick={() => onChange(photos.filter((_, idx) => idx !== i))}
