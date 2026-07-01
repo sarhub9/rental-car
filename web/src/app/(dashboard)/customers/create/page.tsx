@@ -312,8 +312,8 @@ export default function CreateCustomerPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <F label="Passport Number" name="passport_number" value={form.passport_number} onChange={set} required />
                         <D label="Passport Expiry" name="passport_expiry" value={form.passport_expiry} onChange={set} required />
-                        <F label="Visa / Entry No." name="visa_number" value={form.visa_number} onChange={set} required />
-                        <D label="Visa Expiry" name="visa_expiry" value={form.visa_expiry} onChange={set} required />
+                        <F label="Visa / Entry No." name="visa_number" value={form.visa_number} onChange={set} />
+                        <D label="Visa Expiry" name="visa_expiry" value={form.visa_expiry} onChange={set} />
                       </div>
                     </div>
                     <div>

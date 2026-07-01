@@ -351,8 +351,8 @@ function CustomerDrawer({ open, onClose, customer, onSaved }: {
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="Passport Number" name="passport_number" value={form.passport_number} onChange={hi} disabled={ro} required />
                   <DateField label="Passport Expiry" name="passport_expiry" value={form.passport_expiry} onChange={hi} disabled={ro} required />
-                  <Field label="Visa / Entry Stamp No." name="visa_number" value={form.visa_number} onChange={hi} disabled={ro} required />
-                  <DateField label="Visa Expiry" name="visa_expiry" value={form.visa_expiry} onChange={hi} disabled={ro} required />
+                  <Field label="Visa / Entry Stamp No." name="visa_number" value={form.visa_number} onChange={hi} disabled={ro} />
+                  <DateField label="Visa Expiry" name="visa_expiry" value={form.visa_expiry} onChange={hi} disabled={ro} />
                 </div>
               </div>
               <div>
