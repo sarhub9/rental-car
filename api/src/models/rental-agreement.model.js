@@ -294,6 +294,22 @@ class RentalAgreementModel {
   }
 
   /**
+   * Close an ACTIVE agreement: set status, return timestamp and actual amount.
+   * The generic update() only touches DRAFT rows, so closing needs its own
+   * query. The `status = 'ACTIVE'` guard keeps it safe/idempotent.
+   */
+  async close(id, tenantId, actualAmount, timestamp = new Date()) {
+    const query = `
+      UPDATE rental_agreements
+      SET status = 'CLOSED', return_timestamp = $1, actual_amount = $2
+      WHERE id = $3 AND tenant_id = $4 AND status = 'ACTIVE'
+      RETURNING *
+    `;
+    const result = await pool.query(query, [timestamp, actualAmount, id, tenantId]);
+    return result.rows[0];
+  }
+
+  /**
    * Check vehicle availability for date range
    */
   async checkVehicleAvailability(vehicleId, tenantId, startDate, endDate, excludeAgreementId = null) {

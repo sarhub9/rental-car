@@ -38,6 +38,11 @@ const createApiClient = (): AxiosInstance => {
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    // File uploads (checkout/return photos → Cloudinary) can take well over the
+    // default 15s, so give multipart/form-data requests a much longer timeout.
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      config.timeout = 120000;
+    }
     return config;
   });
 

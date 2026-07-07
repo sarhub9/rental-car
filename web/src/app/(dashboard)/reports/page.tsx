@@ -324,7 +324,7 @@ export default function ReportsPage() {
                 <SummaryCard label="Total Amount"    value={fmt(data.summary.total_amount)} />
                 <SummaryCard label="Admin Fees"      value={fmt(data.summary.total_admin_fee)} />
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <SummaryCard label="Attributed"   value={data.summary.attributed?.toString()} />
                 <SummaryCard label="Invoiced"     value={data.summary.invoiced?.toString()} />
                 <SummaryCard label="Unattributed" value={data.summary.unattributed?.toString()} />
@@ -343,7 +343,7 @@ export default function ReportsPage() {
           {/* ── P&L ── */}
           {tab === 'pnl' && data.summary && (
             <>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-green-50 rounded-xl border border-green-100 p-4">
                   <p className="text-xs text-green-600 mb-1 font-medium">Gross Revenue</p>
                   <p className="text-2xl font-bold text-green-700">{fmt(data.summary.gross_revenue)}</p>
@@ -393,7 +393,7 @@ export default function ReportsPage() {
                 <p className="text-sm font-bold text-gray-900">{data.customer.full_name_en}</p>
                 <p className="text-xs text-gray-500">{data.customer.phone_number} · {data.customer.email ?? '—'} · {data.customer.customer_type}</p>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <SummaryCard label="Total Billed"  value={fmt(data.summary.total_billed)} />
                 <SummaryCard label="Total Paid"    value={fmt(data.summary.total_paid)} />
                 <SummaryCard label="Balance Due"   value={fmt(data.summary.balance_due)} />

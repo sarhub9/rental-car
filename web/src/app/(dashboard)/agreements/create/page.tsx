@@ -232,10 +232,6 @@ export default function CreateAgreementPage() {
   const setCharge = (key: keyof typeof charges, val: number) =>
     setCharges((c) => ({ ...c, [key]: val }));
   const [additionalRemarks, setAdditionalRemarks] = useState('');
-  // Manual price adjustment on the rental subtotal: positive = surcharge,
-  // negative = discount. Lets staff correct the auto-calculated rent (e.g. bill
-  // the leftover days of a monthly rental, or apply a negotiated discount).
-  const [rentAdjustment, setRentAdjustment] = useState(0);
   // Per-line overrides for the rent breakdown. `null` = use the calculated
   // amount; a number = the staff-edited amount for that line.
   const [lineOverride, setLineOverride] = useState<{
@@ -279,11 +275,8 @@ export default function CreateAgreementPage() {
   const dayLine = pricing.remainder > 0 ? pricing.remainder * dayUnit : 0;
   const rentBeforeAdjust = monthLine + weekLine + dayLine;
 
-  // Rental subtotal after the manual adjustment (never below zero).
-  const adjustedRent = useMemo(
-    () => Math.max(0, rentBeforeAdjust + (Number(rentAdjustment) || 0)),
-    [rentBeforeAdjust, rentAdjustment]
-  );
+  // Rental subtotal = sum of the (editable) breakdown lines.
+  const adjustedRent = rentBeforeAdjust;
 
   // Config for rendering the editable rent breakdown lines. `unit` is the
   // editable per-unit rate; `value`/`total` is count × unit.
@@ -1138,27 +1131,6 @@ export default function CreateAgreementPage() {
                   </div>
                 )}
                 <div className="border-t border-gray-300 pt-2 flex justify-between">
-                  <span className="text-gray-600">Rent Subtotal (before adjustment)</span>
-                  <span className="font-medium text-gray-900">AED {rentBeforeAdjust.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">
-                    Price Adjustment
-                    <span className="block text-xs text-gray-400">+ surcharge / − discount</span>
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-500 text-xs">AED</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={rentAdjustment || ''}
-                      onChange={(e) => setRentAdjustment(Number(e.target.value) || 0)}
-                      placeholder="0.00"
-                      className="w-28 rounded-md border border-gray-300 px-2 py-1 text-right text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-between">
                   <span className="font-medium text-gray-700">Rental Subtotal</span>
                   <span className="font-semibold text-gray-900">AED {adjustedRent.toFixed(2)}</span>
                 </div>
@@ -1312,18 +1284,6 @@ export default function CreateAgreementPage() {
                     </div>
                   )}
                   <div className="flex justify-between border-t border-blue-200 pt-2 mt-2">
-                    <span className="text-gray-600">Rent Subtotal</span>
-                    <span className="font-medium">AED {rentBeforeAdjust.toFixed(2)}</span>
-                  </div>
-                  {rentAdjustment !== 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Price Adjustment</span>
-                      <span className={`font-medium ${rentAdjustment < 0 ? 'text-red-600' : ''}`}>
-                        {rentAdjustment < 0 ? '−' : '+'} AED {Math.abs(rentAdjustment).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
                     <span className="text-gray-600">Rental Subtotal</span>
                     <span className="font-medium">AED {adjustedRent.toFixed(2)}</span>
                   </div>

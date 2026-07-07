@@ -224,7 +224,7 @@ export default function AdminSettingsPage() {
           </Section>
 
           <Section title="Invoicing & Tax" icon={<HiOutlineCurrencyDollar className="h-5 w-5" />}>
-            <div className="grid grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <Field label="Invoice Prefix" hint="e.g. INV, RNT">{cInput('invoice_prefix', { placeholder: 'INV' })}</Field>
               <Field label="Currency">{cInput('currency', { placeholder: 'AED' })}</Field>
               <Field label="VAT Rate (%)" hint="UAE standard is 5%">

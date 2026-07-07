@@ -225,7 +225,7 @@ export default function CreateExpensePage() {
                 </div>
                 <div>
                   <FG title="Payment Method" />
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {PAYMENT_METHODS.map(m => (
                       <button key={m} type="button"
                         onClick={() => setForm(p => ({ ...p, payment_method: m }))}

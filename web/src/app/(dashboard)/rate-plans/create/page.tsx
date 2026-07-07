@@ -214,7 +214,7 @@ export default function CreateRatePlanPage() {
               <div className="space-y-6">
                 <div>
                   <FG title="Rental Rates (AED)" />
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Field label="Daily Rate"><NumInput value={dailyRate} onChange={setDailyRate} /></Field>
                     <Field label="Weekly Rate"><NumInput value={weeklyRate} onChange={setWeeklyRate} /></Field>
                     <Field label="Monthly Rate"><NumInput value={monthlyRate} onChange={setMonthlyRate} /></Field>
@@ -222,7 +222,7 @@ export default function CreateRatePlanPage() {
                 </div>
                 <div>
                   <FG title="Kilometres & Deposit" />
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Field label="Included KM/Day"><NumInput value={includedKm} onChange={setIncludedKm} placeholder="e.g. 250" step="1" /></Field>
                     <Field label="Extra KM Rate (AED)"><NumInput value={extraKmRate} onChange={setExtraKmRate} placeholder="0.00" /></Field>
                     <Field label="Deposit (AED)"><NumInput value={depositAmount} onChange={setDepositAmount} placeholder="0.00" /></Field>
@@ -288,7 +288,7 @@ export default function CreateRatePlanPage() {
                 </div>
                 <div>
                   <FG title="Late Return Rules" />
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Field label="Grace Period (hrs)"><NumInput value={gracePeriodHours} onChange={setGracePeriodHours} placeholder="2" step="1" /></Field>
                     <Field label="Hourly Charge (AED)"><NumInput value={hourlyCharge} onChange={setHourlyCharge} placeholder="50" /></Field>
                     <Field label="Daily Cap (AED)"><NumInput value={dailyCap} onChange={setDailyCap} placeholder="150" /></Field>

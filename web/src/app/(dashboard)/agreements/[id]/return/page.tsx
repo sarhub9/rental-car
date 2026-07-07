@@ -119,11 +119,12 @@ export default function ReturnPage() {
 
       formData.append('odometer_reading', odometerReading);
       formData.append('fuel_level', fuelLevel);
-      formData.append('has_damage', String(hasDamage));
+      // Field names must match the API controller exactly.
+      formData.append('damage_documented', String(hasDamage));
       if (hasDamage) {
         formData.append('damage_description', damageDescription);
       }
-      formData.append('customer_acknowledged', String(acknowledged));
+      formData.append('customer_acknowledgment', String(acknowledged));
 
       await agreementService.returnAgreement(id, formData);
       toast.success('Return completed successfully');

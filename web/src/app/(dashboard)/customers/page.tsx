@@ -244,7 +244,7 @@ function CustomerDrawer({ open, onClose, customer, onSaved }: {
         {/* Type selector */}
         <div className="px-5 pt-4 pb-3">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2.5">Customer Type</p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {CUSTOMER_TYPES.map(t => {
               const Icon = t.icon;
               const active = form.customer_type === t.value;
@@ -589,7 +589,8 @@ export default function CustomersPage() {
             </button>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px]">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/60">
                 <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
@@ -654,6 +655,7 @@ export default function CustomersPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

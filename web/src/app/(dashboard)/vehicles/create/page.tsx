@@ -233,7 +233,7 @@ export default function CreateVehiclePage() {
               <>
                 <div>
                   <FieldGroup title="Vehicle" />
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <F label="Make" name="make" value={form.make} onChange={set} required placeholder="Toyota" />
                     <F label="Model" name="model" value={form.model} onChange={set} required placeholder="Camry" />
                     <F label="Year" name="year" value={form.year} onChange={set} type="number" required />
@@ -245,7 +245,7 @@ export default function CreateVehiclePage() {
                 </div>
                 <div>
                   <FieldGroup title="Specifications" />
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <S label="Transmission" name="transmission_type" value={form.transmission_type} onChange={set} options={TRANSMISSION_TYPES} />
                     <S label="Fuel Type" name="fuel_type" value={form.fuel_type} onChange={set} options={FUEL_TYPES} />
                     <S label="Body Type" name="body_type" value={form.body_type} onChange={set} options={BODY_TYPES} />
@@ -346,7 +346,7 @@ export default function CreateVehiclePage() {
               <>
                 <div>
                   <FieldGroup title="Rental Rates (AED)" />
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[{ key: 'daily_rate', label: 'Daily' }, { key: 'weekly_rate', label: 'Weekly' }, { key: 'monthly_rate', label: 'Monthly' }].map(({ key, label }) => (
                       <div key={key}>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">{label} Rate</label>

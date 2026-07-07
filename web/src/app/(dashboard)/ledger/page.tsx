@@ -160,7 +160,7 @@ export default function LedgerPage() {
           </div>
 
           {/* Summary */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {tab === 'customer' ? <>
               <div className="bg-red-50 rounded-xl p-4"><p className="text-xs text-red-600 mb-1">Total Debit</p><p className="text-xl font-bold text-red-700">{fmt(data.summary?.total_debit)}</p></div>
               <div className="bg-green-50 rounded-xl p-4"><p className="text-xs text-green-600 mb-1">Total Credit</p><p className="text-xl font-bold text-green-700">{fmt(data.summary?.total_credit)}</p></div>

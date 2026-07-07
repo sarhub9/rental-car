@@ -267,7 +267,8 @@ export default function BranchesPage() {
             </p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="bg-gray-50/60 border-b border-gray-100">
                 <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
@@ -314,6 +315,7 @@ export default function BranchesPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

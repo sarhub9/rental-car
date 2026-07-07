@@ -416,11 +416,12 @@ class AgreementService {
     const totalCharges = charges.reduce((sum, charge) => sum + parseFloat(charge.amount), 0);
     const actualAmount = parseFloat(agreement.estimated_amount) + totalCharges;
 
-    const updated = await RentalAgreementModel.update(agreementId, tenantId, {
-      status: 'CLOSED',
-      return_timestamp: new Date(),
-      actual_amount: parseFloat(actualAmount.toFixed(2)),
-    });
+    const updated = await RentalAgreementModel.close(
+      agreementId,
+      tenantId,
+      parseFloat(actualAmount.toFixed(2)),
+      new Date()
+    );
 
     await AvailabilityService.releaseVehicleLock(agreementId, tenantId, userId);
 

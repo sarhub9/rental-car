@@ -55,7 +55,7 @@ export default function AgreementsPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
             <HiOutlineDocumentText className="w-5 h-5 text-blue-600" />
@@ -68,7 +68,7 @@ export default function AgreementsPage() {
           </div>
         </div>
         <button onClick={() => router.push('/agreements/create')}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 shadow-sm transition-all">
+          className="inline-flex shrink-0 items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 shadow-sm transition-all">
           <HiOutlinePlusCircle className="w-5 h-5" /> New Agreement
         </button>
       </div>
@@ -110,7 +110,8 @@ export default function AgreementsPage() {
             </p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="bg-gray-50/60 border-b border-gray-100">
                 <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
@@ -179,6 +180,7 @@ export default function AgreementsPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

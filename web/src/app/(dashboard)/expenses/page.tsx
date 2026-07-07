@@ -221,7 +221,8 @@ export default function ExpensesPage() {
             </button>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px]">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/60">
                 <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Expense #</th>
@@ -262,6 +263,7 @@ export default function ExpensesPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
